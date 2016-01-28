@@ -34,14 +34,10 @@ namespace pcsh {
             void* mem = allocate(sizeof(T) * n, nullptr);
             return reinterpret_cast<T*>(mem);
         }
+
+        typedef void(*destroyfn)(void*);
       private:
-        typedef void (*destroyfn)(void*);
-        
         struct impl;
-
-        void* allocate(size_t sz, destroyfn fn);
-
-        impl* impl_;
 
         template <class T>
         struct destroyer
@@ -51,6 +47,10 @@ namespace pcsh {
                 static_cast<T*>(ptr)->~T();
             }
         };
+
+        void* allocate(size_t sz, destroyfn fn);
+
+        impl* impl_;
     };
 
 }//namespace pcsh

@@ -9,12 +9,12 @@
 
 CPP_TEST( arena_none )
 {
-    pcsh::arena a(1024);
+    pcsh::arena a;
 }
 
 CPP_TEST( arena_basic )
 {
-    pcsh::arena a(1024);
+    pcsh::arena a;
     {/* simple create */
         int* p = a.create<int>();
         TEST_TRUE(*p == 0);
@@ -52,7 +52,7 @@ CPP_TEST( arena_basic )
 
             ~Foo()
             {
-                printf("Ran Foo::~Foo()\n");
+                printf("Ran " __FUNCTION__ "()\n");
             }
         };
 

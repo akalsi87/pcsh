@@ -5,11 +5,17 @@
 
 #include "pcsh/arena.hpp"
 
+#include <algorithm>
+
 namespace pcsh {
 
     struct header
     {
         size_t sz;
+
+        header(size_t s, bool dtor = false) : sz((s & ~size_t(1)) | (dtor ? 1 : 0))
+        {
+        }
 
         size_t size() const
         {
@@ -36,6 +42,10 @@ namespace pcsh {
     struct dtor_header : public header
     {
         void* ptr;
+
+        dtor_header(size_t s) : header(s, true)
+        {
+        }
     };
 
     struct segment
@@ -66,9 +76,11 @@ namespace pcsh {
             header* const e = end();
             while (f != e) {
                 if (f->has_dtor()) {
-                    void* fnptr = static_cast<dtor_header*>(f)->ptr;
                     typedef void (*dtorfn)(void*);
-                    static_cast<dtorfn>(fnptr)(f->data());
+                    static_assert(
+                        std::is_same<dtorfn, arena::destroyfn>::value,
+                        "Destructor functions must have compatible signatures!");
+                    static_cast<dtorfn>(static_cast<dtor_header*>(f)->ptr)(f->data());
                 }
                 f = f->next();
             }
@@ -106,29 +118,26 @@ namespace pcsh {
 
     void* allocate_from_seg(segment* seg, size_t sz, void* ptr)
     {
-        void* mem = nullptr;
+        header* h = nullptr;
         if (ptr) {
-            dtor_header* hdr = reinterpret_cast<dtor_header*>(seg->end());
-            hdr->sz = (sz & ~size_t(1)) | size_t(1);
+            dtor_header* hdr = new (seg->end()) dtor_header(sz);
             hdr->ptr = ptr;
-            seg->curr = reinterpret_cast<char*>(hdr->next());
-            seg->left -= sz;
-            mem = hdr->data();
+            h = hdr;
         } else {
-            header* hdr = seg->end();
-            hdr->sz = (sz & ~size_t(1));
-            seg->curr = reinterpret_cast<char*>(hdr->next());
-            seg->left -= sz;
-            mem = hdr->data();
+            header* hdr = new (seg->end()) header(sz);
+            h = hdr;
         }
-        return mem;
+        seg->curr = reinterpret_cast<char*>(h->next());
+        seg->left -= sz;
+        return h->data();
     }
 
     struct arena::impl
     {
         segment* seg_;
+        size_t minsz_;
 
-        impl(size_t sz) : seg_(new_segment(sz))
+        impl(size_t sz) : seg_(new_segment(sz)), minsz_(sz)
         {
         }
 
@@ -144,7 +153,8 @@ namespace pcsh {
             if (seg_->left > sz) {
                 return allocate_from_seg(seg_, sz, fptr);
             } else {
-                segment* s = new_segment(sz + sizeof(header) + (fptr ? sizeof(void*) : 0));
+                size_t segsz = std::max(sz + sizeof(header) + (fptr ? sizeof(void*) : 0), minsz_);
+                segment* s = new_segment(segsz);
                 s->fwd = seg_;
                 seg_ = s;
                 return allocate_from_seg(s, sz, fptr);
