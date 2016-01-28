@@ -17,8 +17,11 @@ set(pcsh_src src/pcsh)
 # -- Headers
 # export
 set(pcsh_exp_hdr
+    ${pcsh_inc}/arena.hpp;
+    ${pcsh_inc}/ir.hpp;
+    ${pcsh_inc}/parser.hpp;
     ${pcsh_inc}/version.hpp;
-    ${pcsh_inc}/parser.hpp)
+)
 
 # internal
 set(pcsh_int_hdr
@@ -26,8 +29,11 @@ set(pcsh_int_hdr
 
 # -- Sources
 set(pcsh_src
+    ${pcsh_src}/arena.cpp;
+    ${pcsh_src}/ir.cpp;
+    ${pcsh_src}/parser.cpp;
     ${pcsh_src}/version.cpp;
-    ${pcsh_src}/parser.cpp)
+)
 
 # -- Targets
 # --- shared
