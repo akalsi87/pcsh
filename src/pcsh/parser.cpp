@@ -225,7 +225,6 @@ namespace parser {
 
         inline bool is_start_of_number(char c, char n, char o)
         {
-            using namespace tokenize;
             return is_digit(c) || ((is_sign(c) || (c == '.')) && is_digit(n)) || (is_sign(c) && (n == '.') && is_digit(o));
         }
 
@@ -289,7 +288,6 @@ namespace parser {
                 strm_.clear();
             }
             pos_ += buffpos_;
-            PCSH_ASSERT(pos_ == strm_.tellg());
             buffpos_ = 0;
             buffsz_ = 0;
         }
@@ -315,24 +313,30 @@ namespace parser {
                 buffer_.resize(buffpos_ + n);
             }
             if (strm_.peek() == EOS) {
+                strm_.clear();
                 return;
             }
             strm_.read(&buffer_[buffsz_], n - (buffsz_ - buffpos_));
             auto actread = strm_.gcount();
+            if (!strm_.good()) {
+                strm_.clear();
+            }
             buffsz_ += (pos_t)actread;
         }
     };
 
-    token parser::peek()
+    token parser::peek(pos_t pstrt, pos_t* pactstrt)
     {
         using namespace tokenize;
         // skip whitespace
-        auto p = find_first_non_whitespace(0);
-        strm_->advance(p);
-        char c = strm_->peek_at(0);
+        auto p = find_first_non_whitespace(pstrt);
+        if (pactstrt) {
+            *pactstrt = p;
+        }
+        char c = strm_->peek_at(p);
 
-        if (is_start_of_number(c, strm_->peek_at(1), strm_->peek_at(2))) {
-            return read_number();
+        if (is_start_of_number(c, strm_->peek_at(p + 1), strm_->peek_at(p + 2))) {
+            return read_number(p);
         }
 
         switch (c) {
@@ -361,14 +365,13 @@ namespace parser {
             case '/':
                 return token::get(token_type::FSLASH, "/", 1);
             default:
-                return read_symbol();
+                return read_symbol(p);
         }
     }
 
-    void parser::advance(const token& t)
+    void parser::advance(pos_t len)
     {
-        PCSH_ASSERT(!t.is_a(token_type::FAIL));
-        strm_->advance(t.str().len);
+        strm_->advance(len);
     }
 
     ir::tree parser::parse_to_tree(arena& a)
@@ -431,11 +434,10 @@ namespace parser {
         }
     }
 
-    token parser::read_number()
+    token parser::read_number(pos_t p)
     {
         using namespace tokenize;
-        auto p = find_first_non_whitespace(0);
-        auto beg = p;
+        auto pstart = p;
         char c = strm_->peek_at(p);
 
         // chomp sign if exists
@@ -460,24 +462,24 @@ namespace parser {
         bool hasfracpart = hasdec && ((digend + hasdec) != fracend);
 
         if (hasbegdig && !hasfracpart && !is_symbol_char(strm_->peek_at(digend))) {
-            return token::get(token_type::INTEGER, strm_->buff(), digend);
+            return token::get(token_type::INTEGER, strm_->buff() + pstart, digend - pstart);
         } else if (hasfracpart && !is_symbol_char(strm_->peek_at(fracend))) {
-            return token::get(token_type::FLOATING, strm_->buff(), fracend);
+            return token::get(token_type::FLOATING, strm_->buff() + pstart, fracend - pstart);
         } else {
             return token::get(token_type::FAIL, "Error reading number");
         }
     }
 
-    token parser::read_symbol()
+    token parser::read_symbol(pos_t p)
     {
         using namespace tokenize;
-        auto p = find_first_non_whitespace(0);
+        auto pstart = p;
         while (is_symbol_char(strm_->peek_at(p))) {
             ++p;
         }
 
-        return (p != 0) ? token::get(token_type::SYMBOL, strm_->buff(), p)
-                        : token::get(token_type::FAIL, "Error reading symbol");
+        return (p != pstart) ? token::get(token_type::SYMBOL, strm_->buff() + pstart, p - pstart)
+                             : token::get(token_type::FAIL, "Error reading symbol");
     }
 
     pos_t parser::curr_pos() const

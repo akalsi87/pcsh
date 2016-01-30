@@ -123,6 +123,11 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
             return type_ == x;
         }
 
+        inline size_t length() const
+        {
+            return len_;
+        }
+
         inline buff_string str() const
         {
             buff_string rv = { str_, len_ };
@@ -157,9 +162,9 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 
         ~parser();
 
-        token peek();
+        token peek(pos_t p = 0, pos_t* pactstart = nullptr);
 
-        void advance(const token& t);
+        void advance(pos_t len);
 
         inline int line() const
         {
@@ -185,8 +190,8 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 
         pos_t find_first_non_whitespace(pos_t start);
         pos_t skip_till_line_end(pos_t p);
-        token read_number();
-        token read_symbol();
+        token read_number(pos_t p);
+        token read_symbol(pos_t p);
     };
 
 }// namespace parser
