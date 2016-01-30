@@ -1,6 +1,9 @@
 /*! \file exportsym.h */
 /* Export symbol definitions */
 
+#if !defined(PCSH_EXPORTSYM_H)
+#define PCSH_EXPORTSYM_H
+
 #if defined(PCSH_LINK_STATIC)
 /*! Macro to define library export symbol */
 #  define PCSH_API 
@@ -35,3 +38,5 @@
 #else/* render macro useless */
 #  define PCSH_DEPRECATED(x) 
 #endif/*!PCSH_ALLOW_DEPRECATION*/
+
+#endif/*!defined(PCSH_EXPORTSYM_H)*/

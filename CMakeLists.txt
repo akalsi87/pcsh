@@ -23,10 +23,10 @@ include("cmake/ProjTools.cmake")
 # -- Add the subdirectories
 set(PROJ_SUBDIRS  unittest; doc; tools; test)
 
+# -- Add pcsh lib
+include("pcsh.cmake")
+
 # add all subdirs
 foreach(subdir ${PROJ_SUBDIRS})
   add_subdirectory(${subdir})
 endforeach(subdir)
-
-# -- Add pcsh lib
-include("pcsh.cmake")

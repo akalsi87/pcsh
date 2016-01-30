@@ -17,18 +17,22 @@ set(pcsh_src src/pcsh)
 # -- Headers
 # export
 set(pcsh_exp_hdr
+    ${pcsh_inc}/assert.hpp;
     ${pcsh_inc}/arena.hpp;
     ${pcsh_inc}/ir.hpp;
     ${pcsh_inc}/parser.hpp;
+    ${pcsh_inc}/types.hpp;
     ${pcsh_inc}/version.hpp;
 )
 
 # internal
 set(pcsh_int_hdr
-    )
+#   ${pcsh_inc}/assert.hpp;
+)
 
 # -- Sources
 set(pcsh_src
+    ${pcsh_src}/assert.cpp;
     ${pcsh_src}/arena.cpp;
     ${pcsh_src}/ir.cpp;
     ${pcsh_src}/parser.cpp;

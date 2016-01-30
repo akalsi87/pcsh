@@ -35,7 +35,7 @@ namespace pcsh {
             return reinterpret_cast<T*>(mem);
         }
 
-        typedef void(*destroyfn)(void*);
+        typedef void (*destroyfn)(void*);
       private:
         struct impl;
 

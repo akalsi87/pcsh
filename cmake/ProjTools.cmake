@@ -384,6 +384,9 @@ function(add_lib_build_def tgt file buildTemplate)
     "/*! \\file ${n} */\n"
     "/* Export symbol definitions */\n"
     "\n"
+    "#if !defined(${buildTemplate}_EXPORTSYM_H)\n"
+    "#define ${buildTemplate}_EXPORTSYM_H\n"
+    "\n"
     "#if defined(${buildTemplate}_LINK_STATIC)\n"
     "/*! Macro to define library export symbol */\n"
     "#  define ${buildTemplate}_API \n"
@@ -417,7 +420,9 @@ function(add_lib_build_def tgt file buildTemplate)
     "#  endif/*defined(_MSC_VER)*/\n"
     "#else/* render macro useless */\n"
     "#  define ${buildTemplate}_DEPRECATED(x) \n"
-    "#endif/*!${buildTemplate}_ALLOW_DEPRECATION*/\n")
+    "#endif/*!${buildTemplate}_ALLOW_DEPRECATION*/\n"
+    "\n"
+    "#endif/*!defined(${buildTemplate}_EXPORTSYM_H)*/\n")
   if(is_shared)
     target_compile_definitions(${tgt} PRIVATE "${buildTemplate}_BUILD")
   endif()
@@ -465,7 +470,7 @@ endfunction(set_tgt_ver)
 # Link library install function: For test_on_install builds
 function(link_libs_install tgt)
   set(xtra_libs )
-	
+
 if (USE_CODE_COV)
   if (APPLE)
     add_link_flag(${tgt} --coverage)
