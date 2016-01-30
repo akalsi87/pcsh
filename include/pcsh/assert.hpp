@@ -33,8 +33,8 @@ namespace detail {
 }//namespace detail
 }//namespace pcsh
 
-#define __STRINGIFY(x) #x
-#define STRINGIFY(x) __STRINGIFY(x)
+#define __STRINGIFY_2(x) #x
+#define STRINGIFY(x) __STRINGIFY_2(x)
 
 #if !defined(NDEBUG)//debug enabled
 
