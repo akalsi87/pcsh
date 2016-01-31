@@ -521,9 +521,9 @@ namespace parser {
         parser_engine(parser& p, arena& a) : parser_(p), arena_(a), func_("(main)")
         { }
 
-        ir::tree* parse()
+        ir::block* parse()
         {
-            return arena_.create<ir::tree>(block());
+            return block();
         }
       private:
         parser& parser_;
@@ -546,7 +546,7 @@ namespace parser {
         !!(x) ? 0 : quit_with_error((msg));   \
     } while (0)
 
-        ir::node* block()
+        ir::block* block()
         {
             std::vector<ir::node*> stmts;
             stmts.reserve(20);
@@ -560,11 +560,11 @@ namespace parser {
                     stmts.push_back(stmt());
                 } while (!peek().is_a(token_type::EOS));
             }
-            ir::block* blk = arena_.create<ir::block>();
+            ir::block* blk = arena_.create<ir::block>(arena_);
             auto beg = stmts.rbegin();
             const auto end = stmts.rend();
             for (; beg != end; ++beg) {
-                blk->push_front_statement(*beg, arena_);
+                blk->push_front_statement(*beg);
             }
             return blk;
         }
@@ -725,11 +725,10 @@ namespace parser {
         }
     };
 
-    ir::tree* parser::parse_to_tree(arena& a)
+    ir::tree::ptr parser::parse_to_tree()
     {
-        auto treeptr = parser_engine(*this, a).parse();
-        ir::printer prn(std::cout);
-        treeptr->accept(&prn);
+        auto treeptr = ir::tree::create();
+        treeptr->set_root(parser_engine(*this, treeptr->get_arena()).parse());
         return treeptr;
     }
 

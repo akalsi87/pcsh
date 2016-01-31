@@ -154,7 +154,7 @@ atom ::= var | NUMBER
 
         pos_t curr_pos() const;
 
-        ir::tree* parse_to_tree(arena& a);
+        ir::tree::ptr parse_to_tree();
 
         void sync_stream();
       private:

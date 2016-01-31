@@ -6,10 +6,13 @@
 #ifndef PCSH_IR_HPP
 #define PCSH_IR_HPP
 
+#include "pcsh/arena.hpp"
 #include "pcsh/exportsym.h"
 #include "pcsh/noncopyable.hpp"
 #include "pcsh/ostream.hpp"
 #include "pcsh/types.hpp"
+
+#include <memory>
 
 namespace pcsh {
 namespace ir {
@@ -42,10 +45,28 @@ namespace ir {
         virtual node* right_impl() const = 0;
     };
 
-    class tree : public noncopyable
+    class PCSH_API tree : public noncopyable
     {
+      private:
+        struct tree_destroyer
+        {
+            void operator()(tree* p) const
+            {
+                delete p->arena_;
+            }
+        };
       public:
-        tree(node* root) : root_(root)
+        typedef std::unique_ptr<tree, tree_destroyer> ptr;
+
+        static ptr create()
+        {
+            arena* parena = new arena;
+            ptr p(parena->create<tree>());
+            p->arena_ = parena;
+            return std::move(p);
+        }
+
+        tree(node* root = nullptr) : root_(root), arena_(nullptr)
         { }
 
         inline node* root() const
@@ -57,8 +78,21 @@ namespace ir {
         {
             root_->accept(v);
         }
+
+        inline arena& get_arena()
+        {
+            return *arena_;
+        }
+
+        inline void set_root(node* p)
+        {
+            root_ = p;
+        }
+
+        void print(ostream& os);
       private:
         node* root_;
+        arena* arena_;
     };
 
 }// namespace ir

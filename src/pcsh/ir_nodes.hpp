@@ -10,6 +10,7 @@
 #include "pcsh/ir.hpp"
 
 #include "ir_visitor.hpp"
+#include "symbol_table.hpp"
 
 #include <sstream>
 
@@ -221,12 +222,12 @@ namespace ir {
         };
 
       public:
-        block() : head_(nullptr)
+        block(arena& ar) : arena_(ar), head_(nullptr), symtab_(symbol_table::make_new())
         { }
 
-        void push_front_statement(node* n, arena& ar)
+        void push_front_statement(node* n)
         {
-            auto newstmt = ar.create<list_node>();
+            auto newstmt = arena_.create<list_node>();
             *newstmt = { head_, n };
             head_ = newstmt;
         }
@@ -237,7 +238,9 @@ namespace ir {
         }
 
       private:
+        arena& arena_;
         list_node* head_;
+        symbol_table::ptr symtab_;
     };
 
 }//namespace ir

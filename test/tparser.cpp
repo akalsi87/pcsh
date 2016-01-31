@@ -5,6 +5,7 @@
 
 #include "unittest.hpp"
 
+#include "pcsh/ir.hpp"
 #include "pcsh/parser.hpp"
 
 #include <sstream>
@@ -273,9 +274,8 @@ CPP_TEST( irCreationBasic )
             "#{ y = 1; } { z = 2; }\n"
             "#213 + 456123.123; - cannot handle this line yet as it is not a statement\n"
             "#{ a.b } - cannot handle this line yet as it is unsupported\n");
-        arena a;
         parser p(is);
-        p.parse_to_tree(a);
+        p.parse_to_tree()->print(std::cout);
     }
     {
         std::istringstream is(
@@ -287,6 +287,6 @@ CPP_TEST( irCreationBasic )
             "}\n");
         arena a;
         parser p(is);
-        p.parse_to_tree(a);
+        p.parse_to_tree()->print(std::cout);
     }
 }

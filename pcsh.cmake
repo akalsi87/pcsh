@@ -33,6 +33,7 @@ set(pcsh_int_hdr
     ${pcsh_src}/ir_nodes_fwd.hpp;
     ${pcsh_src}/ir_printer.hpp;
     ${pcsh_src}/ir_visitor.hpp;
+    ${pcsh_src}/symbol_table.hpp;
 )
 
 # -- Sources
@@ -43,6 +44,7 @@ set(pcsh_src
     ${pcsh_src}/ir_printer.cpp;
     ${pcsh_src}/ir_visitor.cpp;
     ${pcsh_src}/parser.cpp;
+    ${pcsh_src}/symbol_table.cpp;
     ${pcsh_src}/version.cpp;
 )
 
