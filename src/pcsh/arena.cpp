@@ -80,7 +80,7 @@ namespace pcsh {
                     static_assert(
                         std::is_same<dtorfn, arena::destroyfn>::value,
                         "Destructor functions must have compatible signatures!");
-                    static_cast<dtorfn>(static_cast<dtor_header*>(f)->ptr)(f->data());
+                    ((dtorfn)(static_cast<dtor_header*>(f)->ptr))(f->data());
                 }
                 f = f->next();
             }
@@ -175,7 +175,7 @@ namespace pcsh {
     {
         sz = (sz + 3) & ~size_t(3);
         size_t szneeded = sz + (fn ? sizeof(void*) : 0);
-        return impl_->allocate(szneeded, fn);
+        return impl_->allocate(szneeded, (void*)fn);
     }
 
 }//namespace pcsh

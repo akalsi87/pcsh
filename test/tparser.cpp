@@ -138,7 +138,7 @@ CPP_TEST( tokenizerCommentsAndLines )
         TEST_TRUE(eos.is_a(token_type::EOS));
         p.advance(curr + eos.length());
     }
-    TEST_TRUE(p.curr_pos() == is.tellg());
+    TEST_TRUE(p.curr_pos() == (size_t)is.tellg());
 }
 
 CPP_TEST( tokenizerCommentsAndLinesCascade )
@@ -257,7 +257,7 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
         auto eos = p.peek(curr, &curr);
         TEST_TRUE(eos.is_a(token_type::EOS));
     }
-    TEST_TRUE(curr == is.tellg());
+    TEST_TRUE(curr == (size_t)is.tellg());
 }
 
 CPP_TEST( irCreationBasic )
@@ -275,7 +275,7 @@ CPP_TEST( irCreationBasic )
             "#{ a.b } - cannot handle this line yet as it is unsupported\n");
         arena a;
         parser p(is);
-        auto treeptr = p.parse_to_tree(a);
+        p.parse_to_tree(a);
     }
     {
         std::istringstream is(
@@ -287,6 +287,6 @@ CPP_TEST( irCreationBasic )
             "}\n");
         arena a;
         parser p(is);
-        auto treeptr = p.parse_to_tree(a);
+        p.parse_to_tree(a);
     }
 }

@@ -6,6 +6,7 @@
 #include "unittest.hpp"
 
 #include "pcsh/arena.hpp"
+#include "pcsh/assert.hpp"
 
 CPP_TEST( arena_none )
 {
@@ -44,6 +45,7 @@ CPP_TEST( arena_basic )
         };
 
         auto pfoo = a.create<Foo>();
+        static_cast<void>(pfoo);
     }
     {/* new segment create; non trivial dtor */
         struct Foo
@@ -52,10 +54,11 @@ CPP_TEST( arena_basic )
 
             ~Foo()
             {
-                printf("Ran " __FUNCTION__ "()\n");
+                printf("Ran %s()\n", FUNCTION_NAME);
             }
         };
 
         auto pfoo = a.create<Foo>();
+        static_cast<void>(pfoo);
     }
 }

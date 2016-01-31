@@ -10,28 +10,26 @@
 #define STRINGIFY(x, y, z) _STRINGIFY_(x, y, z)
 
 namespace pcsh {
-namespace version {
 
-    int major()
+    int version_major()
     {
         return PCSH_MAJ;
     }
 
-    int minor()
+    int version_minor()
     {
         return PCSH_MIN;
     }
 
-    int patch()
+    int version_patch()
     {
         return PCSH_PAT;
     }
 
-    const char* str()
+    const char* version_str()
     {
         return STRINGIFY(PCSH_MAJ, PCSH_MIN, PCSH_PAT);
     }
 
-}// namespace version
 }// namespace pcsh
 
