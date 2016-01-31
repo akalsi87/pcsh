@@ -7,23 +7,21 @@
 #define PCSH_IR_HPP
 
 #include "pcsh/exportsym.h"
-#include "pcsh/arena.hpp"
 #include "pcsh/noncopyable.hpp"
+#include "pcsh/ostream.hpp"
 #include "pcsh/types.hpp"
-
-#include <string>
 
 namespace pcsh {
 namespace ir {
 
-    class node : public noncopyable
+    class node_visitor;
+
+    class PCSH_API node : public noncopyable
     {
       public:
-        inline std::string to_string() const
+        inline void accept(node_visitor* v) const
         {
-            std::string str;
-            to_string_impl(str);
-            return str;
+            accept_impl(v);
         }
 
         inline node* left() const
@@ -35,8 +33,11 @@ namespace ir {
         {
             return right_impl();
         }
+
+        inline virtual ~node()
+        { }
       private:
-        virtual void to_string_impl(std::string& str) const = 0;
+        virtual void accept_impl(node_visitor* v) const = 0;
         virtual node* left_impl() const = 0;
         virtual node* right_impl() const = 0;
     };
@@ -50,6 +51,11 @@ namespace ir {
         inline node* root() const
         {
             return root_;
+        }
+
+        inline void accept(node_visitor* v) const
+        {
+            root_->accept(v);
         }
       private:
         node* root_;

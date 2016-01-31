@@ -6,6 +6,12 @@
 #ifndef PCSH_NONCOPYABLE_HPP
 #define PCSH_NONCOPYABLE_HPP
 
+// Disable MSVC warnings for non DLL-interface inheritance
+// from noncopyable
+#if defined(_MSC_VER)
+#pragma warning (disable:4275)
+#endif // defined(_MSC_VER)
+
 namespace pcsh {
 
     class noncopyable
@@ -14,7 +20,7 @@ namespace pcsh {
         inline noncopyable()
         { }
 
-        inline ~noncopyable()
+        inline virtual ~noncopyable()
         { }
 
       private:
@@ -24,5 +30,11 @@ namespace pcsh {
     };
 
 }//namespace pcsh
+
+// Unfortunately, this disabling must propagate for
+// it to correctly silence the MSVC warnings.
+//#if defined(_MSC_VER)
+//#pragma warning (default:4275)
+//#endif // defined(_MSC_VER)
 
 #endif/*PCSH_NONCOPYABLE_HPP*/

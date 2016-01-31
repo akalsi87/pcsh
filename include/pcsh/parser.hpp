@@ -171,6 +171,7 @@ atom ::= var | NUMBER
         pos_t skip_till_line_end(pos_t p);
         token read_number(pos_t p);
         token read_symbol(pos_t p);
+        std::string copy_line(pos_t p);
     };
 
 }// namespace parser

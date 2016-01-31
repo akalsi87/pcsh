@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "ir_printer.hpp"
+
 namespace pcsh {
 namespace parser {
 
@@ -363,13 +365,8 @@ namespace parser {
         if (pactstrt) {
             *pactstrt = p;
         }
-        char c = strm_->peek_at(p);
 
-        if ( is_digit(c) ||
-            ((is_sign(c) || (c == '.')) && is_digit(strm_->peek_at(p + 1))) ||
-            (is_sign(c) && (strm_->peek_at(p + 1) == '.') && is_digit(strm_->peek_at(p + 2)))) {
-            return read_number(p);
-        }
+        char c = strm_->peek_at(p);
 
         switch (c) {
             case buffered_stream::EOS:
@@ -397,7 +394,7 @@ namespace parser {
             case '/':
                 return token::get(token_type::FSLASH, "/", 1);
             default:
-                return read_symbol(p);
+                return (is_digit(c) ? read_number(p) : read_symbol(p));
         }
     }
 
@@ -473,11 +470,8 @@ namespace parser {
         auto pstart = p;
         char c = strm_->peek_at(p);
 
-        // chomp sign if exists
-        auto hassign = is_sign(c);
-
         // find digits end
-        auto digend = p + hassign;
+        auto digend = p;
         while (is_digit(strm_->peek_at(digend))) {
             ++digend;
         }
@@ -491,7 +485,7 @@ namespace parser {
             ++fracend;
         }
 
-        bool hasbegdig = (p + hassign) != digend;
+        bool hasbegdig = p != digend;
         bool hasfracpart = hasdec && ((digend + hasdec) != fracend);
 
         if (hasbegdig && !hasfracpart && !is_symbol_char(strm_->peek_at(digend))) {
@@ -539,8 +533,13 @@ namespace parser {
 
         int quit_with_error(name msg)
         {
-            const auto& linestr = "line " + std::to_string(parser_.line());
-            return pcsh::assert_fail(msg, parser_.filename_.c_str(), linestr.c_str(), func_.c_str());
+            pos_t ws = 0;
+            parser_.peek(ws, &ws);
+            parser_.advance(ws);
+            const auto& linestr = "line " + std::to_string(parser_.line()) + ", char " + std::to_string(parser_.curr_pos() - parser_.line_start());
+            std::string message(msg);
+            message += "\n\tnear: \"" + parser_.copy_line(0) + "\"";
+            return pcsh::assert_fail(message.c_str(), parser_.filename_.c_str(), linestr.c_str(), func_.c_str());
         }
 
 #define ENFORCE(x, msg)                       \
@@ -588,7 +587,7 @@ namespace parser {
         ir::variable* var()
         {
             auto t = peek();
-            ENFORCE(t.is_a(token_type::SYMBOL), "Variable must be a non keyword and alpha-numeric.");
+            ENFORCE(t.is_a(token_type::SYMBOL), "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
             name nm = arena_.create_string(t.str().ptr, t.length());
             advance();
             return arena_.create<ir::variable>(nm);
@@ -604,17 +603,19 @@ namespace parser {
                 return e;
             } else if (is_unary_op(t)) {
                 return unop();
-            } else if (is_binary_op(t)) {
-                return binop();
             } else {
-                return atom();
+                auto a = atom();
+                if (is_binary_op(peek())) {
+                    return binop(a);
+                }
+                return a;
             }
         }
 
-        ir::node* binop()
+        ir::node* binop(ir::node* a)
         {
-            ir::binary_op* op = nullptr;
-            auto nodea = atom();
+            ir::untyped_binary_op_base* op = nullptr;
+            ir::node* nodea = a;
             auto nxt = peek();
             while (is_binary_op(nxt)) {
                 op = create_binary_op(nxt);
@@ -635,10 +636,10 @@ namespace parser {
             return op;
         }
 
-        ir::node* atom()
+        ir::untyped_atom_base* atom()
         {
             auto t = peek();
-            ir::node* v = nullptr;
+            ir::untyped_atom_base* v = nullptr;
             switch (t.type()) {
                 case token_type::SYMBOL:
                     v = arena_.create<ir::variable>(arena_.create_string(t.str().ptr, t.length()));
@@ -661,14 +662,9 @@ namespace parser {
 
         token peek()
         {
-            pos_t ws = 0;
-            auto t = parser_.peek(0, &ws);
+            auto t = parser_.peek();
             if (t.is_a(token_type::FAIL)) {
-                // advance ws up to the failure
-                parser_.advance(ws);
-                auto errtok = parser_.peek();
-                PCSH_ASSERT(errtok.is_a(token_type::FAIL));
-                quit_with_error(errtok.str().ptr);
+                quit_with_error(t.str().ptr);
             }
             return t;
         }
@@ -682,7 +678,7 @@ namespace parser {
 
         bool is_unary_op(const token& t)
         {
-            return t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS);
+            return t.is_a(token_type::MINUS);
         }
 
         bool is_binary_op(const token& nxt)
@@ -699,7 +695,7 @@ namespace parser {
             }
         }
 
-        ir::binary_op* create_binary_op(const token& nxt)
+        ir::untyped_binary_op_base* create_binary_op(const token& nxt)
         {
             switch (nxt.type()) {
                 case token_type::PLUS:
@@ -718,11 +714,9 @@ namespace parser {
             }
         }
 
-        ir::unary_op* create_unary_op(const token& nxt)
+        ir::untyped_unary_op_base* create_unary_op(const token& nxt)
         {
             switch (nxt.type()) {
-                case token_type::PLUS:
-                    return arena_.create<ir::unary_plus>();
                 case token_type::MINUS:
                     return arena_.create<ir::unary_minus>();
                 default:
@@ -734,7 +728,20 @@ namespace parser {
 
     ir::tree* parser::parse_to_tree(arena& a)
     {
-        return parser_engine(*this, a).parse();
+        auto treeptr = parser_engine(*this, a).parse();
+        ir::printer prn(std::cout);
+        treeptr->accept(&prn);
+        return treeptr;
+    }
+
+    std::string parser::copy_line(pos_t p)
+    {
+        std::string str;
+        char c;
+        while (((c = strm_->peek_at(p++)) != strm_->EOS) && !tokenize::is_newline(c)) {
+            str.push_back(c);
+        }
+        return str;
     }
 
 }// namespace parser

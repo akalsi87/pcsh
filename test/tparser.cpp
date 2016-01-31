@@ -147,7 +147,7 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
     std::istringstream is(
         "#/usr/bin/env pcsh\n"
         "foo = 1;## test if double comment works\n"
-        "bar = 2;\n"
+        "bar = -121;\n"
         "213 + 456123.123;\n"
         "{ a.b }\n");
     parser p(is);
@@ -188,8 +188,13 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
     }
     {
         auto two = p.peek(curr, &curr);
+        TEST_TRUE(two.is_a(token_type::MINUS));
+        curr += two.length();
+    }
+    {
+        auto two = p.peek(curr, &curr);
         TEST_TRUE(two.is_a(token_type::INTEGER));
-        TEST_TRUE(two.str().equals("2"));
+        TEST_TRUE(two.str().equals("121"));
         curr += two.length();
     }
     {
@@ -260,14 +265,26 @@ CPP_TEST( irCreationBasic )
     using pcsh::arena;
     using namespace pcsh::parser;
 
-    std::istringstream is(
-        "#/usr/bin/env pcsh\n"
-        "foo = 1;## test if double comment works\n"
-        "bar = 2;\n"
-        "#213 + 456123.123; - cannot handle this line yet as it is not a statement\n"
-        "#{ a.b } - cannot handle this line yet as it is unsupported\n");
-
     {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            "foo = 1;## test if double comment works\n"
+            "bar = 2;\n"
+            "#{ y = 1; } { z = 2; }\n"
+            "#213 + 456123.123; - cannot handle this line yet as it is not a statement\n"
+            "#{ a.b } - cannot handle this line yet as it is unsupported\n");
+        arena a;
+        parser p(is);
+        auto treeptr = p.parse_to_tree(a);
+    }
+    {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            "{\n"
+            "    a = 1;\n"
+            "    b = -42;\n"
+            "    c = a + b;\n"
+            "}\n");
         arena a;
         parser p(is);
         auto treeptr = p.parse_to_tree(a);

@@ -6,18 +6,37 @@
 #ifndef PCSH_IR_NODES_HPP
 #define PCSH_IR_NODES_HPP
 
+#include "pcsh/arena.hpp"
 #include "pcsh/ir.hpp"
+
+#include "ir_visitor.hpp"
 
 #include <sstream>
 
+// Disable MSVC warnings for dominant method inheritance in
+// diamond classes
+#if defined(_MSC_VER)
+#pragma warning (disable:4250)
+#endif // defined(_MSC_VER)
+
 namespace pcsh {
 namespace ir {
+
+    template <class T>
+    class typed_node : public virtual node
+    {
+      private:
+        void accept_impl(node_visitor* v) const
+        {
+            v->visit(static_cast<const T*>(this));
+        }
+    };
 
     //////////////////////////////////////////////////////////////////////////
     /// node types
     //////////////////////////////////////////////////////////////////////////
 
-    class atom_base : public node
+    class untyped_atom_base : public virtual node
     {
       private:
         node* left_impl() const override
@@ -31,71 +50,81 @@ namespace ir {
         }
     };
 
+    template <class T>
+    class atom_base : public typed_node<T>, public untyped_atom_base
+    {
+    };
+
     // leaf nodes
 
-    class variable : public atom_base
+    class variable : public atom_base<variable>
     {
       public:
         variable(name nm) : name_(nm)
         { }
+
+        inline name varname() const
+        {
+            return name_;
+        }
       private:
         name name_;
-
-        void to_string_impl(std::string& str) const override
-        {
-            str = name_;
-        }
     };
 
-    class int_constant : public atom_base
+    class int_constant : public atom_base<int_constant>
     {
       public:
         int_constant(int val) : val_(val)
         { }
+
+        inline int value() const
+        {
+            return val_;
+        }
       private:
         int val_;
-
-        void to_string_impl(std::string& str) const override
-        {
-            str = std::to_string(val_);
-        }
     };
 
-    class float_constant : public atom_base
+    class float_constant : public atom_base<float_constant>
     {
       public:
         float_constant(double val) : val_(val)
         { }
+
+        inline double value() const
+        {
+            return val_;
+        }
       private:
         double val_;
-
-        void to_string_impl(std::string& str) const override
-        {
-            str = std::to_string(val_);
-        }
     };
 
-    class string_constant : public atom_base
+    class string_constant : public atom_base<string_constant>
     {
       public:
         string_constant(name val) : val_(val)
         { }
+
+        inline name value() const
+        {
+            return val_;
+        }
       private:
         name val_;
-
-        void to_string_impl(std::string& str) const override
-        {
-            str = val_;
-        }
     };
 
     // operations
 
-    class unary_op : public node
+    class untyped_unary_op_base : public virtual node
     {
       public:
-        unary_op() : operand_(nullptr)
+        untyped_unary_op_base() : operand_(nullptr)
         { }
+
+        const node* operand() const
+        {
+            return operand_;
+        }
 
         void set_operand(node* v)
         {
@@ -115,28 +144,21 @@ namespace ir {
         }
     };
 
-    class unary_minus : public unary_op
+    template <class T>
+    class unary_op : public typed_node<T>, public untyped_unary_op_base
     {
-      private:
-        void to_string_impl(std::string& str) const override
-        {
-            str = "- (unary)";
-        }
     };
 
-    class unary_plus : public unary_op
+    class unary_minus : public unary_op<unary_minus>
     {
-      private:
-        void to_string_impl(std::string& str) const override
-        {
-            str = "+ (unary)";
-        }
     };
 
-    class binary_op : public node
+    // binary ops
+
+    class untyped_binary_op_base : public virtual node
     {
       public:
-        binary_op() : left_(nullptr), right_(nullptr)
+        untyped_binary_op_base() : left_(nullptr), right_(nullptr)
         { }
 
         void set_left(node* n)
@@ -164,58 +186,38 @@ namespace ir {
         }
     };
 
-    class binary_plus : public binary_op
+    template <class T>
+    class binary_op : public typed_node<T>, public untyped_binary_op_base
     {
-      private:
-        void to_string_impl(std::string& str) const override
-        {
-            str = "+";
-        }
     };
 
-    class binary_minus : public binary_op
+    class binary_plus : public binary_op<binary_plus>
     {
-      private:
-        void to_string_impl(std::string& str) const override
-        {
-            str = "-";
-        }
     };
 
-    class binary_mult : public binary_op
+    class binary_minus : public binary_op<binary_minus>
     {
-      private:
-        void to_string_impl(std::string& str) const override
-        {
-            str = "*";
-        }
     };
 
-    class binary_div : public binary_op
+    class binary_mult : public binary_op<binary_mult>
     {
-      private:
-        void to_string_impl(std::string& str) const override
-        {
-            str = "/";
-        }
     };
 
-    class assign : public binary_op
+    class binary_div : public binary_op<binary_div>
     {
-      private:
-        void to_string_impl(std::string& str) const override
-        {
-            str = "=";
-        }
     };
 
-    class block : public atom_base
+    class assign : public binary_op<assign>
+    {
+    };
+
+    class block : public atom_base<block>
     {
       public:
         struct list_node
         {
             list_node* next;
-            node* entry;
+            const node* entry;
         };
 
       public:
@@ -236,16 +238,13 @@ namespace ir {
 
       private:
         list_node* head_;
-
-        void to_string_impl(std::string& str) const override
-        {
-            std::ostringstream strm;
-            strm << "block at " << this;
-            str = strm.str();
-        }
     };
 
 }//namespace ir
 }//namespace pcsh
+
+#if defined(_MSC_VER)
+#pragma warning (default:4250)
+#endif // defined(_MSC_VER)
 
 #endif/*PCSH_IR_NODES_HPP*/

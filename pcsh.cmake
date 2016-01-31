@@ -20,6 +20,8 @@ set(pcsh_exp_hdr
     ${pcsh_inc}/assert.hpp;
     ${pcsh_inc}/arena.hpp;
     ${pcsh_inc}/ir.hpp;
+    ${pcsh_inc}/noncopyable.hpp;
+    ${pcsh_inc}/ostream.hpp;
     ${pcsh_inc}/parser.hpp;
     ${pcsh_inc}/types.hpp;
     ${pcsh_inc}/version.hpp;
@@ -27,7 +29,10 @@ set(pcsh_exp_hdr
 
 # internal
 set(pcsh_int_hdr
-    ${pcsh_inc}/ir_nodes.hpp;
+    ${pcsh_src}/ir_nodes.hpp;
+    ${pcsh_src}/ir_nodes_fwd.hpp;
+    ${pcsh_src}/ir_printer.hpp;
+    ${pcsh_src}/ir_visitor.hpp;
 )
 
 # -- Sources
@@ -35,6 +40,8 @@ set(pcsh_src
     ${pcsh_src}/assert.cpp;
     ${pcsh_src}/arena.cpp;
     ${pcsh_src}/ir.cpp;
+    ${pcsh_src}/ir_printer.cpp;
+    ${pcsh_src}/ir_visitor.cpp;
     ${pcsh_src}/parser.cpp;
     ${pcsh_src}/version.cpp;
 )
