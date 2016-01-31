@@ -25,42 +25,13 @@ namespace parser {
 /*
 Grammar:
 
-module ::= block
-block ::= '{' { stmt } '}'
-stmt ::= assign ';'
-| funcall ';'
-| externcall ';'
-| 'import' any ';'
-| 'return' expr ';'
-| 'break' ';'
-| 'continue' ';'
-| '#' any NEWLINE
-| 'if' '(' expr ')' block
-| 'if' '(' expr ')' block { 'else' 'if' '(' expr ')' block } 'else' block
-| 'for' '(' var 'in' atom [ '..' atom ] ')' block
-| 'def' var '(' varlist ')' block
-| block
-assign ::= location '=' expr
-| location '=' '[' exprlist ']'
-funcall ::= namespacedvar '(' exprlist ')'
-externcall ::= '@' '(' interp ')'
-expr ::= expr '|' logical | logical
-logical ::= logical 'and' equality | logical 'or' equality | equality
-equality ::= equality '==' relative | equality '!=' relative | relative
-relative ::= relative '<' arith | relative '>' arith
-| relative '<=' arith | relative '>=' arith
-| arith
-arith ::= arith '+' term | arith '-' term | term
-term ::= term '*' unary | term '/' unary | term '%' unary | unary
-unary ::= '-' unary | 'not' unary | factor
-factor ::= '( expr ')' | funcall | externcall | atom
-atom ::= location | NUMBER | '"' STRING '"' | 'true' | 'false'
-var ::= { ALPHANUM | '_' }
-location ::= namespacedvar | namespacedvar '[' expr ']'
-namespacedvar ::= [ var '.' ] var
-varlist ::= var { ',' var }
-exprlist ::= expr { ',' expr }
-interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
+block ::= '{' { stmt ';' } '}'
+stmt ::= var '=' expr
+var ::= NAME
+expr ::= '(' expr ')' | unop atom | atom { binop atom } | atom
+binop ::= '+' | '-' | '*' | '/'
+unop ::= '-'
+atom ::= var | NUMBER
 */
 
     //////////////////////////////////////////////////////////////////////////
@@ -113,6 +84,11 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
         token(const token& rhs) : type_(rhs.type_), str_(rhs.str_), len_(rhs.len_)
         { }
 
+        inline token_type type() const
+        {
+            return type_;
+        }
+
         inline bool defined() const
         {
             return type_ != token_type::NONE;
@@ -158,7 +134,7 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
     class PCSH_API parser
     {
       public:
-        parser(std::istream& is);
+        parser(std::istream& is, const std::string& filename = "(test)");
 
         ~parser();
 
@@ -178,15 +154,18 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 
         pos_t curr_pos() const;
 
-        ir::tree parse_to_tree(arena& a);
+        ir::tree* parse_to_tree(arena& a);
 
         void sync_stream();
       private:
         class buffered_stream;
 
+        class parser_engine;
+
         buffered_stream* strm_;
         int line_;
         pos_t line_start_;
+        const std::string& filename_;
 
         pos_t find_first_non_whitespace(pos_t start);
         pos_t skip_till_line_end(pos_t p);

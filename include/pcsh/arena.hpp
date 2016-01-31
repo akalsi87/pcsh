@@ -8,6 +8,7 @@
 
 #include "pcsh/exportsym.h"
 
+#include <algorithm>
 #include <new>
 #include <type_traits>
 
@@ -23,6 +24,14 @@ namespace pcsh {
         arena(size_t sz = 1024);
 
         ~arena();
+
+        const char* create_string(const char* str, size_t len)
+        {
+            auto arr = create_array<char>(len + 1);
+            memcpy(arr, str, len);
+            arr[len] = '\0';
+            return arr;
+        }
 
         template <class T, class... Args>
         T* create(Args&&... args)

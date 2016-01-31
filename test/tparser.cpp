@@ -146,7 +146,7 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
     using namespace pcsh::parser;
     std::istringstream is(
         "#/usr/bin/env pcsh\n"
-        "foo = 1; # comment after tokens\n"
+        "foo = 1;## test if double comment works\n"
         "bar = 2;\n"
         "213 + 456123.123;\n"
         "{ a.b }\n");
@@ -255,3 +255,21 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
     TEST_TRUE(curr == is.tellg());
 }
 
+CPP_TEST( irCreationBasic )
+{
+    using pcsh::arena;
+    using namespace pcsh::parser;
+
+    std::istringstream is(
+        "#/usr/bin/env pcsh\n"
+        "foo = 1;## test if double comment works\n"
+        "bar = 2;\n"
+        "#213 + 456123.123; - cannot handle this line yet as it is not a statement\n"
+        "#{ a.b } - cannot handle this line yet as it is unsupported\n");
+
+    {
+        arena a;
+        parser p(is);
+        auto treeptr = p.parse_to_tree(a);
+    }
+}

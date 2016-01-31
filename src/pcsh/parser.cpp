@@ -6,7 +6,11 @@
 #include "pcsh/assert.hpp"
 #include "pcsh/parser.hpp"
 
+#include "ir_nodes.hpp"
+
 #include <cstring>
+#include <string>
+#include <vector>
 
 namespace pcsh {
 namespace parser {
@@ -230,6 +234,32 @@ namespace parser {
 
     }//namespace tokenize
 
+    namespace conversions {
+
+        int to_int(const token& t)
+        {
+            size_t len = t.length();
+            char* s = const_cast<char*>(t.str().ptr);
+            auto oldval = s[len];
+            s[len] = '\0';
+            int i = ::atoi(s);
+            s[len] = oldval;
+            return i;
+        }
+
+        double to_double(const token& t)
+        {
+            size_t len = t.length();
+            char* s = const_cast<char*>(t.str().ptr);
+            auto oldval = s[len];
+            s[len] = '\0';
+            double f = ::atof(s);
+            s[len] = oldval;
+            return f;
+        }
+
+    }//namespace conversions
+
     /// buffered_stream
     class parser::buffered_stream
     {
@@ -312,7 +342,7 @@ namespace parser {
             if ((buffpos_ + n) > buffer_.size()) {
                 buffer_.resize(buffpos_ + n);
             }
-            if (strm_.peek() == EOS) {
+            if (strm_.peek() == EOF) {
                 strm_.clear();
                 return;
             }
@@ -335,7 +365,9 @@ namespace parser {
         }
         char c = strm_->peek_at(p);
 
-        if (is_start_of_number(c, strm_->peek_at(p + 1), strm_->peek_at(p + 2))) {
+        if ( is_digit(c) ||
+            ((is_sign(c) || (c == '.')) && is_digit(strm_->peek_at(p + 1))) ||
+            (is_sign(c) && (strm_->peek_at(p + 1) == '.') && is_digit(strm_->peek_at(p + 2)))) {
             return read_number(p);
         }
 
@@ -371,17 +403,25 @@ namespace parser {
 
     void parser::advance(pos_t len)
     {
+        pos_t p = 0;
+        while (p < len) {
+            char c = strm_->peek_at(p);
+            if (tokenize::is_newline(c)) {
+                if (c == '\r' && strm_->peek_at(p + 1) == '\n') {
+                    ++p;
+                }
+                ++line_;
+                line_start_ = strm_->pos() + p;
+            }
+            ++p;
+        }
         strm_->advance(len);
     }
 
-    ir::tree parser::parse_to_tree(arena& a)
-    {
-        return ir::tree();
-    }
-
-    parser::parser(std::istream& is)
+    parser::parser(std::istream& is, const std::string& filename)
       : strm_(new buffered_stream(is))
-      , line_(0)
+      , filename_(filename)
+      , line_(1)
       , line_start_(0)
     {
     }
@@ -403,13 +443,6 @@ namespace parser {
         while (true) {
             char c = strm_->peek_at(p);
             if (is_whitespace(c)) {
-                if (is_newline(c)) {
-                    if (c == '\r' && strm_->peek_at(p + 1) == '\n') {
-                        ++p;
-                    }
-                    ++line_;
-                    line_start_ = strm_->pos() + p;
-                }
                 ++p;
             } else if (is_comment_char(c)) {
                 ++p;
@@ -485,6 +518,223 @@ namespace parser {
     pos_t parser::curr_pos() const
     {
         return strm_->pos();
+    }
+    
+
+    /// parser_engine
+    class parser::parser_engine
+    {
+      public:
+        parser_engine(parser& p, arena& a) : parser_(p), arena_(a), func_("(main)")
+        { }
+
+        ir::tree* parse()
+        {
+            return arena_.create<ir::tree>(block());
+        }
+      private:
+        parser& parser_;
+        arena&  arena_;
+        std::string func_;
+
+        int quit_with_error(name msg)
+        {
+            const auto& linestr = "line " + std::to_string(parser_.line());
+            return pcsh::assert_fail(msg, parser_.filename_.c_str(), linestr.c_str(), func_.c_str());
+        }
+
+#define ENFORCE(x, msg)                       \
+    do {                                      \
+        !!(x) ? 0 : quit_with_error((msg));   \
+    } while (0)
+
+        ir::node* block()
+        {
+            std::vector<ir::node*> stmts;
+            stmts.reserve(20);
+            if (peek().is_a(token_type::LBRACE)) {
+                advance();
+                do {
+                    stmts.push_back(stmt());
+                } while (!peek().is_a(token_type::RBRACE));
+            } else {
+                do {
+                    stmts.push_back(stmt());
+                } while (!peek().is_a(token_type::EOS));
+            }
+            ir::block* blk = arena_.create<ir::block>();
+            auto beg = stmts.rbegin();
+            const auto end = stmts.rend();
+            for (; beg != end; ++beg) {
+                blk->push_front_statement(*beg, arena_);
+            }
+            return blk;
+        }
+
+        ir::node* stmt()
+        {
+            auto v = var();
+            ENFORCE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
+            advance(); /* consume = */
+            auto e = expr();
+            ENFORCE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
+            advance(); /* consume ; */
+            auto op = arena_.create<ir::assign>();
+            op->set_left(v);
+            op->set_right(e);
+            return op;
+        }
+
+        ir::variable* var()
+        {
+            auto t = peek();
+            ENFORCE(t.is_a(token_type::SYMBOL), "Variable must be a non keyword and alpha-numeric.");
+            name nm = arena_.create_string(t.str().ptr, t.length());
+            advance();
+            return arena_.create<ir::variable>(nm);
+        }
+
+        ir::node* expr()
+        {
+            auto t = peek();
+            if (t.is_a(token_type::LPAREN)) {
+                advance();
+                auto e = expr();
+                ENFORCE(peek().is_a(token_type::RPAREN), "Unmatched '('.");
+                return e;
+            } else if (is_unary_op(t)) {
+                return unop();
+            } else if (is_binary_op(t)) {
+                return binop();
+            } else {
+                return atom();
+            }
+        }
+
+        ir::node* binop()
+        {
+            ir::binary_op* op = nullptr;
+            auto nodea = atom();
+            auto nxt = peek();
+            while (is_binary_op(nxt)) {
+                op = create_binary_op(nxt);
+                advance();
+                op->set_left(nodea);
+                op->set_right(atom());
+                nxt = peek();
+                nodea = op;
+            }
+            return op;
+        }
+
+        ir::node* unop()
+        {
+            auto op = create_unary_op(peek());
+            advance();
+            op->set_operand(atom());
+            return op;
+        }
+
+        ir::node* atom()
+        {
+            auto t = peek();
+            ir::node* v = nullptr;
+            switch (t.type()) {
+                case token_type::SYMBOL:
+                    v = arena_.create<ir::variable>(arena_.create_string(t.str().ptr, t.length()));
+                    break;
+                case token_type::INTEGER:
+                    v = arena_.create<ir::int_constant>(conversions::to_int(t));
+                    break;
+                case token_type::FLOATING:
+                    v = arena_.create<ir::float_constant>(conversions::to_double(t));
+                    break;
+                default:
+                    PCSH_ASSERT_MSG(false, "Invalid atom value!");
+                    break;
+            }
+            advance();
+            return v;
+        }
+
+        // parser manipulation
+
+        token peek()
+        {
+            pos_t ws = 0;
+            auto t = parser_.peek(0, &ws);
+            if (t.is_a(token_type::FAIL)) {
+                // advance ws up to the failure
+                parser_.advance(ws);
+                auto errtok = parser_.peek();
+                PCSH_ASSERT(errtok.is_a(token_type::FAIL));
+                quit_with_error(errtok.str().ptr);
+            }
+            return t;
+        }
+
+        void advance()
+        {
+            pos_t ws = 0;
+            auto t = parser_.peek(ws, &ws);
+            parser_.advance(ws + t.length());
+        }
+
+        bool is_unary_op(const token& t)
+        {
+            return t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS);
+        }
+
+        bool is_binary_op(const token& nxt)
+        {
+            switch (nxt.type()) {
+                case token_type::PLUS:
+                case token_type::MINUS:
+                case token_type::ASTERISK:
+                case token_type::FSLASH:
+                case token_type::ASSIGN:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        ir::binary_op* create_binary_op(const token& nxt)
+        {
+            switch (nxt.type()) {
+                case token_type::PLUS:
+                    return arena_.create<ir::binary_plus>();
+                case token_type::MINUS:
+                    return arena_.create<ir::binary_minus>();
+                case token_type::ASTERISK:
+                    return arena_.create<ir::binary_mult>();
+                case token_type::FSLASH:
+                    return arena_.create<ir::binary_div>();
+                case token_type::ASSIGN:
+                    return arena_.create<ir::assign>();
+                default:
+                    PCSH_ASSERT_MSG(false, "Invalid binary operation!");
+                    return nullptr;
+            }
+        }
+
+        ir::unary_op* create_unary_op(const token& nxt)
+        {
+            switch (nxt.type()) {
+                case token_type::PLUS:
+                    return arena_.create<ir::unary_plus>();
+                case token_type::MINUS:
+                    return arena_.create<ir::unary_minus>();
+                default:
+                    PCSH_ASSERT_MSG(false, "Invalid binary operation!");
+                    return nullptr;
+            }
+        }
+    };
+
+    ir::tree* parser::parse_to_tree(arena& a)
+    {
+        return parser_engine(*this, a).parse();
     }
 
 }// namespace parser

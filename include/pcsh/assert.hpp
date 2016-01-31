@@ -22,6 +22,8 @@ namespace detail {
 #if !defined(FUNCTION_NAME)
 #  if defined(__GNUC__)
 #    define FUNCTION_NAME __PRETTY_FUNCTION__
+#  elif defined(_MSC_VER)
+#   define FUNCTION_NAME __FUNCTION__
 #  elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901)
 #    define FUNCTION_NAME __func__
 #  else

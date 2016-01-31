@@ -27,7 +27,7 @@ set(pcsh_exp_hdr
 
 # internal
 set(pcsh_int_hdr
-#   ${pcsh_inc}/assert.hpp;
+    ${pcsh_inc}/ir_nodes.hpp;
 )
 
 # -- Sources
