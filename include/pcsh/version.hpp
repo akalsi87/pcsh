@@ -10,17 +10,15 @@
 #include "pcsh/exportsym.h"
 
 namespace pcsh {
-namespace version {
 
-    PCSH_API int major();
+    PCSH_API int version_major();
 
-    PCSH_API int minor();
+    PCSH_API int version_minor();
 
-    PCSH_API int patch();
+    PCSH_API int version_patch();
 
-    PCSH_API const char* str();
+    PCSH_API const char* version_str();
 
-}// namespace version
 }// namespace pcsh
 
 #endif/*PCSH_VERSION_HPP*/

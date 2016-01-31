@@ -10,8 +10,8 @@
 
 CPP_TEST( version )
 {
-    TEST_TRUE(pcsh::version::major() == 0);
-    TEST_TRUE(pcsh::version::minor() == 0);
-    TEST_TRUE(pcsh::version::patch() == 1);
-    TEST_TRUE(strcmp(pcsh::version::str(), "0.0.1") == 0);
+    TEST_TRUE(pcsh::version_major() == 0);
+    TEST_TRUE(pcsh::version_minor() == 0);
+    TEST_TRUE(pcsh::version_patch() == 1);
+    TEST_TRUE(strcmp(pcsh::version_str(), "0.0.1") == 0);
 }

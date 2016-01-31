@@ -9,6 +9,7 @@
 #include "pcsh/exportsym.h"
 
 #include <algorithm>
+#include <cstring>
 #include <new>
 #include <type_traits>
 
@@ -25,7 +26,7 @@ namespace pcsh {
 
         ~arena();
 
-        const char* create_string(const char* str, size_t len)
+        inline const char* create_string(const char* str, size_t len)
         {
             auto arr = create_array<char>(len + 1);
             memcpy(arr, str, len);
@@ -34,7 +35,7 @@ namespace pcsh {
         }
 
         template <class T, class... Args>
-        T* create(Args&&... args)
+        inline T* create(Args&&... args)
         {
             static const bool trivialdtor = std::is_trivially_destructible<T>::value;
             void* mem = allocate(sizeof(T), (trivialdtor ? nullptr : &destroyer<T>::act));
@@ -42,7 +43,7 @@ namespace pcsh {
         }
 
         template <class T>
-        T* create_array(size_t n)
+        inline T* create_array(size_t n)
         {
             void* mem = allocate(sizeof(T) * n, nullptr);
             return reinterpret_cast<T*>(mem);

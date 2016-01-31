@@ -417,9 +417,9 @@ namespace parser {
 
     parser::parser(std::istream& is, const std::string& filename)
       : strm_(new buffered_stream(is))
-      , filename_(filename)
       , line_(1)
       , line_start_(0)
+      , filename_(filename)
     {
     }
 
@@ -468,7 +468,6 @@ namespace parser {
     {
         using namespace tokenize;
         auto pstart = p;
-        char c = strm_->peek_at(p);
 
         // find digits end
         auto digend = p;

@@ -17,7 +17,6 @@
 
 #else//UNIX
 
-#define __USE_LARGEFILE64
 #include <unistd.h>
 #include <fcntl.h>
 
