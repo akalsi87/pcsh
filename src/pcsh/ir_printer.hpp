@@ -16,10 +16,11 @@ namespace ir {
     class printer : public node_visitor
     {
       public:
-        printer(ostream& os) : strm_(os)
+        printer(ostream& os) : strm_(os), nesting_(0)
         { }
       private:
         ostream& strm_;
+        int nesting_;
 
         void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;
@@ -32,6 +33,8 @@ namespace ir {
         void visit_impl(const binary_plus* v) override;
         void visit_impl(const assign* v) override;
         void visit_impl(const block* v) override;
+
+        void print_spacing();
     };
 
 }//namespace ir

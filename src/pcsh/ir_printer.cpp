@@ -9,7 +9,15 @@
 namespace pcsh {
 namespace ir {
 
-    static const char* spacing = "\n  ";
+    static const char* spacing = "  ";
+
+    void printer::print_spacing()
+    {
+        strm_ << "\n";
+        for (int i = 0; i != nesting_; ++i) {
+            strm_ << spacing;
+        }
+    }
 
     void printer::visit_impl(const variable* v)
     {
@@ -80,14 +88,23 @@ namespace ir {
         v->left()->accept(this);
         strm_ << " ";
         v->right()->accept(this);
-        strm_ << ")" << spacing;
+        strm_ << ")";
+        print_spacing();
     }
 
     void printer::visit_impl(const block* v)
     {
-        strm_ << "(block) at " << v << spacing;
+        for (int i = 0; i != nesting_; ++i) {
+            strm_ << spacing;
+        }
+        ++nesting_;
+        strm_ << "(block) at " << v;
+        print_spacing();
         visit_block(v);
-        strm_ << "\n";
+        --nesting_;
+        if (nesting_ == 0) {
+            strm_ << "\n";
+        }
     }
 
 }//namespace ir
