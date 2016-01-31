@@ -16,6 +16,8 @@ set(INCLUDE_TEST_IN_BIN FALSE)
 
 # -- Set project name
 project(pcsh)
+set(USE_CPP 1)
+set(USE_CPP11 1)
 
 # -- Include the magic ProjTools
 include("cmake/ProjTools.cmake")
