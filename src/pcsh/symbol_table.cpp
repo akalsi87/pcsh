@@ -26,12 +26,12 @@ namespace detail {
         return std::move(tableptr);
     }
 
-    void insert(ptr tbl, ir::variable* v, ir::node* value)
+    void insert(const ptr& tbl, ir::variable* v, ir::node* value)
     {
         (*tbl)[v] = value;
     }
 
-    ir::node* lookup(ptr tbl, ir::variable* v)
+    ir::node* lookup(const ptr& tbl, ir::variable* v)
     {
         auto it = tbl->find(v);
         if (it == tbl->end()) {

@@ -7,6 +7,7 @@
 #define PCSH_IR_NODES_HPP
 
 #include "pcsh/arena.hpp"
+#include "pcsh/assert.hpp"
 #include "pcsh/ir.hpp"
 
 #include "ir_visitor.hpp"
@@ -23,21 +24,11 @@
 namespace pcsh {
 namespace ir {
 
-    template <class T>
-    class typed_node : public virtual node
-    {
-      private:
-        void accept_impl(node_visitor* v) const
-        {
-            v->visit(static_cast<const T*>(this));
-        }
-    };
-
     //////////////////////////////////////////////////////////////////////////
     /// node types
     //////////////////////////////////////////////////////////////////////////
 
-    class untyped_atom_base : public virtual node
+    class untyped_atom_base : public node
     {
       private:
         node* left_impl() const override
@@ -52,8 +43,13 @@ namespace ir {
     };
 
     template <class T>
-    class atom_base : public typed_node<T>, public untyped_atom_base
+    class atom_base : public untyped_atom_base
     {
+      private:
+        void accept_impl(node_visitor* v) const
+        {
+            v->visit(static_cast<const T*>(this));
+        }
     };
 
     // leaf nodes
@@ -61,15 +57,15 @@ namespace ir {
     class variable : public atom_base<variable>
     {
       public:
-        variable(name nm) : name_(nm)
+        variable(cstring nm) : name_(nm)
         { }
 
-        inline name varname() const
+        inline cstring name() const
         {
             return name_;
         }
       private:
-        name name_;
+        cstring name_;
     };
 
     class int_constant : public atom_base<int_constant>
@@ -103,20 +99,20 @@ namespace ir {
     class string_constant : public atom_base<string_constant>
     {
       public:
-        string_constant(name val) : val_(val)
+        string_constant(cstring val) : val_(val)
         { }
 
-        inline name value() const
+        inline cstring value() const
         {
             return val_;
         }
       private:
-        name val_;
+        cstring val_;
     };
 
     // operations
 
-    class untyped_unary_op_base : public virtual node
+    class untyped_unary_op_base : public node
     {
       public:
         untyped_unary_op_base() : operand_(nullptr)
@@ -146,8 +142,13 @@ namespace ir {
     };
 
     template <class T>
-    class unary_op : public typed_node<T>, public untyped_unary_op_base
+    class unary_op : public untyped_unary_op_base
     {
+      private:
+        void accept_impl(node_visitor* v) const
+        {
+            v->visit(static_cast<const T*>(this));
+        }
     };
 
     class unary_minus : public unary_op<unary_minus>
@@ -156,7 +157,7 @@ namespace ir {
 
     // binary ops
 
-    class untyped_binary_op_base : public virtual node
+    class untyped_binary_op_base : public node
     {
       public:
         untyped_binary_op_base() : left_(nullptr), right_(nullptr)
@@ -172,10 +173,10 @@ namespace ir {
             right_ = n;
         }
 
-      private:
+      protected:
         node* left_;
         node* right_;
-
+      private:
         node* left_impl() const override
         {
             return left_;
@@ -188,8 +189,13 @@ namespace ir {
     };
 
     template <class T>
-    class binary_op : public typed_node<T>, public untyped_binary_op_base
+    class binary_op : public untyped_binary_op_base
     {
+      private:
+        void accept_impl(node_visitor* v) const
+        {
+            v->visit(static_cast<const T*>(this));
+        }
     };
 
     class binary_plus : public binary_op<binary_plus>
@@ -210,6 +216,12 @@ namespace ir {
 
     class assign : public binary_op<assign>
     {
+      public:
+        variable* var() const
+        {
+            PCSH_ASSERT_MSG(dynamic_cast<variable*>(left_) != nullptr, "Assignment node left must be a variable.");
+            return reinterpret_cast<variable*>(left_);
+        }
     };
 
     class block : public atom_base<block>
@@ -224,6 +236,11 @@ namespace ir {
       public:
         block(arena& ar) : arena_(ar), head_(nullptr), symtab_(symbol_table::make_new())
         { }
+
+        inline void insert(ir::variable* v, ir::node* value) const
+        {
+            symbol_table::insert(symtab_, v, value);
+        }
 
         void push_front_statement(node* n)
         {

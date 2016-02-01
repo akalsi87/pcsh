@@ -10,7 +10,7 @@
 
 namespace pcsh {
 
-    typedef const char* name;
+    typedef const char* cstring;
 
     typedef unsigned char byte;
 

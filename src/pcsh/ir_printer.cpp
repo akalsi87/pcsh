@@ -21,7 +21,7 @@ namespace ir {
 
     void printer::visit_impl(const variable* v)
     {
-        strm_ << "<var:" << v->varname() << ">";
+        strm_ << "<var:" << v->name() << ">";
     }
 
     void printer::visit_impl(const int_constant* v)
@@ -85,7 +85,7 @@ namespace ir {
     void printer::visit_impl(const assign* v)
     {
         strm_ << "(assign ";
-        v->left()->accept(this);
+        this->visit(v->var()); //optimize
         strm_ << " ";
         v->right()->accept(this);
         strm_ << ")";

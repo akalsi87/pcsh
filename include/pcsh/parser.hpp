@@ -65,7 +65,7 @@ atom ::= var | NUMBER
 
     struct buff_string
     {
-        name   ptr;
+        cstring ptr;
         size_t len;
 
         inline bool equals(const char* s) const
@@ -113,15 +113,15 @@ atom ::= var | NUMBER
         std::string to_string() const;
 
       private:
-        token(token_type t, name s, size_t l) : type_(t), str_(s), len_(l)
+        token(token_type t, cstring s, size_t l) : type_(t), str_(s), len_(l)
         { }
 
-        static token get(token_type t, name nm = nullptr, size_t len = 0);
+        static token get(token_type t, cstring nm = nullptr, size_t len = 0);
 
         friend class parser;
 
         token_type type_;
-        name str_;
+        cstring str_;
         size_t len_;
     };
 

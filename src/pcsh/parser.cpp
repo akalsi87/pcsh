@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "ir_printer.hpp"
+#include "populate_symbol_table.hpp"
 
 namespace pcsh {
 namespace parser {
@@ -21,7 +21,7 @@ namespace parser {
     /// token
     //////////////////////////////////////////////////////////////////////////
 
-    token token::get(token_type t, name nm, size_t len)
+    token token::get(token_type t, cstring nm, size_t len)
     {
         switch (t) {
             case token_type::ASSIGN:
@@ -530,7 +530,7 @@ namespace parser {
         arena&  arena_;
         std::string func_;
 
-        int quit_with_error(name msg)
+        int quit_with_error(cstring msg)
         {
             pos_t ws = 0;
             parser_.peek(ws, &ws);
@@ -587,7 +587,7 @@ namespace parser {
         {
             auto t = peek();
             ENFORCE(t.is_a(token_type::SYMBOL), "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
-            name nm = arena_.create_string(t.str().ptr, t.length());
+            cstring nm = arena_.create_string(t.str().ptr, t.length());
             advance();
             return arena_.create<ir::variable>(nm);
         }
@@ -729,6 +729,9 @@ namespace parser {
     {
         auto treeptr = ir::tree::create();
         treeptr->set_root(parser_engine(*this, treeptr->get_arena()).parse());
+        // populate symbol tables
+        ir::populate_symbol_table populater;
+        treeptr->accept(&populater);
         return treeptr;
     }
 
