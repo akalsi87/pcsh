@@ -263,9 +263,7 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
 
 CPP_TEST( irCreationBasic )
 {
-    using pcsh::arena;
     using namespace pcsh::parser;
-
     {
         std::istringstream is(
             "#/usr/bin/env pcsh\n"
@@ -285,7 +283,6 @@ CPP_TEST( irCreationBasic )
             "    b = -42;\n"
             "    c = a + b;\n"
             "}\n");
-        arena a;
         parser p(is);
         p.parse_to_tree()->print(std::cout);
     }

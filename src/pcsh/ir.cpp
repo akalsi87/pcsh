@@ -10,9 +10,9 @@
 namespace pcsh {
 namespace ir {
 
-    void tree::print(ostream& os)
+    void tree::print(ostream& os, bool types)
     {
-        printer p(os);
+        printer p(os, types);
         accept(&p);
     }
 

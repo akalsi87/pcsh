@@ -10,8 +10,10 @@
 #include "pcsh/ir.hpp"
 
 #include "ir_nodes_fwd.hpp"
+#include "result_type.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace pcsh {
 namespace symbol_table {
@@ -40,9 +42,25 @@ namespace detail {
 
     ptr make_new();
 
+    struct entry
+    {
+        ir::node* ptr;
+        result_type type;
+    };
+
+    struct name_and_type
+    {
+        cstring name;
+        result_type type;
+    };
+
     void insert(const ptr& tbl, ir::variable* v, ir::node* value);
 
-    ir::node* lookup(const ptr& tbl, ir::variable* v);
+    entry lookup(const ptr& tbl, ir::variable* v);
+
+    void set_var_type(const ptr& tbl, ir::variable* v, result_type ty);
+
+    std::vector<name_and_type> all_entries(const ptr& tbl);
 
 }//namespace symbol_table
 }//namespace pcsh

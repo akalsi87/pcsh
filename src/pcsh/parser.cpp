@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "populate_symbol_table.hpp"
+#include "tree_validation.hpp"
 
 namespace pcsh {
 namespace parser {
@@ -729,9 +729,7 @@ namespace parser {
     {
         auto treeptr = ir::tree::create();
         treeptr->set_root(parser_engine(*this, treeptr->get_arena()).parse());
-        // populate symbol tables
-        ir::populate_symbol_table populater;
-        treeptr->accept(&populater);
+        validate_tree(treeptr);
         return treeptr;
     }
 

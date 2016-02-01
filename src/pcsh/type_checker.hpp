@@ -1,29 +1,40 @@
 /**
- * \file ir_printer.hpp
+ * \file type_checker.hpp
  * \date Jan 31, 2016
  */
 
-#ifndef PCSH_IR_PRINTER_HPP
-#define PCSH_IR_PRINTER_HPP
-
-#include "pcsh/ostream.hpp"
+#ifndef PCSH_TYPE_CHECKER_HPP
+#define PCSH_TYPE_CHECKER_HPP
 
 #include "ir_visitor.hpp"
+
+#include "result_type.hpp"
 
 namespace pcsh {
 namespace ir {
 
-    class printer : public node_visitor
+    struct type_checker_error
+    {
+        std::string msg;
+        result_type left;
+        result_type right;
+
+        type_checker_error(const std::string& m, result_type a, result_type b)
+          : msg(m)
+          , left(a)
+          , right(b)
+        { }
+    };
+
+    class type_checker : public node_visitor
     {
       public:
-        printer(ostream& os, bool types) : strm_(os), nesting_(0), types_(types)
+        type_checker() : curr_(result_type::UNDETERMINED), curr_blk_(nullptr)
         { }
       private:
-        ostream& strm_;
-        int nesting_;
-        bool types_;
+        result_type curr_;
+        const block* curr_blk_;
 
-        void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;
         void visit_impl(const float_constant* v) override;
         void visit_impl(const string_constant* v) override;
@@ -34,12 +45,9 @@ namespace ir {
         void visit_impl(const binary_plus* v) override;
         void visit_impl(const assign* v) override;
         void visit_impl(const block* v) override;
-
-        void print_spacing_newline();
-        void print_spacing();
     };
 
 }//namespace ir
 }//namespace pcsh
 
-#endif/*PCSH_IR_PRINTER_HPP*/
+#endif/*PCSH_TYPE_CHECKER_HPP*/

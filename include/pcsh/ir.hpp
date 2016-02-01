@@ -89,7 +89,7 @@ namespace ir {
             root_ = p;
         }
 
-        void print(ostream& os);
+        void print(ostream& os, bool vartypes = true);
       private:
         node* root_;
         arena* arena_;

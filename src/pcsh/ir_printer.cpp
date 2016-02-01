@@ -13,10 +13,15 @@ namespace ir {
 
     void printer::print_spacing()
     {
-        strm_ << "\n";
         for (int i = 0; i != nesting_; ++i) {
             strm_ << spacing;
         }
+    }
+
+    void printer::print_spacing_newline()
+    {
+        strm_ << "\n";
+        print_spacing();
     }
 
     void printer::visit_impl(const variable* v)
@@ -89,7 +94,7 @@ namespace ir {
         strm_ << " ";
         v->right()->accept(this);
         strm_ << ")";
-        print_spacing();
+        print_spacing_newline();
     }
 
     void printer::visit_impl(const block* v)
@@ -97,11 +102,28 @@ namespace ir {
         for (int i = 0; i != nesting_; ++i) {
             strm_ << spacing;
         }
-        ++nesting_;
-        strm_ << "(block) at " << v;
-        print_spacing();
-        visit_block(v);
-        --nesting_;
+        {
+            ++nesting_;
+            strm_ << "(block) at " << v;
+            print_spacing_newline();
+            if (types_) {
+                const auto& tbl = v->table();
+                {
+                    --nesting_;
+                    print_spacing();
+                    ++nesting_;
+                }
+                strm_ << "SYMTAB = { ";
+                auto ntvec = symbol_table::all_entries(tbl);
+                for (const auto& el : ntvec) {
+                    strm_ << "<" << el.name << ":" << to_string(el.type) << "> ";
+                }
+                strm_ << "}";
+                print_spacing_newline();
+            }
+            visit_block(v);
+            --nesting_;
+        }
         if (nesting_ == 0) {
             strm_ << "\n";
         }

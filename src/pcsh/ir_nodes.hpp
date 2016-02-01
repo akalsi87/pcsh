@@ -242,6 +242,11 @@ namespace ir {
             symbol_table::insert(symtab_, v, value);
         }
 
+        inline const symbol_table::ptr& table() const
+        {
+            return symtab_;
+        }
+
         void push_front_statement(node* n)
         {
             auto newstmt = arena_.create<list_node>();

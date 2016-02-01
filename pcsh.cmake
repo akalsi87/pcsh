@@ -34,7 +34,10 @@ set(pcsh_int_hdr
     ${pcsh_src}/ir_printer.hpp;
     ${pcsh_src}/ir_visitor.hpp;
     ${pcsh_src}/populate_symbol_table.hpp;
+    ${pcsh_src}/result_type.hpp;
     ${pcsh_src}/symbol_table.hpp;
+    ${pcsh_src}/tree_validation.hpp;
+    ${pcsh_src}/type_checker.hpp;
 )
 
 # -- Sources
@@ -47,6 +50,8 @@ set(pcsh_src
     ${pcsh_src}/parser.cpp;
     ${pcsh_src}/populate_symbol_table.cpp;
     ${pcsh_src}/symbol_table.cpp;
+    ${pcsh_src}/tree_validation.cpp;
+    ${pcsh_src}/type_checker.cpp;
     ${pcsh_src}/version.cpp;
 )
 
@@ -60,6 +65,14 @@ add_comp_def(pcsh PCSH_PAT=${pcsh_pat_ver})
 link_libs(pcsh )
 set_tgt_ver(pcsh ${pcsh_lib_ver} ${pcsh_lib_compat_ver})
 
+# --- text executable
+add_exe(pcshell src/main.cpp)
+link_libs(pcshell pcsh)
+
+# add fake dependency of check on pcshell so we enforce its build
+add_dependencies(check pcshell)
+
 # -- Install!
 install_hdr(${pcsh_exp_hdr})
 install_tgt(pcsh)
+install_tgt(pcshell)
