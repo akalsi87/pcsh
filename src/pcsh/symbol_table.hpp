@@ -42,6 +42,8 @@ namespace detail {
 
     ptr make_new();
 
+    void copy_into(const ptr& psrc, const ptr& pdst);
+
     struct entry
     {
         ir::node* ptr;
@@ -54,11 +56,11 @@ namespace detail {
         result_type type;
     };
 
-    void insert(const ptr& tbl, ir::variable* v, ir::node* value);
+    void set(const ptr& tbl, const ir::variable* v, ir::node* value);
 
-    entry lookup(const ptr& tbl, ir::variable* v);
+    entry lookup(const ptr& tbl, const ir::variable* v);
 
-    void set_var_type(const ptr& tbl, ir::variable* v, result_type ty);
+    void set_var_type(const ptr& tbl, const ir::variable* v, result_type ty);
 
     std::vector<name_and_type> all_entries(const ptr& tbl);
 

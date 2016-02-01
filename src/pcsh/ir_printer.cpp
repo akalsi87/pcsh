@@ -106,27 +106,31 @@ namespace ir {
             ++nesting_;
             strm_ << "(block) at " << v;
             print_spacing_newline();
-            if (types_) {
-                const auto& tbl = v->table();
-                {
-                    --nesting_;
-                    print_spacing();
-                    ++nesting_;
-                }
-                strm_ << "SYMTAB = { ";
-                auto ntvec = symbol_table::all_entries(tbl);
-                for (const auto& el : ntvec) {
-                    strm_ << "<" << el.name << ":" << to_string(el.type) << "> ";
-                }
-                strm_ << "}";
-                print_spacing_newline();
-            }
+            print_types(v);
             visit_block(v);
             --nesting_;
         }
         if (nesting_ == 0) {
             strm_ << "\n";
         }
+    }
+
+    void printer::print_types(const block* v)
+    {
+        if (!types_) { return; }
+        const auto& tbl = v->table();
+        {
+            --nesting_;
+            print_spacing();
+            ++nesting_;
+        }
+        strm_ << "typemap = { ";
+        auto ntvec = symbol_table::all_entries(tbl);
+        for (const auto& el : ntvec) {
+            strm_ << "<" << el.name << ":" << to_string(el.type) << "> ";
+        }
+        strm_ << "}";
+        print_spacing_newline();
     }
 
 }//namespace ir

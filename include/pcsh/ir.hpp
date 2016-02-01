@@ -90,6 +90,8 @@ namespace ir {
         }
 
         void print(ostream& os, bool vartypes = true);
+
+        ptr evaluate() const;
       private:
         node* root_;
         arena* arena_;

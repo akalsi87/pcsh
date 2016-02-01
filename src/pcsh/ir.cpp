@@ -6,6 +6,7 @@
 #include "pcsh/ir.hpp"
 
 #include "ir_printer.hpp"
+#include "ir_evaluator.hpp"
 
 namespace pcsh {
 namespace ir {
@@ -14,6 +15,13 @@ namespace ir {
     {
         printer p(os, types);
         accept(&p);
+    }
+
+    tree::ptr tree::evaluate() const
+    {
+        evaluator e;
+        accept(&e);
+        return std::move(e.evaluated_tree());
     }
 
 }// namespace ir

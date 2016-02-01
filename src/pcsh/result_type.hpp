@@ -24,15 +24,15 @@ namespace pcsh {
     {
         switch (t) {
             case pcsh::result_type::BOOLEAN:
-                return "BOOL";
+                return "boolean";
             case pcsh::result_type::INTEGER:
-                return "INT";
+                return "int";
             case pcsh::result_type::FLOATING:
-                return "DOUBLE";
+                return "double";
             case pcsh::result_type::STRING:
-                return "STRING";
+                return "string";
             case pcsh::result_type::UNDETERMINED:
-                return "UNDETERMINED";
+                return "unknown";
             case pcsh::result_type::FAILED:
                 return "FAILED";
             default:

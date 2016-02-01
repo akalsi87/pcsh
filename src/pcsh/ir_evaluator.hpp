@@ -1,27 +1,32 @@
 /**
- * \file ir_printer.hpp
+ * \file ir_evaluator.hpp
  * \date Jan 31, 2016
  */
 
-#ifndef PCSH_IR_PRINTER_HPP
-#define PCSH_IR_PRINTER_HPP
-
-#include "pcsh/ostream.hpp"
+#ifndef PCSH_IR_EVALUATOR_HPP
+#define PCSH_IR_EVALUATOR_HPP
 
 #include "ir_visitor.hpp"
+
+#include <vector>
 
 namespace pcsh {
 namespace ir {
 
-    class printer : public node_visitor
+    class evaluator : public node_visitor
     {
       public:
-        printer(ostream& os, bool types) : strm_(os), nesting_(0), types_(types)
+        evaluator::evaluator() : curr_(nullptr), curr_visitor_(nullptr), tree_(tree::create()), out_stmts_(), root_(nullptr)
         { }
+
+        tree::ptr evaluated_tree();
       private:
-        ostream& strm_;
-        int nesting_;
-        bool types_;
+        const block* curr_;
+        node_visitor* curr_visitor_;
+
+        tree::ptr tree_;
+        std::vector<node*> out_stmts_;
+        block* root_;
 
         void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;
@@ -43,4 +48,4 @@ namespace ir {
 }//namespace ir
 }//namespace pcsh
 
-#endif/*PCSH_IR_PRINTER_HPP*/
+#endif/*PCSH_IR_EVALUATOR_HPP*/

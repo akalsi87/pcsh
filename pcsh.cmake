@@ -29,6 +29,7 @@ set(pcsh_exp_hdr
 
 # internal
 set(pcsh_int_hdr
+    ${pcsh_src}/ir_evaluator.hpp;
     ${pcsh_src}/ir_nodes.hpp;
     ${pcsh_src}/ir_nodes_fwd.hpp;
     ${pcsh_src}/ir_printer.hpp;
@@ -45,6 +46,7 @@ set(pcsh_src
     ${pcsh_src}/assert.cpp;
     ${pcsh_src}/arena.cpp;
     ${pcsh_src}/ir.cpp;
+    ${pcsh_src}/ir_evaluator.cpp;
     ${pcsh_src}/ir_printer.cpp;
     ${pcsh_src}/ir_visitor.cpp;
     ${pcsh_src}/parser.cpp;

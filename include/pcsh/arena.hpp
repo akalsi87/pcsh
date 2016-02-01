@@ -26,10 +26,15 @@ namespace pcsh {
 
         ~arena();
 
+        inline const char* create_string(const char* str)
+        {
+            return create_string(str, ::strlen(str));
+        }
+
         inline const char* create_string(const char* str, size_t len)
         {
             auto arr = create_array<char>(len + 1);
-            memcpy(arr, str, len);
+            ::memcpy(arr, str, len);
             arr[len] = '\0';
             return arr;
         }

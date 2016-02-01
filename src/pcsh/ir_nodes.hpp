@@ -239,7 +239,7 @@ namespace ir {
 
         inline void insert(ir::variable* v, ir::node* value) const
         {
-            symbol_table::insert(symtab_, v, value);
+            symbol_table::set(symtab_, v, value);
         }
 
         inline const symbol_table::ptr& table() const
@@ -257,6 +257,11 @@ namespace ir {
         list_node* head() const
         {
             return head_;
+        }
+
+        arena& get_arena() const
+        {
+            return arena_;
         }
 
       private:

@@ -38,26 +38,33 @@ namespace detail {
 #define __STRINGIFY_2(x) #x
 #define STRINGIFY(x) __STRINGIFY_2(x)
 
-#if !defined(NDEBUG)//debug enabled
-
-#define PCSH_ASSERT(x)                                                                        \
+#define PCSH_CRIT_ASSERT(x)                                                                   \
     do {                                                                                      \
         (!!(x)) ? 0 : pcsh::assert_fail(#x, __FILE__, STRINGIFY(__LINE__), FUNCTION_NAME);    \
     } while (0)
 
-#define PCSH_ASSERT_MSG(x, msg)                                                               \
+#define PCSH_CRIT_ASSERT_MSG(x, msg)                                                          \
     do {                                                                                      \
         (!!(x)) ? 0 : pcsh::assert_fail((msg), __FILE__, STRINGIFY(__LINE__), FUNCTION_NAME); \
     } while (0)
 
+#if !defined(NDEBUG)//debug enabled
+
+#define PCSH_DEBUG(x) x
+
+#define PCSH_ASSERT PCSH_CRIT_ASSERT
+
+#define PCSH_ASSERT_MSG PCSH_CRIT_ASSERT_MSG
+
 #else//no debugging
+
+#define PCSH_DEBUG(x)
 
 #define PCSH_ASSERT(x)                                                                        \
     static_cast<void>(0)
 
 #define PCSH_ASSERT_MSG(x, msg)                                                               \
     static_cast<void>(0)
-
 
 #endif//!defined(NDEBUG)
 
