@@ -100,10 +100,11 @@ namespace pcsh {
     segment* new_segment(size_t sz)
     {
         static const size_t ALIGN = 15;
+        // align to nearest multiple of 16
+        sz = (sz + ALIGN) & ~ALIGN;
         sz += sizeof(segment);
-        const size_t req = (sz + ALIGN) & ~ALIGN;
-        void* mem = call_malloc(req);
-        return new (mem) segment(req - sizeof(segment));
+        void* mem = call_malloc(sz + sizeof(segment));
+        return new (mem) segment(sz);
     }
 
     void destroy_segments(segment* seg)
@@ -120,11 +121,11 @@ namespace pcsh {
     {
         header* h = nullptr;
         if (ptr) {
-            dtor_header* hdr = new (seg->end()) dtor_header(sz);
+            dtor_header* hdr = new (seg->end()) dtor_header(sz - sizeof(dtor_header));
             hdr->ptr = ptr;
             h = hdr;
         } else {
-            header* hdr = new (seg->end()) header(sz);
+            header* hdr = new (seg->end()) header(sz - sizeof(header));
             h = hdr;
         }
         seg->curr = reinterpret_cast<char*>(h->next());
@@ -153,7 +154,7 @@ namespace pcsh {
             if (seg_->left > sz) {
                 return allocate_from_seg(seg_, sz, fptr);
             } else {
-                size_t segsz = std::max(sz + sizeof(header) + (fptr ? sizeof(void*) : 0), minsz_);
+                size_t segsz = std::max(sz, minsz_);
                 segment* s = new_segment(segsz);
                 s->fwd = seg_;
                 seg_ = s;
@@ -173,8 +174,8 @@ namespace pcsh {
 
     void* arena::allocate(size_t sz, arena::destroyfn fn)
     {
-        sz = (sz + 3) & ~size_t(3);
-        size_t szneeded = sz + (fn ? sizeof(void*) : 0);
+        sz = (sz + 7) & ~size_t(7); // align upto 8
+        size_t szneeded = sz + sizeof(header) + (fn ? sizeof(void*) : 0);
         return impl_->allocate(szneeded, (void*)fn);
     }
 
