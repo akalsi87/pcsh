@@ -130,9 +130,11 @@ namespace ir {
 
     void evaluator::visit_impl(const assign* v)
     {
-        arena& ar = curr_->get_arena();
+        arena& ar = *ar_;
         const auto& ptab = curr_->table();
+
         result_type outty = symbol_table::lookup(ptab, v->var()).type;
+
         switch (outty) {
             case result_type::INTEGER:
                 curr_visitor_ = new typed_evaluate<int>(ptab);
@@ -153,9 +155,6 @@ namespace ir {
             int    intval;
         } uval;
 
-        auto varname = ar.create_string(v->var()->name());
-        auto var = ar.create<variable>(varname);
-        auto asgn = ar.create<assign>();
         node* newvalue = nullptr;
 
         switch (outty) {
@@ -172,55 +171,30 @@ namespace ir {
                 break;
         }
 
-        asgn->set_left(var);
-        asgn->set_right(newvalue);
+        symbol_table::set(ptab, v->var(), newvalue, outty);
 
         delete curr_visitor_;
         curr_visitor_ = nullptr;
-
-        out_stmts_.push_back(asgn);
     }
 
     void evaluator::visit_impl(const block* v)
     {
         auto oldblk = curr_;
         auto oldvis = curr_visitor_;
-        auto oldstmts = out_stmts_;
-        auto oldroot = root_;
+
+        if (!ar_) {
+            ar_ = &(v->get_arena());
+        }
 
         {// visit this block
-            arena& ar = tree_->get_arena();
-
             curr_ = v;
             curr_visitor_ = nullptr;
-            out_stmts_.clear();
-            root_ = ar.create<block>(ar);
-            symbol_table::copy_into(v->table(), root_->table());
 
             visit_block(v);
-
-            {// make a block out of all statements
-                auto beg = out_stmts_.rbegin();
-                const auto end = out_stmts_.rend();
-                for (; beg != end; ++beg) {
-                    root_->push_front_statement(*beg);
-                }
-            }
         }
 
         curr_ = oldblk;
         curr_visitor_ = oldvis;
-        out_stmts_ = std::move(oldstmts);
-        if (oldroot) {
-            oldroot->push_front_statement(root_);
-            root_ = oldroot;
-        }
-    }
-
-    tree::ptr evaluator::evaluated_tree()
-    {
-        tree_->set_root(root_);
-        return std::move(tree_);
     }
 
 }//namespace ir

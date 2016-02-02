@@ -33,10 +33,12 @@ set(pcsh_int_hdr
     ${pcsh_src}/ir_nodes.hpp;
     ${pcsh_src}/ir_nodes_fwd.hpp;
     ${pcsh_src}/ir_printer.hpp;
+    ${pcsh_src}/ir_variable_printer.hpp;
     ${pcsh_src}/ir_visitor.hpp;
     ${pcsh_src}/populate_symbol_table.hpp;
     ${pcsh_src}/result_type.hpp;
     ${pcsh_src}/symbol_table.hpp;
+    ${pcsh_src}/tree_cloner.hpp;
     ${pcsh_src}/tree_validation.hpp;
     ${pcsh_src}/type_checker.hpp;
 )
@@ -48,10 +50,12 @@ set(pcsh_src
     ${pcsh_src}/ir.cpp;
     ${pcsh_src}/ir_evaluator.cpp;
     ${pcsh_src}/ir_printer.cpp;
+    ${pcsh_src}/ir_variable_printer.cpp;
     ${pcsh_src}/ir_visitor.cpp;
     ${pcsh_src}/parser.cpp;
     ${pcsh_src}/populate_symbol_table.cpp;
     ${pcsh_src}/symbol_table.cpp;
+    ${pcsh_src}/tree_cloner.cpp;
     ${pcsh_src}/tree_validation.cpp;
     ${pcsh_src}/type_checker.cpp;
     ${pcsh_src}/version.cpp;

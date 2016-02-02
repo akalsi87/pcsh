@@ -89,9 +89,13 @@ namespace ir {
             root_ = p;
         }
 
-        void print(ostream& os, bool vartypes = true);
+        void print(ostream& os, bool vartypes = true) const;
 
-        ptr evaluate() const;
+        void print_variables(ostream& os) const;
+
+        ptr clone() const;
+
+        const tree& evaluate() const;
       private:
         node* root_;
         arena* arena_;

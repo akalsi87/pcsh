@@ -13,9 +13,9 @@
 namespace pcsh {
 namespace symbol_table {
 
-    struct variable_hash
+    struct variable_name_hash
     {
-        size_t operator()(const ir::variable* v) const
+        inline size_t operator()(const ir::variable* v) const
         {
             auto s = v->name();
             size_t hash = 0;
@@ -26,15 +26,16 @@ namespace symbol_table {
         }
     };
 
-    struct variable_comp
+    struct variable_name_comp
     {
-        bool operator()(const ir::variable* v1, const ir::variable* v2) const
+        inline bool operator()(const ir::variable* v1, const ir::variable* v2) const
         {
             return ::strcmp(v1->name(), v2->name()) == 0;
         }
     };
 
-    class table_impl : public std::unordered_map<const ir::variable*, entry, variable_hash, variable_comp>
+    class table_impl
+        : public std::unordered_map<const ir::variable*, entry, variable_name_hash, variable_name_comp>
     { };
 
 namespace detail {
@@ -50,9 +51,9 @@ namespace detail {
         return std::move(tableptr);
     }
 
-    void set(const ptr& tbl, const ir::variable* v, ir::node* value)
+    void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty)
     {
-        (*tbl)[v] = { value, result_type::UNDETERMINED };
+        (*tbl)[v] = { value, ty };
     }
 
     entry lookup(const ptr& tbl, const ir::variable* v)

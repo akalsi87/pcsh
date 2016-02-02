@@ -102,6 +102,7 @@ namespace ir {
         for (int i = 0; i != nesting_; ++i) {
             strm_ << spacing;
         }
+
         {
             ++nesting_;
             strm_ << "(block) at " << v;
@@ -110,6 +111,7 @@ namespace ir {
             visit_block(v);
             --nesting_;
         }
+
         if (nesting_ == 0) {
             strm_ << "\n";
         }

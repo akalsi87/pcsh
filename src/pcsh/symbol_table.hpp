@@ -56,7 +56,7 @@ namespace detail {
         result_type type;
     };
 
-    void set(const ptr& tbl, const ir::variable* v, ir::node* value);
+    void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED);
 
     entry lookup(const ptr& tbl, const ir::variable* v);
 

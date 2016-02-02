@@ -13,6 +13,7 @@ int main(int argc, const char* argv[])
     auto t1 = parser(in).parse_to_tree();
     t1->print(out);
     out << "\n --- Evaluation --- \n";
-    t1->evaluate()->print(out, false);
+    // t1->clone()->print(out);
+    t1->evaluate().print_variables(out);
     return 0;
 }

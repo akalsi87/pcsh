@@ -64,6 +64,11 @@ namespace ir {
         {
             return name_;
         }
+
+        inline void set_name(cstring n)
+        {
+            name_ = n;
+        }
       private:
         cstring name_;
     };
