@@ -27,10 +27,10 @@ namespace ir {
                     return res;
                 }
             }
-            return { nullptr, result_type::UNDETERMINED };
+            return { nullptr, result_type::UNDETERMINED, false };
         }
 
-        void set(const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED) const
+        void set(const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED, bool eval = false) const
         {
             auto it = list_.rbegin();
             auto end = list_.rend();
@@ -38,7 +38,7 @@ namespace ir {
                 const auto& tblptr = *it;
                 auto res = symbol_table::lookup(*tblptr, v);
                 if (res.ptr) {
-                    symbol_table::set(*tblptr, v, value, ty);
+                    symbol_table::set(*tblptr, v, value, ty, eval);
                     return;
                 }
             }
@@ -65,7 +65,7 @@ namespace ir {
         void visit_impl(const variable* v) override
         {
             auto res = accessor_.lookup(v);
-            if (res.ptr) {
+            if (res.evaluated) {
                 res.ptr->accept(this);
                 return;
             }
@@ -174,9 +174,10 @@ namespace ir {
     void evaluator::visit_impl(const assign* v)
     {
         arena& ar = *ar_;
-        const auto& ptab = curr_->table();
 
-        const auto& ent = symbol_table::lookup(ptab, v->var());
+        variable_accessor acc(nested_tables_);
+
+        const auto& ent = acc.lookup(v->var());
         result_type outty = ent.type;
 
         switch (outty) {
@@ -221,9 +222,7 @@ namespace ir {
                 break;
         }
 
-        if ((newvalue != ent.ptr) || (outty != ent.type)) {
-            symbol_table::set(ptab, v->var(), newvalue, outty);
-        }
+        acc.set(v->var(), newvalue, outty, true);
 
         delete curr_visitor_;
         curr_visitor_ = nullptr;

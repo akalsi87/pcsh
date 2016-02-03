@@ -48,6 +48,7 @@ namespace detail {
     {
         ir::node* ptr;
         result_type type;
+        bool evaluated;
     };
 
     struct name_and_type
@@ -56,7 +57,7 @@ namespace detail {
         result_type type;
     };
 
-    void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED);
+    void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED, bool eval = false);
 
     entry lookup(const ptr& tbl, const ir::variable* v);
 

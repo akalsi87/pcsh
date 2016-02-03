@@ -121,11 +121,6 @@ namespace ir {
     {
         if (!types_) { return; }
         const auto& tbl = v->table();
-        //        {
-        //            --nesting_;
-        //            print_spacing();
-        //            ++nesting_;
-        //        }
         strm_ << "typemap = { ";
         auto ntvec = symbol_table::all_entries(tbl);
         for (const auto& el : ntvec) {

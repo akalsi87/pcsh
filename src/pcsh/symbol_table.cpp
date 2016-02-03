@@ -51,16 +51,16 @@ namespace detail {
         return std::move(tableptr);
     }
 
-    void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty)
+    void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty, bool eval)
     {
-        (*tbl)[v] = { value, ty };
+        (*tbl)[v] = { value, ty, eval };
     }
 
     entry lookup(const ptr& tbl, const ir::variable* v)
     {
         auto it = tbl->find(v);
         if (it == tbl->end()) {
-            return { nullptr, result_type::UNDETERMINED };
+            return { nullptr, result_type::UNDETERMINED, false };
         } else {
             return it->second;
         }
