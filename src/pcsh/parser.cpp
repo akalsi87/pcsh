@@ -608,16 +608,29 @@ namespace parser {
         {
             std::vector<ir::node*> stmts;
             stmts.reserve(20);
-            if (peek().is_a(token_type::LBRACE)) {
-                advance();
-                do {
-                    stmts.push_back(stmt());
-                } while (!peek().is_a(token_type::RBRACE));
-            } else {
-                do {
-                    stmts.push_back(stmt());
-                } while (!peek().is_a(token_type::EOS));
+
+            bool inblock = true;
+
+            while (inblock) {
+                const auto& t = peek();
+                switch (t.type()) {
+                    case token_type::LBRACE:
+                        advance();
+                        stmts.push_back(block());
+                        break;
+                    case token_type::RBRACE:
+                        advance();
+                        inblock = false;
+                        break;
+                    case token_type::EOS:
+                        inblock = false;
+                        break;
+                    default:
+                        stmts.push_back(stmt());
+                        break;
+                }
             }
+
             ir::block* blk = arena_.create<ir::block>(arena_);
             auto beg = stmts.rbegin();
             const auto end = stmts.rend();
@@ -658,13 +671,19 @@ namespace parser {
                 auto e = expr();
                 ENFORCE(peek().is_a(token_type::RPAREN), "Unmatched '('.");
                 return e;
-            } else if (is_unary_op(t)) {
-                return unop();
+            }
+
+            ir::node* a = nullptr;
+
+            if (is_unary_op(t)) {
+                a = unop();
             } else {
-                auto a = atom();
-                if (is_binary_op(peek())) {
-                    return binop(a);
-                }
+                a = atom();
+            }
+
+            if (is_binary_op(peek())) {
+                return binop(a);
+            } else {
                 return a;
             }
         }

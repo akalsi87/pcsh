@@ -7,8 +7,9 @@
 #define PCSH_IR_EVALUATOR_HPP
 
 #include "ir_visitor.hpp"
+#include "symbol_table.hpp"
 
-#include <vector>
+#include <list>
 
 namespace pcsh {
 namespace ir {
@@ -16,12 +17,20 @@ namespace ir {
     class evaluator : public node_visitor
     {
       public:
-        evaluator::evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr)
+        evaluator::evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_()
         { }
       private:
         const block* curr_;
         node_visitor* curr_visitor_;
         arena* ar_;
+
+        typedef std::list<const symbol_table::ptr*> sym_table_list;
+        sym_table_list nested_tables_;
+
+        class variable_accessor;
+
+        template <class T>
+        class typed_evaluate;
 
         void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;

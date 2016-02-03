@@ -10,11 +10,48 @@
 namespace pcsh {
 namespace ir {
 
-    template <class T>
-    class typed_evaluate : public node_visitor
+    class evaluator::variable_accessor
     {
       public:
-        typed_evaluate(const symbol_table::ptr& p) : ptab_(p), value_()
+        variable_accessor(const sym_table_list& l) : list_(l)
+        { }
+
+        symbol_table::entry lookup(const ir::variable* v) const
+        {
+            auto it = list_.rbegin();
+            auto end = list_.rend();
+            for (; it != end; ++it) {
+                const auto& tblptr = *it;
+                auto res = symbol_table::lookup(*tblptr, v);
+                if (res.ptr) {
+                    return res;
+                }
+            }
+            return { nullptr, result_type::UNDETERMINED };
+        }
+
+        void set(const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED) const
+        {
+            auto it = list_.rbegin();
+            auto end = list_.rend();
+            for (; it != end; ++it) {
+                const auto& tblptr = *it;
+                auto res = symbol_table::lookup(*tblptr, v);
+                if (res.ptr) {
+                    symbol_table::set(*tblptr, v, value, ty);
+                    return;
+                }
+            }
+        }
+      private:
+        const sym_table_list& list_;
+    };
+
+    template <class T>
+    class evaluator::typed_evaluate : public node_visitor
+    {
+      public:
+        typed_evaluate(const sym_table_list& p) : accessor_(p), value_()
         { }
 
         T value() const
@@ -22,12 +59,12 @@ namespace ir {
             return value_;
         }
       private:
-        const symbol_table::ptr& ptab_;
+        evaluator::variable_accessor accessor_;
         T value_;
 
         void visit_impl(const variable* v) override
         {
-            symbol_table::lookup(ptab_, v).ptr->accept(this);
+            accessor_.lookup(v).ptr->accept(this);
         }
 
         void visit_impl(const int_constant* v) override
@@ -139,10 +176,10 @@ namespace ir {
         switch (outty) {
             case result_type::STRING:
             case result_type::INTEGER:
-                curr_visitor_ = new typed_evaluate<int>(ptab);
+                curr_visitor_ = new typed_evaluate<int>(nested_tables_);
                 break;
             case result_type::FLOATING:
-                curr_visitor_ = new typed_evaluate<double>(ptab);
+                curr_visitor_ = new typed_evaluate<double>(nested_tables_);
                 break;
             default:
                 PCSH_CRIT_ASSERT_MSG(false, "Incomplete implementation for evaluate!");
@@ -196,8 +233,11 @@ namespace ir {
         {// visit this block
             curr_ = v;
             curr_visitor_ = nullptr;
+            nested_tables_.push_back(&(v->table()));
 
             visit_block(v);
+
+            nested_tables_.pop_back();
         }
 
         curr_ = oldblk;

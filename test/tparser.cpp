@@ -286,4 +286,24 @@ CPP_TEST( irCreationBasic )
         parser p(is);
         p.parse_to_tree()->print(std::cout);
     }
+    {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            ""
+            "    foo = 1;\n"
+            "    doo = -1.0 + foo;\n"
+            "");
+        parser p(is);
+        p.parse_to_tree()->print(std::cout);
+    }
+    {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            "foo = 1;\n"
+            "{\n"
+            "    doo = -1.0 + foo;\n"
+            "}");
+        parser p(is);
+        p.parse_to_tree()->print(std::cout);
+    }
 }

@@ -63,22 +63,23 @@ set(pcsh_src
 
 # -- Targets
 # --- shared
-add_lib(pcsh SHARED ${pcsh_src} ${pcsh_int_hdr} ${pcsh_exp_hdr})
-add_lib_build_def(pcsh include/pcsh/exportsym.h PCSH)
-add_comp_def(pcsh PCSH_MAJ=${pcsh_maj_ver})
-add_comp_def(pcsh PCSH_MIN=${pcsh_min_ver})
-add_comp_def(pcsh PCSH_PAT=${pcsh_pat_ver})
-link_libs(pcsh )
-set_tgt_ver(pcsh ${pcsh_lib_ver} ${pcsh_lib_compat_ver})
+add_lib(libpcsh SHARED ${pcsh_src} ${pcsh_int_hdr} ${pcsh_exp_hdr})
+add_lib_build_def(libpcsh include/pcsh/exportsym.h PCSH)
+add_comp_def(libpcsh PCSH_MAJ=${pcsh_maj_ver})
+add_comp_def(libpcsh PCSH_MIN=${pcsh_min_ver})
+add_comp_def(libpcsh PCSH_PAT=${pcsh_pat_ver})
+link_libs(libpcsh )
+set_tgt_ver(libpcsh ${pcsh_lib_ver} ${pcsh_lib_compat_ver})
+set_target_properties(libpcsh PROPERTIES OUTPUT_NAME libpcsh)
 
 # --- text executable
-add_exe(pcshell src/main.cpp)
-link_libs(pcshell pcsh)
+add_exe(pcsh src/main.cpp)
+link_libs(pcsh libpcsh)
 
 # add fake dependency of check on pcshell so we enforce its build
-add_dependencies(check pcshell)
+add_dependencies(check pcsh)
 
 # -- Install!
 install_hdr(${pcsh_exp_hdr})
+install_tgt(libpcsh)
 install_tgt(pcsh)
-install_tgt(pcshell)
