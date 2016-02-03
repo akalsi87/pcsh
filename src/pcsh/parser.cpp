@@ -481,7 +481,6 @@ namespace parser {
         buffer.reserve(1024);
         buffer.resize(0);
         pos_t startp = 0;
-        pos_t nchars = 0;
         int c = strm_->peek_at(++p);
         while (true) {
             PCSH_ASSERT_MSG(c != strm_->EOS, "End-of-stream while reading string literal.");

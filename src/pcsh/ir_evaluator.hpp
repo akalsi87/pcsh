@@ -17,7 +17,7 @@ namespace ir {
     class evaluator : public node_visitor
     {
       public:
-        evaluator::evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_()
+        evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_()
         { }
       private:
         const block* curr_;

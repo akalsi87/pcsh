@@ -11,7 +11,7 @@ namespace ir {
 
     void printer::print_spacing()
     {
-        for (int i = 0; i != nesting_; ++i) {
+        for (int i = 0; i < nesting_; ++i) {
             strm_ << spacing;
         }
     }
@@ -100,15 +100,14 @@ namespace ir {
 
     void printer::visit_impl(const block* v)
     {
-        for (int i = 0; i != nesting_; ++i) {
-            strm_ << spacing;
-        }
-
         {
+            --nesting_;
+            print_spacing();
             ++nesting_;
             strm_ << "(block) at " << v;
+            ++nesting_;
             print_spacing_newline();
-            print_types(v);
+            print_types(v);            
             visit_block(v);
             --nesting_;
         }
@@ -122,11 +121,11 @@ namespace ir {
     {
         if (!types_) { return; }
         const auto& tbl = v->table();
-        {
-            --nesting_;
-            print_spacing();
-            ++nesting_;
-        }
+        //        {
+        //            --nesting_;
+        //            print_spacing();
+        //            ++nesting_;
+        //        }
         strm_ << "typemap = { ";
         auto ntvec = symbol_table::all_entries(tbl);
         for (const auto& el : ntvec) {

@@ -70,7 +70,8 @@ add_comp_def(libpcsh PCSH_MIN=${pcsh_min_ver})
 add_comp_def(libpcsh PCSH_PAT=${pcsh_pat_ver})
 link_libs(libpcsh )
 set_tgt_ver(libpcsh ${pcsh_lib_ver} ${pcsh_lib_compat_ver})
-set_target_properties(libpcsh PROPERTIES OUTPUT_NAME libpcsh)
+
+set_target_properties(libpcsh PROPERTIES PREFIX "")
 
 # --- text executable
 add_exe(pcsh src/main.cpp)
