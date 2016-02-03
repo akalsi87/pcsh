@@ -174,12 +174,14 @@ namespace ir {
         result_type outty = ent.type;
 
         switch (outty) {
-            case result_type::STRING:
             case result_type::INTEGER:
                 curr_visitor_ = new typed_evaluate<int>(nested_tables_);
                 break;
             case result_type::FLOATING:
                 curr_visitor_ = new typed_evaluate<double>(nested_tables_);
+                break;
+            case result_type::STRING:
+                // do nothing, we retain the same value as of now
                 break;
             default:
                 PCSH_CRIT_ASSERT_MSG(false, "Incomplete implementation for evaluate!");

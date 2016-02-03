@@ -9,8 +9,6 @@
 namespace pcsh {
 namespace ir {
 
-    static const char* spacing = "  ";
-
     void printer::print_spacing()
     {
         for (int i = 0; i != nesting_; ++i) {

@@ -10,8 +10,6 @@
 namespace pcsh {
 namespace ir {
 
-    static const char* const spacing = "  ";
-
     void var_value_printer::visit_impl(const block* v)
     {
         if (!prn_) {
