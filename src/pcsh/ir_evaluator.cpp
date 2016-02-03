@@ -64,7 +64,13 @@ namespace ir {
 
         void visit_impl(const variable* v) override
         {
-            accessor_.lookup(v).ptr->accept(this);
+            auto res = accessor_.lookup(v);
+            if (res.ptr) {
+                res.ptr->accept(this);
+                return;
+            }
+            auto msg = std::string("Variable `") + v->name() + "' used before it is assigned a value!";
+            PCSH_ASSERT_MSG(false, msg.c_str());
         }
 
         void visit_impl(const int_constant* v) override

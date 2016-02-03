@@ -43,6 +43,11 @@ namespace ir {
 
         --nesting_;
         tbl_ = oldtbl;
+        
+        if (tbl_ == nullptr) {
+            // print ending new line
+            strm_ << "\n";
+        }
     }
 
     void var_value_printer::print_spacing() const
