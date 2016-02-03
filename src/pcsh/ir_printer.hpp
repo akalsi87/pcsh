@@ -13,6 +13,12 @@
 namespace pcsh {
 namespace ir {
 
+    ostream& print(ostream& os, const int_constant* v);
+
+    ostream& print(ostream& os, const float_constant* v);
+
+    ostream& print(ostream& os, const string_constant* v);
+
     class printer : public node_visitor
     {
       public:

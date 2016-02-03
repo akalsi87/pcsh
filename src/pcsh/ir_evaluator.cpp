@@ -133,9 +133,11 @@ namespace ir {
         arena& ar = *ar_;
         const auto& ptab = curr_->table();
 
-        result_type outty = symbol_table::lookup(ptab, v->var()).type;
+        const auto& ent = symbol_table::lookup(ptab, v->var());
+        result_type outty = ent.type;
 
         switch (outty) {
+            case result_type::STRING:
             case result_type::INTEGER:
                 curr_visitor_ = new typed_evaluate<int>(ptab);
                 break;
@@ -166,12 +168,17 @@ namespace ir {
                 uval.dblval = static_cast<typed_evaluate<double>*>(curr_visitor_)->value();
                 newvalue = ar.create<float_constant>(uval.dblval);
                 break;
+            case result_type::STRING:
+                newvalue = ent.ptr;
+                break;
             default:
                 PCSH_CRIT_ASSERT_MSG(false, "Incomplete implementation for evaluate!");
                 break;
         }
 
-        symbol_table::set(ptab, v->var(), newvalue, outty);
+        if ((newvalue != ent.ptr) || (outty != ent.type)) {
+            symbol_table::set(ptab, v->var(), newvalue, outty);
+        }
 
         delete curr_visitor_;
         curr_visitor_ = nullptr;

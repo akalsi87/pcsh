@@ -80,6 +80,11 @@ namespace parser {
                 PCSH_ASSERT(len == 1);
                 nm = "+";
                 break;
+            case token_type::QUOTE:
+                //PCSH_ASSERT(nm[0] == '"');
+                //PCSH_ASSERT(len == 1);
+                //nm = "\"";
+                break;
             case token_type::RBRACE:
                 PCSH_ASSERT(nm[0] == '}');
                 PCSH_ASSERT(len == 1);
@@ -148,6 +153,9 @@ namespace parser {
                 break;
             case token_type::PLUS:
                 str += "plus          | ";
+                break;
+            case token_type::QUOTE:
+                str += "quote         | ";
                 break;
             case token_type::RBRACE:
                 str += "rbrace        | ";
@@ -266,7 +274,7 @@ namespace parser {
     class parser::buffered_stream
     {
       public:
-        static const char EOS = (char)-1;
+        static const int EOS = -1;
       public:
         buffered_stream(std::istream& is) : strm_(is), buffer_(), buffpos_(0), buffsz_(0), pos_(0)
         {
@@ -278,7 +286,7 @@ namespace parser {
             return &buffer_[buffpos_];
         }
 
-        inline char peek_at(pos_t pos)
+        inline int peek_at(pos_t pos)
         {
             return has_chars(pos + 1) ? buffer_[buffpos_ + pos] : EOS;
         }
@@ -366,7 +374,7 @@ namespace parser {
             *pactstrt = p;
         }
 
-        char c = strm_->peek_at(p);
+        int c = strm_->peek_at(p);
 
         switch (c) {
             case buffered_stream::EOS:
@@ -391,6 +399,8 @@ namespace parser {
                 return token::get(token_type::ASTERISK, "*", 1);
             case '.':
                 return token::get(token_type::DOT, ".", 1);
+            case '"':
+                return read_string(p);
             case '/':
                 return token::get(token_type::FSLASH, "/", 1);
             default:
@@ -398,12 +408,12 @@ namespace parser {
         }
     }
 
-    void parser::advance(pos_t len)
+    void parser::advance(pos_t len, bool countnl)
     {
         pos_t p = 0;
         while (p < len) {
-            char c = strm_->peek_at(p);
-            if (tokenize::is_newline(c)) {
+            int c = strm_->peek_at(p);
+            if (countnl && tokenize::is_newline(c)) {
                 if (c == '\r' && strm_->peek_at(p + 1) == '\n') {
                     ++p;
                 }
@@ -438,7 +448,7 @@ namespace parser {
     {
         using namespace tokenize;
         while (true) {
-            char c = strm_->peek_at(p);
+            int c = strm_->peek_at(p);
             if (is_whitespace(c)) {
                 ++p;
             } else if (is_comment_char(c)) {
@@ -454,7 +464,7 @@ namespace parser {
     {
         using namespace tokenize;
         while (true) {
-            char c = strm_->peek_at(p);
+            int c = strm_->peek_at(p);
             if (is_newline(c)) {
                 return p;
             } else if (c == strm_->EOS) {
@@ -462,6 +472,54 @@ namespace parser {
             }
             ++p;
         }
+    }
+
+    token parser::read_string(pos_t p)
+    {
+        //return token::get(token_type::QUOTE, "\"", 1);
+        static std::string buffer;
+        buffer.reserve(1024);
+        buffer.resize(0);
+        pos_t startp = 0;
+        pos_t nchars = 0;
+        int c = strm_->peek_at(++p);
+        while (true) {
+            PCSH_ASSERT_MSG(c != strm_->EOS, "End-of-stream while reading string literal.");
+            if (c == '"') {
+                break;
+            }
+            if (c == '\\') {
+                int n = strm_->peek_at(++p);
+                switch (n) {
+                    case 't':
+                        buffer.push_back('\t');
+                        break;
+                    case 'n':
+                        buffer.push_back('\n');
+                        break;
+                    case 'v':
+                        buffer.push_back('\v');
+                        break;
+                    case '\\':
+                        buffer.push_back('\\');
+                        break;
+                    case 'a':
+                        buffer.push_back('\a');
+                        break;
+                    case 'r':
+                        buffer.push_back('\r');
+                        break;
+                    default:
+                        buffer.push_back(n);
+                        break;
+                }
+            } else {
+                buffer.push_back(c);
+            }
+            c = strm_->peek_at(++p);
+        }
+
+        return token::get(token_type::QUOTE, buffer.c_str(), p - startp /* acct for close quote */);
     }
 
     token parser::read_number(pos_t p)
@@ -649,6 +707,12 @@ namespace parser {
                 case token_type::FLOATING:
                     v = arena_.create<ir::float_constant>(conversions::to_double(t));
                     break;
+                case token_type::QUOTE: {
+                    // we have a static string's data here. copy into a new string
+                    cstring str = arena_.create_string(t.str().ptr);
+                    v = arena_.create<ir::string_constant>(str);
+                    break;
+                }
                 default:
                     PCSH_ASSERT_MSG(false, "Invalid atom value!");
                     break;
@@ -736,7 +800,7 @@ namespace parser {
     std::string parser::copy_line(pos_t p)
     {
         std::string str;
-        char c;
+        int c;
         while (((c = strm_->peek_at(p++)) != strm_->EOS) && !tokenize::is_newline(c)) {
             str.push_back(c);
         }

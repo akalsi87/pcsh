@@ -31,17 +31,20 @@ namespace ir {
 
     void printer::visit_impl(const int_constant* v)
     {
-        strm_ << "<int:" << v->value() << ">";
+        strm_ << "<int:";
+        print(strm_, v) << ">";
     }
 
     void printer::visit_impl(const float_constant* v)
     {
-        strm_ << "<double:" << v->value() << ">";
+        strm_ << "<double:";
+        print(strm_, v) << ">";
     }
 
     void printer::visit_impl(const string_constant* v)
     {
-        strm_ << "<string:" << v->value() << ">";
+        strm_ << "<string:\"";
+        print(strm_, v) << "\">";
     }
 
     void printer::visit_impl(const unary_minus* v)
@@ -133,6 +136,47 @@ namespace ir {
         }
         strm_ << "}";
         print_spacing_newline();
+    }
+
+    ostream& print(ostream& os, const int_constant* v)
+    {
+        os << v->value();
+        return os;
+    }
+
+    ostream& print(ostream& os, const float_constant* v)
+    {
+        os << v->value();
+        return os;
+    }
+
+    ostream& print(ostream& os, const string_constant* v)
+    {
+        cstring in = v->value();
+        for (; *in; ++in) {
+            char c = *in;
+            switch (c) {
+                case '\n':
+                    os << "\\n";
+                    break;
+                case '\r':
+                    os << "\\r";
+                    break;
+                case '\t':
+                    os << "\\t";
+                    break;
+                case '\\':
+                    os << "\\\\";
+                    break;
+                case '\a':
+                    os << "\\a";
+                    break;
+                default:
+                    os << c;
+                    break;
+            }
+        }
+        return os;
     }
 
 }//namespace ir

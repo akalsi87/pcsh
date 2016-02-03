@@ -51,6 +51,7 @@ atom ::= var | NUMBER
         ASTERISK,
         DOT,
         FSLASH,
+        QUOTE,
         SYMBOL,
         INTEGER,
         FLOATING,
@@ -140,7 +141,7 @@ atom ::= var | NUMBER
 
         token peek(pos_t p = 0, pos_t* pactstart = nullptr);
 
-        void advance(pos_t len);
+        void advance(pos_t len, bool countnl = true);
 
         inline int line() const
         {
@@ -169,6 +170,7 @@ atom ::= var | NUMBER
 
         pos_t find_first_non_whitespace(pos_t start);
         pos_t skip_till_line_end(pos_t p);
+        token read_string(pos_t p);
         token read_number(pos_t p);
         token read_symbol(pos_t p);
         std::string copy_line(pos_t p);
