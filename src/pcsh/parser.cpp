@@ -3,6 +3,11 @@
  * \date Jan 27, 2016
  */
 
+// disable security warnings for MSVC for std::copy()
+#if defined(_MSC_VER)
+#  define _SCL_SECURE_NO_WARNINGS
+#endif // defined(_MSC_VER)
+
 #include "pcsh/assert.hpp"
 #include "pcsh/parser.hpp"
 
@@ -287,6 +292,10 @@ namespace parser {
 
     }//namespace conversions
 
+#if defined(_MSC_VER)
+#  pragma warning(disable:4351)
+#endif // defined(_MSC_VER)
+
     template <int N>
     class flex_buffer
     {
@@ -330,11 +339,13 @@ namespace parser {
         }
     };
 
+#if defined(_MSC_VER)
+#  pragma warning(default:4996)
+#endif // defined(_MSC_VER)
+
     /// buffered_stream
     class parser::buffered_stream
     {
-      private:
-        static const int INIT_SIZE = 256;
       public:
         static const int EOS = -1;
       public:
@@ -393,6 +404,8 @@ namespace parser {
             buffsz_ = 0;
         }
       private:
+        static const int INIT_SIZE = 256;
+
         std::istream&          strm_;
         flex_buffer<INIT_SIZE> buffer_;
         pos_t                  buffpos_;
@@ -481,7 +494,7 @@ namespace parser {
     PCSH_INLINE void parser::advance_impl(pos_t len, bool countnl)
     {
         pos_t p = 0;
-        if (countnl) {
+        if (PCSH_LIKELY(countnl)) {
             while (p < len) {
                 int c = strm_->peek_at(p);
                 if (PCSH_UNLIKELY(tokenize::is_newline(c))) {
@@ -559,7 +572,9 @@ namespace parser {
         pos_t startp = 0;
         int c = strm_->peek_at(++p);
         while (true) {
-            PCSH_ASSERT_MSG(c != strm_->EOS, "End-of-stream while reading string literal.");
+            if (c == strm_->EOS) {
+                return token::get(token_type::FAIL, "End-of-stream while reading string literal.");
+            }
             if (c == '"') {
                 break;
             }

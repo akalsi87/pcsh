@@ -14,6 +14,10 @@
 #include <iostream>
 #include <memory>
 
+#if defined(_MSC_VER)
+#  pragma warning(disable:4251)
+#endif // defined(_MSC_VER)
+
 namespace pcsh {
 namespace parser {
 
@@ -208,5 +212,9 @@ atom ::= var | NUMBER
 
 }// namespace parser
 }// namespace pcsh
+
+#if defined(_MSC_VER)
+#  pragma warning(default:4251)
+#endif // defined(_MSC_VER)
 
 #endif/*PCSH_PARSER_HPP*/
