@@ -49,7 +49,7 @@ namespace ir {
         auto lfttype = curr_;
         auto fintype = propagate(lfttype, /*fake value*/result_type::BOOLEAN);
         if (fintype == result_type::FAILED) {
-            throw type_checker_error("Invalid application of unary `-'.", lfttype, result_type::UNDETERMINED);
+            throw type_checker_error("Invalid application of unary `-'.", v->left(), nullptr);
         }
         curr_ = fintype;
     }
@@ -62,7 +62,7 @@ namespace ir {
         auto rgttype = curr_;
         auto fintype = propagate(lfttype, rgttype, result_type::INTEGER);
         if (fintype == result_type::FAILED) {
-            throw type_checker_error("Invalid application of `/'.", lfttype, rgttype);
+            throw type_checker_error("Invalid application of `/'.", v->left(), v->right());
         }
         curr_ = fintype;
     }
@@ -75,7 +75,7 @@ namespace ir {
         auto rgttype = curr_;
         auto fintype = propagate(lfttype, rgttype);
         if (fintype == result_type::FAILED) {
-            throw type_checker_error("Invalid application of `-'.", lfttype, rgttype);
+            throw type_checker_error("Invalid application of `-'.", v->left(), v->right());
         }
         curr_ = (fintype == result_type::BOOLEAN) ? result_type::INTEGER : fintype;
     }
@@ -88,7 +88,7 @@ namespace ir {
         auto rgttype = curr_;
         auto fintype = propagate(lfttype, rgttype);
         if (fintype == result_type::FAILED) {
-            throw type_checker_error("Invalid application of `*'.", lfttype, rgttype);
+            throw type_checker_error("Invalid application of `*'.", v->left(), v->right());
         }
         curr_ = (fintype == result_type::BOOLEAN) ? result_type::INTEGER : fintype;
     }
@@ -101,7 +101,7 @@ namespace ir {
         auto rgttype = curr_;
         auto fintype = propagate(lfttype, rgttype);
         if (fintype == result_type::FAILED) {
-            throw type_checker_error("Invalid application of `+'.", lfttype, rgttype);
+            throw type_checker_error("Invalid application of `+'.", v->left(), v->right());
         }
         curr_ = (fintype == result_type::BOOLEAN) ? result_type::INTEGER : fintype;
     }
@@ -112,9 +112,16 @@ namespace ir {
         auto ty = curr_;
         PCSH_ASSERT_MSG(ty != result_type::FAILED, "Assigned FAILED result type to variable.");
         if (ty == result_type::UNDETERMINED) {
-            throw type_checker_error("Value of variable `" + std::string(v->var()->name()) + "' is undetermined!", ty, ty);
+            throw type_checker_error("Value of variable `" + std::string(v->var()->name()) + "' is undetermined!", v->left(), v->right());
         }
-        symbol_table::set_var_type(curr_blk_->table(), v->var(), ty);
+
+        variable_accessor acc(nested_tables_);
+        auto sym = acc.lookup(v->var());
+        if (sym.type == result_type::UNDETERMINED) {
+            acc.set(v->var(), sym.ptr, ty);
+        } else if (sym.type != ty) {
+            throw type_checker_error("Type of variable `" + std::string(v->var()->name()) + "' is changed!", v->right(), nullptr);
+        }
     }
 
     void type_checker::visit_impl(const block* v)
@@ -124,7 +131,9 @@ namespace ir {
         {
             curr_ = result_type::UNDETERMINED;
             curr_blk_ = v;
+            nested_tables_.push_back(&(v->table()));
             visit_block(v);
+            nested_tables_.pop_back();
         }
         curr_ = oldtype;
         curr_blk_ = oldblk;

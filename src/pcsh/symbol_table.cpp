@@ -35,7 +35,7 @@ namespace symbol_table {
     };
 
     class table_impl
-        : public std::unordered_map<const ir::variable*, entry, variable_name_hash, variable_name_comp>
+      : public std::unordered_map<const ir::variable*, entry, variable_name_hash, variable_name_comp>
     { };
 
 namespace detail {

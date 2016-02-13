@@ -127,6 +127,34 @@ atom ::= var | NUMBER
     };
 
     //////////////////////////////////////////////////////////////////////////
+    /// parser exception
+    //////////////////////////////////////////////////////////////////////////
+
+    class exception
+    {
+      public:
+        inline exception(const std::string& msg, const std::string& fname, const std::string& func, const std::string& line)
+          : msg_(msg), fname_(fname), func_(func), line_(line)
+        { }
+
+        inline ~exception()
+        { }
+
+        inline const std::string& message() const { return msg_; }
+
+        inline const std::string& filename() const { return fname_; }
+
+        inline const std::string& function() const { return func_; }
+
+        inline const std::string& line() const { return line_; }
+      private:
+        std::string msg_;
+        std::string fname_;
+        std::string func_;
+        std::string line_;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
     /// parser
     //////////////////////////////////////////////////////////////////////////
 
@@ -168,6 +196,8 @@ atom ::= var | NUMBER
         pos_t line_start_;
         const std::string& filename_;
 
+        inline token peek_impl(pos_t p = 0, pos_t* pactstart = nullptr);
+        inline void advance_impl(pos_t len, bool countnl = true);
         pos_t find_first_non_whitespace(pos_t start);
         pos_t skip_till_line_end(pos_t p);
         token read_string(pos_t p);

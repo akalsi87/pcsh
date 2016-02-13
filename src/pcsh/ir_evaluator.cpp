@@ -10,43 +10,6 @@
 namespace pcsh {
 namespace ir {
 
-    class evaluator::variable_accessor
-    {
-      public:
-        variable_accessor(const sym_table_list& l) : list_(l)
-        { }
-
-        symbol_table::entry lookup(const ir::variable* v) const
-        {
-            auto it = list_.rbegin();
-            auto end = list_.rend();
-            for (; it != end; ++it) {
-                const auto& tblptr = *it;
-                auto res = symbol_table::lookup(*tblptr, v);
-                if (res.ptr) {
-                    return res;
-                }
-            }
-            return { nullptr, result_type::UNDETERMINED, false };
-        }
-
-        void set(const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED, bool eval = false) const
-        {
-            auto it = list_.rbegin();
-            auto end = list_.rend();
-            for (; it != end; ++it) {
-                const auto& tblptr = *it;
-                auto res = symbol_table::lookup(*tblptr, v);
-                if (res.ptr) {
-                    symbol_table::set(*tblptr, v, value, ty, eval);
-                    return;
-                }
-            }
-        }
-      private:
-        const sym_table_list& list_;
-    };
-
     template <class T>
     class evaluator::typed_evaluate : public node_visitor
     {
@@ -59,12 +22,12 @@ namespace ir {
             return value_;
         }
       private:
-        evaluator::variable_accessor accessor_;
+        variable_accessor accessor_;
         T value_;
 
         void visit_impl(const variable* v) override
         {
-            auto res = accessor_.lookup(v);
+            auto res = accessor_.lookup(v, true);
             if (res.evaluated) {
                 res.ptr->accept(this);
                 return;

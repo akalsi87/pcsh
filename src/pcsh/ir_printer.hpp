@@ -13,7 +13,7 @@
 namespace pcsh {
 namespace ir {
 
-    static const char* const spacing = "    ";
+    static const char* const spacing = "  ";
 
     ostream& print(ostream& os, const int_constant* v);
 

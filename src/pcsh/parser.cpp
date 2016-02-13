@@ -7,12 +7,21 @@
 #include "pcsh/parser.hpp"
 
 #include "ir_nodes.hpp"
+#include "tree_validation.hpp"
+#include "type_checker.hpp"
 
 #include <cstring>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
-#include "tree_validation.hpp"
+#if !defined(_MSC_VER)
+#define PCSH_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define PCSH_LIKELY(x)   __builtin_expect(!!(x), 1)
+#else
+#define PCSH_UNLIKELY(x) (x)
+#define PCSH_LIKELY(x)   (x)
+#endif
 
 namespace pcsh {
 namespace parser {
@@ -349,23 +358,27 @@ namespace parser {
 
         inline void fill_buffer(pos_t n)
         {
+            n = std::max(n, pos_t(1024));
+
             if ((buffpos_ + n) > buffer_.size()) {
                 buffer_.resize(buffpos_ + n);
             }
-            if (strm_.peek() == EOF) {
-                strm_.clear();
-                return;
-            }
+
             strm_.read(&buffer_[buffsz_], n - (buffsz_ - buffpos_));
-            auto actread = strm_.gcount();
+            buffsz_ += (pos_t)strm_.gcount();
+
             if (!strm_.good()) {
                 strm_.clear();
             }
-            buffsz_ += (pos_t)actread;
         }
     };
 
     token parser::peek(pos_t pstrt, pos_t* pactstrt)
+    {
+        return peek_impl(pstrt, pactstrt);
+    }
+
+    inline token parser::peek_impl(pos_t pstrt, pos_t* pactstrt)
     {
         using namespace tokenize;
         // skip whitespace
@@ -410,17 +423,24 @@ namespace parser {
 
     void parser::advance(pos_t len, bool countnl)
     {
+        advance_impl(len, countnl);
+    }
+
+    inline void parser::advance_impl(pos_t len, bool countnl)
+    {
         pos_t p = 0;
-        while (p < len) {
-            int c = strm_->peek_at(p);
-            if (countnl && tokenize::is_newline(c)) {
-                if (c == '\r' && strm_->peek_at(p + 1) == '\n') {
-                    ++p;
+        if (countnl) {
+            while (p < len) {
+                int c = strm_->peek_at(p);
+                if (PCSH_UNLIKELY(tokenize::is_newline(c))) {
+                    if (c == '\r' && strm_->peek_at(p + 1) == '\n') {
+                        ++p;
+                    }
+                    ++line_;
+                    line_start_ = strm_->pos() + p;
                 }
-                ++line_;
-                line_start_ = strm_->pos() + p;
+                ++p;
             }
-            ++p;
         }
         strm_->advance(len);
     }
@@ -444,11 +464,15 @@ namespace parser {
         strm_->sync_stream();
     }
 
-    pos_t parser::find_first_non_whitespace(pos_t p)
+    inline pos_t parser::find_first_non_whitespace(pos_t p)
     {
         using namespace tokenize;
+        int c = strm_->peek_at(p);
+        if (PCSH_LIKELY(!is_whitespace(c) && !is_comment_char(c))) {
+            return p;
+        }
         while (true) {
-            int c = strm_->peek_at(p);
+            c = strm_->peek_at(p);
             if (is_whitespace(c)) {
                 ++p;
             } else if (is_comment_char(c)) {
@@ -465,9 +489,9 @@ namespace parser {
         using namespace tokenize;
         while (true) {
             int c = strm_->peek_at(p);
-            if (is_newline(c)) {
+            if (PCSH_UNLIKELY(is_newline(c))) {
                 return p;
-            } else if (c == strm_->EOS) {
+            } else if (PCSH_UNLIKELY(c == strm_->EOS)) {
                 return p;
             }
             ++p;
@@ -569,7 +593,16 @@ namespace parser {
     {
         return strm_->pos();
     }
-    
+
+    /// map node to source info
+    struct source_info
+    {
+        std::string filename;
+        std::string line;
+        std::string function;
+    };
+
+    using source_map = std::unordered_map<ir::node*, source_info>;
 
     /// parser_engine
     class parser::parser_engine
@@ -578,32 +611,33 @@ namespace parser {
         parser_engine(parser& p, arena& a) : parser_(p), arena_(a), func_("(main)")
         { }
 
-        ir::block* parse()
+        ir::block* parse(source_map& m)
         {
-            return block();
+            return block(m);
         }
       private:
         parser& parser_;
         arena&  arena_;
         std::string func_;
 
-        int quit_with_error(cstring msg)
+        int throw_error(cstring msg)
         {
             pos_t ws = 0;
-            parser_.peek(ws, &ws);
-            parser_.advance(ws);
+            parser_.peek_impl(ws, &ws);
+            parser_.advance_impl(ws);
             const auto& linestr = "line " + std::to_string(parser_.line()) + ", char " + std::to_string(parser_.curr_pos() - parser_.line_start());
             std::string message(msg);
             message += "\n\tnear: \"" + parser_.copy_line(0) + "\"";
-            return pcsh::assert_fail(message.c_str(), parser_.filename_.c_str(), linestr.c_str(), func_.c_str());
+            throw exception(message, parser_.filename_, func_, linestr);
+            return 0;
         }
 
-#define ENFORCE(x, msg)                       \
-    do {                                      \
-        !!(x) ? 0 : quit_with_error((msg));   \
+#define ENFORCE(x, msg)                   \
+    do {                                  \
+        !!(x) ? 0 : throw_error((msg));   \
     } while (0)
 
-        ir::block* block()
+        ir::block* block(source_map& m)
         {
             std::vector<ir::node*> stmts;
             stmts.reserve(20);
@@ -615,7 +649,7 @@ namespace parser {
                 switch (t.type()) {
                     case token_type::LBRACE:
                         advance();
-                        stmts.push_back(block());
+                        stmts.push_back(block(m));
                         break;
                     case token_type::RBRACE:
                         advance();
@@ -625,7 +659,7 @@ namespace parser {
                         inblock = false;
                         break;
                     default:
-                        stmts.push_back(stmt());
+                        stmts.push_back(stmt(m));
                         break;
                 }
             }
@@ -639,12 +673,12 @@ namespace parser {
             return blk;
         }
 
-        ir::node* stmt()
+        ir::node* stmt(source_map& m)
         {
-            auto v = var();
+            auto v = var(m);
             ENFORCE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
             advance(); /* consume = */
-            auto e = expr();
+            auto e = expr(m);
             ENFORCE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
             advance(); /* consume ; */
             auto op = arena_.create<ir::assign>();
@@ -653,21 +687,24 @@ namespace parser {
             return op;
         }
 
-        ir::variable* var()
+        ir::variable* var(source_map& m)
         {
             auto t = peek();
-            ENFORCE(t.is_a(token_type::SYMBOL), "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
+            ENFORCE(t.is_a(token_type::SYMBOL),
+                    "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
             cstring nm = arena_.create_string(t.str().ptr, t.length());
+            auto lvar = arena_.create<ir::variable>(nm);
+            m[lvar] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
             advance();
-            return arena_.create<ir::variable>(nm);
+            return lvar;
         }
 
-        ir::node* expr()
+        ir::node* expr(source_map& m)
         {
             auto t = peek();
             if (t.is_a(token_type::LPAREN)) {
                 advance();
-                auto e = expr();
+                auto e = expr(m);
                 ENFORCE(peek().is_a(token_type::RPAREN), "Unmatched '('.");
                 return e;
             }
@@ -675,43 +712,45 @@ namespace parser {
             ir::node* a = nullptr;
 
             if (is_unary_op(t)) {
-                a = unop();
+                a = unop(m);
             } else {
-                a = atom();
+                a = atom(m);
             }
 
             if (is_binary_op(peek())) {
-                return binop(a);
+                return binop(a, m);
             } else {
                 return a;
             }
         }
 
-        ir::node* binop(ir::node* a)
+        ir::node* binop(ir::node* a, source_map& m)
         {
             ir::untyped_binary_op_base* op = nullptr;
             ir::node* nodea = a;
             auto nxt = peek();
             while (is_binary_op(nxt)) {
                 op = create_binary_op(nxt);
+                m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
                 advance();
                 op->set_left(nodea);
-                op->set_right(atom());
+                op->set_right(atom(m));
                 nxt = peek();
                 nodea = op;
             }
             return op;
         }
 
-        ir::node* unop()
+        ir::node* unop(source_map& m)
         {
             auto op = create_unary_op(peek());
+            m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
             advance();
-            op->set_operand(atom());
+            op->set_operand(atom(m));
             return op;
         }
 
-        ir::untyped_atom_base* atom()
+        ir::untyped_atom_base* atom(source_map& m)
         {
             auto t = peek();
             ir::untyped_atom_base* v = nullptr;
@@ -735,6 +774,7 @@ namespace parser {
                     PCSH_ASSERT_MSG(false, "Invalid atom value!");
                     break;
             }
+            m[v] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
             advance();
             return v;
         }
@@ -743,18 +783,18 @@ namespace parser {
 
         token peek()
         {
-            auto t = parser_.peek();
+            auto t = parser_.peek_impl();
             if (t.is_a(token_type::FAIL)) {
-                quit_with_error(t.str().ptr);
+                throw_error(t.str().ptr);
             }
             return t;
         }
 
-        void advance()
+        inline void advance()
         {
             pos_t ws = 0;
-            auto t = parser_.peek(ws, &ws);
-            parser_.advance(ws + t.length());
+            auto t = parser_.peek_impl(ws, &ws);
+            parser_.advance_impl(ws + t.length());
         }
 
         bool is_unary_op(const token& t)
@@ -810,7 +850,13 @@ namespace parser {
     ir::tree::ptr parser::parse_to_tree()
     {
         auto treeptr = ir::tree::create();
-        treeptr->set_root(parser_engine(*this, treeptr->get_arena()).parse());
+        source_map sm;
+        treeptr->set_root(parser_engine(*this, treeptr->get_arena()).parse(sm));
+        try {
+            validate_tree(treeptr);
+        } catch(const ir::type_checker_error& ex) {
+            throw exception(ex.msg, sm[ex.left].filename, sm[ex.left].function, sm[ex.left].line);
+        }
         validate_tree(treeptr);
         return treeptr;
     }

@@ -23,11 +23,7 @@ namespace ir {
         const block* curr_;
         node_visitor* curr_visitor_;
         arena* ar_;
-
-        typedef std::list<const symbol_table::ptr*> sym_table_list;
         sym_table_list nested_tables_;
-
-        class variable_accessor;
 
         template <class T>
         class typed_evaluate;

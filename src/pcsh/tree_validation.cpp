@@ -21,11 +21,7 @@ namespace pcsh {
         // type check
         {
             ir::type_checker checker;
-            try {
-                p->accept(&checker);
-            } catch (const ir::type_checker_error& ex) {
-                PCSH_CRIT_ASSERT_MSG(false, ex.msg.c_str());
-            }
+            p->accept(&checker);
         }
     }
 

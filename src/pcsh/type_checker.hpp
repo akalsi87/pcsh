@@ -7,8 +7,8 @@
 #define PCSH_TYPE_CHECKER_HPP
 
 #include "ir_visitor.hpp"
-
 #include "result_type.hpp"
+#include "symbol_table.hpp"
 
 namespace pcsh {
 namespace ir {
@@ -16,10 +16,10 @@ namespace ir {
     struct type_checker_error
     {
         std::string msg;
-        result_type left;
-        result_type right;
+        ir::node* left;
+        ir::node* right;
 
-        type_checker_error(const std::string& m, result_type a, result_type b)
+        type_checker_error(const std::string& m, ir::node* a, ir::node* b)
           : msg(m)
           , left(a)
           , right(b)
@@ -29,11 +29,12 @@ namespace ir {
     class type_checker : public node_visitor
     {
       public:
-        type_checker() : curr_(result_type::UNDETERMINED), curr_blk_(nullptr)
+        type_checker() : curr_(result_type::UNDETERMINED), curr_blk_(nullptr), nested_tables_()
         { }
       private:
         result_type curr_;
         const block* curr_blk_;
+        sym_table_list nested_tables_;
 
         void visit_impl(const int_constant* v) override;
         void visit_impl(const float_constant* v) override;

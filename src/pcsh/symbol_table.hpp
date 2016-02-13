@@ -12,6 +12,7 @@
 #include "ir_nodes_fwd.hpp"
 #include "result_type.hpp"
 
+#include <list>
 #include <memory>
 #include <vector>
 
@@ -66,6 +67,52 @@ namespace detail {
     std::vector<name_and_type> all_entries(const ptr& tbl);
 
 }//namespace symbol_table
+
+namespace ir {
+
+    using sym_table_list = std::list<const symbol_table::ptr*>;
+
+    class variable_accessor
+    {
+      public:
+        variable_accessor(const sym_table_list& l) : list_(l)
+        { }
+
+        symbol_table::entry lookup(const ir::variable* v, bool findevaluated = false) const
+        {
+            auto it = list_.rbegin();
+            auto end = list_.rend();
+            for (; it != end; ++it) {
+                const auto& tblptr = *it;
+                auto res = symbol_table::lookup(*tblptr, v);
+                if (res.ptr) {
+                    if (!findevaluated || res.evaluated) {
+                        return res;
+                    }
+                }
+            }
+            return { nullptr, result_type::UNDETERMINED, false };
+        }
+
+        void set(const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED, bool eval = false) const
+        {
+            auto it = list_.rbegin();
+            auto end = list_.rend();
+            for (; it != end; ++it) {
+                const auto& tblptr = *it;
+                auto res = symbol_table::lookup(*tblptr, v);
+                if (res.ptr) {
+                    symbol_table::set(*tblptr, v, value, ty, eval);
+                    return;
+                }
+            }
+        }
+      private:
+        const sym_table_list& list_;
+    };
+
+}//namespace ir
+
 }//namespace pcsh
 
 #endif/*PCSH_SYMBOL_TABLE_HPP*/
