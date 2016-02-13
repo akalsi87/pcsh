@@ -149,7 +149,7 @@ namespace pcsh {
             }
         }
 
-        void* allocate(size_t sz, void* fptr)
+        inline void* allocate(size_t sz, void* fptr)
         {
             if (seg_->left > sz) {
                 return allocate_from_seg(seg_, sz, fptr);

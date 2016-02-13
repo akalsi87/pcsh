@@ -15,12 +15,20 @@
 #include <vector>
 #include <unordered_map>
 
+#if !defined(PCSH_INLINE)
+#  if !defined(_MSC_VER)
+#    define PCSH_INLINE __inline__ __attribute__((always_inline))
+#  else
+#    define PCSH_INLINE __forceinline
+#  endif
+#endif
+
 #if !defined(_MSC_VER)
-#define PCSH_UNLIKELY(x) __builtin_expect(!!(x), 0)
-#define PCSH_LIKELY(x)   __builtin_expect(!!(x), 1)
+#  define PCSH_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#  define PCSH_LIKELY(x)   __builtin_expect(!!(x), 1)
 #else
-#define PCSH_UNLIKELY(x) (x)
-#define PCSH_LIKELY(x)   (x)
+#  define PCSH_UNLIKELY(x) (x)
+#  define PCSH_LIKELY(x)   (x)
 #endif
 
 namespace pcsh {
@@ -191,62 +199,62 @@ namespace parser {
 
     namespace tokenize {
 
-        inline bool is_sign(char c)
+        PCSH_INLINE bool is_sign(char c)
         {
             return (c == '+') || (c == '-');
         }
 
-        inline bool is_newline(char c)
+        PCSH_INLINE bool is_newline(char c)
         {
             return (c == '\n') || (c == '\r');
         }
 
-        inline bool is_space(char c)
+        PCSH_INLINE bool is_space(char c)
         {
             return (c == '\t') || (c == ' ');
         }
 
-        inline bool is_whitespace(char c)
+        PCSH_INLINE bool is_whitespace(char c)
         {
             return is_newline(c) || is_space(c);
         }
 
-        inline bool is_digit(char c)
+        PCSH_INLINE bool is_digit(char c)
         {
             return (c >= '0') && (c <= '9');
         }
 
-        inline bool is_lower_alpha(char c)
+        PCSH_INLINE bool is_lower_alpha(char c)
         {
             return (c >= 'a') && (c <= 'z');
         }
 
-        inline bool is_upper_alpha(char c)
+        PCSH_INLINE bool is_upper_alpha(char c)
         {
             return (c >= 'A') && (c <= 'Z');
         }
 
-        inline char to_lower(char c)
+        PCSH_INLINE char to_lower(char c)
         {
             return (c - 'A' + 'a');
         }
 
-        inline char to_upper(char c)
+        PCSH_INLINE char to_upper(char c)
         {
             return (c - 'a' + 'A');
         }
 
-        inline bool is_comment_char(char c)
+        PCSH_INLINE bool is_comment_char(char c)
         {
             return (c == '#');
         }
 
-        inline bool is_symbol_char(char c)
+        PCSH_INLINE bool is_symbol_char(char c)
         {
             return is_digit(c) || is_lower_alpha(c) || is_upper_alpha(c) || (c == '_');
         }
 
-        inline bool is_start_of_number(char c, char n, char o)
+        PCSH_INLINE bool is_start_of_number(char c, char n, char o)
         {
             return is_digit(c) || ((is_sign(c) || (c == '.')) && is_digit(n)) || (is_sign(c) && (n == '.') && is_digit(o));
         }
@@ -279,28 +287,72 @@ namespace parser {
 
     }//namespace conversions
 
+    template <int N>
+    class flex_buffer
+    {
+      private:
+        mutable char stackbuff[N + 1];
+        size_t sz;
+        mutable std::string heapbuff;
+        bool useheap;
+      public:
+        flex_buffer() : stackbuff(), sz(0), heapbuff(), useheap(false)
+        {
+            stackbuff[N] = '\0';
+        }
+
+        inline char& operator[](size_t i) const
+        {
+            return useheap ? heapbuff[i] : stackbuff[i];
+        }
+
+        inline size_t size() const
+        {
+            return useheap ? heapbuff.size() : sz;
+        }
+
+        inline void resize(size_t s)
+        {
+            if (!useheap && (s < N)) {
+                sz = s;
+                return;
+            }
+
+            if (!useheap) {
+                heapbuff.reserve(2 * s);
+            }
+
+            heapbuff.resize(s);
+            if (!useheap) {
+                std::copy(stackbuff, stackbuff + sz, &heapbuff[0]);
+                useheap = true;
+            }
+        }
+    };
+
     /// buffered_stream
     class parser::buffered_stream
     {
+      private:
+        static const int INIT_SIZE = 256;
       public:
         static const int EOS = -1;
       public:
         buffered_stream(std::istream& is) : strm_(is), buffer_(), buffpos_(0), buffsz_(0), pos_(0)
         {
-            buffer_.reserve(1024);
         }
 
-        inline const char* buff() const
+        PCSH_INLINE const char* buff() const
         {
             return &buffer_[buffpos_];
         }
 
-        inline int peek_at(pos_t pos)
+        PCSH_INLINE int peek_at(pos_t pos)
         {
             return has_chars(pos + 1) ? buffer_[buffpos_ + pos] : EOS;
         }
 
-        inline pos_t pos() const
+        PCSH_INLINE pos_t pos() const
         {
             return pos_ + buffpos_;
         }
@@ -341,13 +393,13 @@ namespace parser {
             buffsz_ = 0;
         }
       private:
-        std::istream& strm_;
-        std::string   buffer_;
-        pos_t         buffpos_;
-        pos_t         buffsz_;
-        pos_t         pos_;
+        std::istream&          strm_;
+        flex_buffer<INIT_SIZE> buffer_;
+        pos_t                  buffpos_;
+        pos_t                  buffsz_;
+        pos_t                  pos_;
 
-        inline bool has_chars(pos_t n)
+        PCSH_INLINE bool has_chars(pos_t n)
         {
             if (buffsz_ >= (buffpos_ + n)) {
                 return true;
@@ -356,9 +408,9 @@ namespace parser {
             return buffsz_ >= (buffpos_ + n);
         }
 
-        inline void fill_buffer(pos_t n)
+        void fill_buffer(pos_t n)
         {
-            n = std::max(n, pos_t(1024));
+            n = std::max(n, pos_t(INIT_SIZE));
 
             if ((buffpos_ + n) > buffer_.size()) {
                 buffer_.resize(buffpos_ + n);
@@ -378,7 +430,7 @@ namespace parser {
         return peek_impl(pstrt, pactstrt);
     }
 
-    inline token parser::peek_impl(pos_t pstrt, pos_t* pactstrt)
+    PCSH_INLINE token parser::peek_impl(pos_t pstrt, pos_t* pactstrt)
     {
         using namespace tokenize;
         // skip whitespace
@@ -426,7 +478,7 @@ namespace parser {
         advance_impl(len, countnl);
     }
 
-    inline void parser::advance_impl(pos_t len, bool countnl)
+    PCSH_INLINE void parser::advance_impl(pos_t len, bool countnl)
     {
         pos_t p = 0;
         if (countnl) {
@@ -464,7 +516,7 @@ namespace parser {
         strm_->sync_stream();
     }
 
-    inline pos_t parser::find_first_non_whitespace(pos_t p)
+    PCSH_INLINE pos_t parser::find_first_non_whitespace(pos_t p)
     {
         using namespace tokenize;
         int c = strm_->peek_at(p);
@@ -781,7 +833,7 @@ namespace parser {
 
         // parser manipulation
 
-        inline token peek()
+        token peek()
         {
             auto t = parser_.peek_impl();
             if (t.is_a(token_type::FAIL)) {
@@ -790,7 +842,7 @@ namespace parser {
             return t;
         }
 
-        inline void advance()
+        void advance()
         {
             pos_t ws = 0;
             auto t = parser_.peek_impl(ws, &ws);
@@ -851,11 +903,14 @@ namespace parser {
     {
         auto treeptr = ir::tree::create();
         source_map sm;
-        treeptr->set_root(parser_engine(*this, treeptr->get_arena()).parse(sm));
+        sm.reserve(20);
+        parser_engine eng(*this, treeptr->get_arena());
+        treeptr->set_root(eng.parse(sm));
         try {
             validate_tree(treeptr);
         } catch(const ir::type_checker_error& ex) {
-            throw exception(ex.msg, sm[ex.left].filename, sm[ex.left].function, sm[ex.left].line);
+            const source_info& info = sm[ex.left];
+            throw exception(ex.msg, info.filename, info.function, info.line);
         }
         return treeptr;
     }

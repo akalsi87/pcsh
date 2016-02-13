@@ -194,7 +194,7 @@ atom ::= var | NUMBER
         buffered_stream* strm_;
         int line_;
         pos_t line_start_;
-        const std::string& filename_;
+        std::string filename_;
 
         inline token peek_impl(pos_t p = 0, pos_t* pactstart = nullptr);
         inline void advance_impl(pos_t len, bool countnl = true);
