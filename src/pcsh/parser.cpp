@@ -632,7 +632,7 @@ namespace parser {
             return 0;
         }
 
-#define ENFORCE(x, msg)                   \
+#define ENSURE_OR_THROW(x, msg)           \
     do {                                  \
         !!(x) ? 0 : throw_error((msg));   \
     } while (0)
@@ -676,10 +676,10 @@ namespace parser {
         ir::node* stmt(source_map& m)
         {
             auto v = var(m);
-            ENFORCE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
+            ENSURE_OR_THROW(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
             advance(); /* consume = */
             auto e = expr(m);
-            ENFORCE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
+            ENSURE_OR_THROW(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
             advance(); /* consume ; */
             auto op = arena_.create<ir::assign>();
             op->set_left(v);
@@ -690,7 +690,7 @@ namespace parser {
         ir::variable* var(source_map& m)
         {
             auto t = peek();
-            ENFORCE(t.is_a(token_type::SYMBOL),
+            ENSURE_OR_THROW(t.is_a(token_type::SYMBOL),
                     "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
             cstring nm = arena_.create_string(t.str().ptr, t.length());
             auto lvar = arena_.create<ir::variable>(nm);
@@ -705,7 +705,7 @@ namespace parser {
             if (t.is_a(token_type::LPAREN)) {
                 advance();
                 auto e = expr(m);
-                ENFORCE(peek().is_a(token_type::RPAREN), "Unmatched '('.");
+                ENSURE_OR_THROW(peek().is_a(token_type::RPAREN), "Unmatched '('.");
                 return e;
             }
 
@@ -781,7 +781,7 @@ namespace parser {
 
         // parser manipulation
 
-        token peek()
+        inline token peek()
         {
             auto t = parser_.peek_impl();
             if (t.is_a(token_type::FAIL)) {
@@ -857,7 +857,6 @@ namespace parser {
         } catch(const ir::type_checker_error& ex) {
             throw exception(ex.msg, sm[ex.left].filename, sm[ex.left].function, sm[ex.left].line);
         }
-        validate_tree(treeptr);
         return treeptr;
     }
 

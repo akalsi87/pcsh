@@ -306,4 +306,55 @@ CPP_TEST( irCreationBasic )
         parser p(is);
         p.parse_to_tree()->print(std::cout);
     }
+    {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            "foo = 1;\n"
+            "{\n"
+            "    doo = \"a literal string.\";\n"
+            "}");
+        parser p(is);
+        p.parse_to_tree()->print(std::cout);
+    }
+    {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            "foo = 1;\n"
+            "{\n"
+            "    doo = \"a\n\";\n"
+            "}");
+        parser p(is);
+        p.parse_to_tree()->print(std::cout);
+    }
+    {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            "{\n"
+            "    doo = -1.0f;\n"
+            "}");
+        parser p(is);
+        bool shouldBeTrue = false;
+        try {
+            p.parse_to_tree();
+        } catch (const exception&) {
+            shouldBeTrue = true;
+        }
+        TEST_TRUE(shouldBeTrue);
+    }
+    {
+        std::istringstream is(
+            "#/usr/bin/env pcsh\n"
+            "{\n"
+            "    doo = -1.0;\n"
+            "    doo = \"foo\";\n"
+            "}");
+        parser p(is);
+        bool shouldBeTrue = false;
+        try {
+            p.parse_to_tree();
+        } catch (const exception& ex) {
+            shouldBeTrue = (ex.message().find("Type") != std::string::npos);
+        }
+        TEST_TRUE(shouldBeTrue);
+    }
 }

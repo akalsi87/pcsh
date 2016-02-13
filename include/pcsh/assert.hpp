@@ -38,12 +38,12 @@ namespace detail {
 #define __STRINGIFY_2(x) #x
 #define STRINGIFY(x) __STRINGIFY_2(x)
 
-#define PCSH_CRIT_ASSERT(x)                                                                   \
+#define PCSH_ENFORCE(x)                                                                       \
     do {                                                                                      \
         (!!(x)) ? 0 : pcsh::assert_fail(#x, __FILE__, STRINGIFY(__LINE__), FUNCTION_NAME);    \
     } while (0)
 
-#define PCSH_CRIT_ASSERT_MSG(x, msg)                                                          \
+#define PCSH_ENFORCE_MSG(x, msg)                                                              \
     do {                                                                                      \
         (!!(x)) ? 0 : pcsh::assert_fail((msg), __FILE__, STRINGIFY(__LINE__), FUNCTION_NAME); \
     } while (0)
@@ -52,9 +52,9 @@ namespace detail {
 
 #define PCSH_DEBUG(x) x
 
-#define PCSH_ASSERT PCSH_CRIT_ASSERT
+#define PCSH_ASSERT PCSH_ENFORCE
 
-#define PCSH_ASSERT_MSG PCSH_CRIT_ASSERT_MSG
+#define PCSH_ASSERT_MSG PCSH_ENFORCE_MSG
 
 #else//no debugging
 

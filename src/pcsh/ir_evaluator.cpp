@@ -154,7 +154,7 @@ namespace ir {
                 // do nothing, we retain the same value as of now
                 break;
             default:
-                PCSH_CRIT_ASSERT_MSG(false, "Incomplete implementation for evaluate!");
+                PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
                 break;
         }
 
@@ -181,7 +181,7 @@ namespace ir {
                 newvalue = ent.ptr;
                 break;
             default:
-                PCSH_CRIT_ASSERT_MSG(false, "Incomplete implementation for evaluate!");
+                PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
                 break;
         }
 

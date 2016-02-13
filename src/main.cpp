@@ -17,9 +17,9 @@ int main(int argc, const char* argv[])
     } catch(const parser::exception& ex) {
         assert_fail(ex.message().c_str(), ex.filename().c_str(), ex.line().c_str(), ex.function().c_str());
     } catch(const std::bad_alloc&) {
-        PCSH_CRIT_ASSERT_MSG(false, "Out of memory!");
+        PCSH_ENFORCE_MSG(false, "Out of memory!");
     } catch(...) {
-        PCSH_CRIT_ASSERT_MSG(false, "Unknown exception encountered.");
+        PCSH_ENFORCE_MSG(false, "Unknown exception encountered.");
     }
     t1->print(out);
     out << "\n --- Evaluation --- \n";
