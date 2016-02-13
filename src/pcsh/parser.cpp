@@ -567,30 +567,29 @@ namespace parser {
                 int n = strm_->peek_at(++p);
                 switch (n) {
                     case 't':
-                        buffer.push_back('\t');
+                        c = '\t';
                         break;
                     case 'n':
-                        buffer.push_back('\n');
+                        c = '\n';
                         break;
                     case 'v':
-                        buffer.push_back('\v');
+                        c = '\v';
                         break;
                     case '\\':
-                        buffer.push_back('\\');
+                        c = '\\';
                         break;
                     case 'a':
-                        buffer.push_back('\a');
+                        c = '\a';
                         break;
                     case 'r':
-                        buffer.push_back('\r');
+                        c = '\r';
                         break;
                     default:
-                        buffer.push_back(n);
+                        c = n;
                         break;
                 }
-            } else {
-                buffer.push_back(c);
             }
+            buffer.push_back(c);
             c = strm_->peek_at(++p);
         }
 
