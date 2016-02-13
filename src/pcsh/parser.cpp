@@ -850,7 +850,7 @@ namespace parser {
         token peek()
         {
             auto t = parser_.peek_impl();
-            if (t.is_a(token_type::FAIL)) {
+            if (PCSH_UNLIKELY(t.is_a(token_type::FAIL))) {
                 throw_error(t.str().ptr);
             }
             return t;
