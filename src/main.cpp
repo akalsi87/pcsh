@@ -6,11 +6,15 @@
 #include "pcsh/assert.hpp"
 #include "pcsh/parser.hpp"
 
+#include "linebufistream.hpp"
+
 int main(int argc, const char* argv[])
 {
     using namespace pcsh;
-    auto& in = std::cin;
-    auto& out = std::cerr;
+
+    auto& in = linebuff_istream(std::cin);
+    auto& out = std::cout;
+
     ir::tree::ptr t1;
     try {
         t1 = parser::parser(in).parse_to_tree();

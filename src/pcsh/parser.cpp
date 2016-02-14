@@ -36,6 +36,24 @@
 #  define PCSH_LIKELY(x)   (x)
 #endif
 
+///
+// Based on Bish
+// http://www.github.com/tdenniston/bish
+//
+
+/*
+Grammar:
+-------
+block ::= ['{'] stmt ['}']
+stmt ::= assign ';' | block
+expr ::= expr '+' term | expr '-' term | var '=' term | term
+term ::= term '*' unary | term '/' unary | unary
+unary ::= '-' unary | '+' unary | factor
+factor ::= '( expr ')' | atom
+atom ::= var | NUMBER | '"' STRING '"'
+var ::= STRING
+*/
+
 namespace pcsh {
 namespace parser {
 
