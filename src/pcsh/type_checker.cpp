@@ -43,6 +43,17 @@ namespace ir {
         curr_ = result_type::STRING;
     }
 
+    void type_checker::visit_impl(const unary_plus* v)
+    {
+        v->left()->accept(this);
+        auto lfttype = curr_;
+        auto fintype = propagate(lfttype, /*fake value*/result_type::BOOLEAN);
+        if (fintype == result_type::FAILED) {
+            throw type_checker_error("Invalid application of unary `+'.", v->left(), nullptr);
+        }
+        curr_ = fintype;
+    }
+
     void type_checker::visit_impl(const unary_minus* v)
     {
         v->left()->accept(this);

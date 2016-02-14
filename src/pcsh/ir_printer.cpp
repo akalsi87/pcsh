@@ -45,9 +45,16 @@ namespace ir {
         print(strm_, v) << "\">";
     }
 
+    void printer::visit_impl(const unary_plus* v)
+    {
+        strm_ << "(un-plus ";
+        v->operand()->accept(this);
+        strm_ << ")";
+    }
+
     void printer::visit_impl(const unary_minus* v)
     {
-        strm_ << "(negate ";
+        strm_ << "(un-minus ";
         v->operand()->accept(this);
         strm_ << ")";
     }

@@ -28,14 +28,15 @@ namespace parser {
 
 /*
 Grammar:
-
-block ::= '{' { stmt ';' } '}'
-stmt ::= var '=' expr
-var ::= NAME
-expr ::= '(' expr ')' | unop atom | atom { binop atom } | atom
-binop ::= '+' | '-' | '*' | '/'
-unop ::= '-'
-atom ::= var | NUMBER
+-------
+block ::= ['{'] stmt ['}']
+stmt ::= assign ';' | block
+expr ::= expr '+' term | expr '-' term | var '=' term | term
+term ::= term '*' unary | term '/' unary | unary
+unary ::= '-' unary | '+' unary | factor
+factor ::= '( expr ')' | atom
+atom ::= var | NUMBER | '"' STRING '"'
+var ::= STRING
 */
 
     //////////////////////////////////////////////////////////////////////////
@@ -187,6 +188,7 @@ atom ::= var | NUMBER
 
         pos_t curr_pos() const;
 
+        // returns a valid executable tree, except for use before assign errors.
         ir::tree::ptr parse_to_tree();
 
         void sync_stream();

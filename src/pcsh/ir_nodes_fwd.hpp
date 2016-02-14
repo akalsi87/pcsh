@@ -19,6 +19,8 @@ namespace ir {
     class string_constant;
 
     // unary ops
+    class unary_plus;
+
     class unary_minus;
 
     // binary ops

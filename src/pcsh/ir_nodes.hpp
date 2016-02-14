@@ -156,9 +156,11 @@ namespace ir {
         }
     };
 
+    class unary_plus : public unary_op<unary_plus>
+    { };
+
     class unary_minus : public unary_op<unary_minus>
-    {
-    };
+    { };
 
     // binary ops
 
@@ -204,20 +206,16 @@ namespace ir {
     };
 
     class binary_plus : public binary_op<binary_plus>
-    {
-    };
+    { };
 
     class binary_minus : public binary_op<binary_minus>
-    {
-    };
+    { };
 
     class binary_mult : public binary_op<binary_mult>
-    {
-    };
+    { };
 
     class binary_div : public binary_op<binary_div>
-    {
-    };
+    { };
 
     class assign : public binary_op<assign>
     {

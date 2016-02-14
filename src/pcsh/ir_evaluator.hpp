@@ -32,6 +32,7 @@ namespace ir {
         void visit_impl(const int_constant* v) override;
         void visit_impl(const float_constant* v) override;
         void visit_impl(const string_constant* v) override;
+        void visit_impl(const unary_plus* v) override;
         void visit_impl(const unary_minus* v) override;
         void visit_impl(const binary_div* v) override;
         void visit_impl(const binary_minus* v) override;

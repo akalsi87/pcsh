@@ -34,6 +34,17 @@ namespace ir {
         cloned_ = ar.create<string_constant>(v->value());
     }
 
+    void tree_cloner::visit_impl(const unary_plus* v)
+    {
+        v->operand()->accept(this);
+        auto newoperand = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newuplus = ar.create<unary_plus>();
+        newuplus->set_operand(newoperand);
+        cloned_ = newuplus;
+    }
+
     void tree_cloner::visit_impl(const unary_minus* v)
     {
         v->operand()->accept(this);

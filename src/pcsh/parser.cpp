@@ -677,6 +677,9 @@ namespace parser {
         parser_engine(parser& p, arena& a) : parser_(p), arena_(a), func_("(main)")
         { }
 
+        //
+        // throws exceptions if parse fails.
+        //
         ir::block* parse(source_map& m)
         {
             return block(m);
@@ -703,147 +706,21 @@ namespace parser {
         !!(x) ? 0 : throw_error((msg));   \
     } while (0)
 
-        ir::block* block(source_map& m)
-        {
-            std::vector<ir::node*> stmts;
-            stmts.reserve(20);
+        ir::block* block(source_map& m);
 
-            bool inblock = true;
+        ir::node* stmt(source_map& m);
 
-            while (inblock) {
-                const auto& t = peek();
-                switch (t.type()) {
-                    case token_type::LBRACE:
-                        advance();
-                        stmts.push_back(block(m));
-                        break;
-                    case token_type::RBRACE:
-                        advance();
-                        inblock = false;
-                        break;
-                    case token_type::EOS:
-                        inblock = false;
-                        break;
-                    default:
-                        stmts.push_back(stmt(m));
-                        break;
-                }
-            }
+        ir::variable* var(source_map& m);
 
-            ir::block* blk = arena_.create<ir::block>(arena_);
-            auto beg = stmts.rbegin();
-            const auto end = stmts.rend();
-            for (; beg != end; ++beg) {
-                blk->push_front_statement(*beg);
-            }
-            return blk;
-        }
+        ir::node* factor(source_map& m);
 
-        ir::node* stmt(source_map& m)
-        {
-            auto v = var(m);
-            ENSURE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
-            advance(); /* consume = */
-            auto e = expr(m);
-            ENSURE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
-            advance(); /* consume ; */
-            auto op = arena_.create<ir::assign>();
-            op->set_left(v);
-            op->set_right(e);
-            return op;
-        }
+        ir::node* term(source_map& m);
 
-        ir::variable* var(source_map& m)
-        {
-            auto t = peek();
-            ENSURE(t.is_a(token_type::SYMBOL),
-                    "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
-            cstring nm = arena_.create_string(t.str().ptr, t.length());
-            auto lvar = arena_.create<ir::variable>(nm);
-            m[lvar] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
-            advance();
-            return lvar;
-        }
+        ir::node* expr(source_map& m);
 
-        ir::node* expr(source_map& m)
-        {
-            auto t = peek();
-            if (t.is_a(token_type::LPAREN)) {
-                advance();
-                auto e = expr(m);
-                ENSURE(peek().is_a(token_type::RPAREN), "Unmatched '('.");
-                return e;
-            }
+        ir::node* unop(source_map& m);
 
-            ir::node* a = nullptr;
-
-            if (is_unary_op(t)) {
-                a = unop(m);
-            } else {
-                a = atom(m);
-            }
-
-            if (is_binary_op(peek())) {
-                return binop(a, m);
-            } else {
-                return a;
-            }
-        }
-
-        ir::node* binop(ir::node* a, source_map& m)
-        {
-            ir::untyped_binary_op_base* op = nullptr;
-            ir::node* nodea = a;
-            auto nxt = peek();
-            while (is_binary_op(nxt)) {
-                op = create_binary_op(nxt);
-                m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
-                advance();
-                op->set_left(nodea);
-                op->set_right(atom(m));
-                nxt = peek();
-                nodea = op;
-            }
-            return op;
-        }
-
-        ir::node* unop(source_map& m)
-        {
-            auto op = create_unary_op(peek());
-            m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
-            advance();
-            op->set_operand(atom(m));
-            return op;
-        }
-
-        ir::untyped_atom_base* atom(source_map& m)
-        {
-            auto t = peek();
-            ir::untyped_atom_base* v = nullptr;
-            switch (t.type()) {
-                case token_type::SYMBOL:
-                    v = arena_.create<ir::variable>(arena_.create_string(t.str().ptr, t.length()));
-                    break;
-                case token_type::INTEGER:
-                    v = arena_.create<ir::int_constant>(conversions::to_int(t));
-                    break;
-                case token_type::FLOATING:
-                    v = arena_.create<ir::float_constant>(conversions::to_double(t));
-                    break;
-                case token_type::QUOTE: {
-                    // we have a static string's data here. copy into a new string
-                    cstring str = arena_.create_string(t.str().ptr);
-                    v = arena_.create<ir::string_constant>(str);
-                    break;
-                }
-                default:
-                    PCSH_ASSERT_MSG(false, "Invalid atom value!");
-                    break;
-            }
-            m[v] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
-            advance();
-            return v;
-        }
+        ir::untyped_atom_base* atom(source_map& m);
 
         // parser manipulation
 
@@ -865,7 +742,7 @@ namespace parser {
 
         bool is_unary_op(const token& t)
         {
-            return t.is_a(token_type::MINUS);
+            return t.is_a(token_type::MINUS) || t.is_a(token_type::PLUS);
         }
 
         bool is_binary_op(const token& nxt)
@@ -882,36 +759,195 @@ namespace parser {
             }
         }
 
-        ir::untyped_binary_op_base* create_binary_op(const token& nxt)
+        ir::untyped_binary_op_base* create_binary_op(const token& nxt, ir::node* a, source_map& m)
         {
+            ir::untyped_binary_op_base* op = nullptr;
             switch (nxt.type()) {
                 case token_type::PLUS:
-                    return arena_.create<ir::binary_plus>();
+                    op = arena_.create<ir::binary_plus>();
+                    break;
                 case token_type::MINUS:
-                    return arena_.create<ir::binary_minus>();
+                    op = arena_.create<ir::binary_minus>();
+                    break;
                 case token_type::ASTERISK:
-                    return arena_.create<ir::binary_mult>();
+                    op = arena_.create<ir::binary_mult>();
+                    break;
                 case token_type::FSLASH:
-                    return arena_.create<ir::binary_div>();
+                    op = arena_.create<ir::binary_div>();
+                    break;
                 case token_type::ASSIGN:
-                    return arena_.create<ir::assign>();
+                    op = arena_.create<ir::assign>();
+                    break;
                 default:
                     PCSH_ASSERT_MSG(false, "Invalid binary operation!");
-                    return nullptr;
+                    break;
+            }
+            m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
+            advance();
+            op->set_left(a);
+            op->set_right(term(m));
+            return op;
+        }
+
+        ir::untyped_unary_op_base* create_unary_op(const token& nxt, source_map& m)
+        {
+            ir::untyped_unary_op_base* op = nullptr;
+            switch (nxt.type()) {
+                case token_type::MINUS:
+                    op = arena_.create<ir::unary_minus>();
+                    break;
+                case token_type::PLUS:
+                    op = arena_.create<ir::unary_plus>();
+                    break;
+                default:
+                    PCSH_ASSERT_MSG(false, "Invalid binary operation!");
+                    break;
+            }
+            m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
+            advance();
+            op->set_operand(factor(m));
+            return op;
+        }
+    };
+
+    ir::block* parser::parser_engine::block(source_map& m)
+    {
+        std::vector<ir::node*> stmts;
+        stmts.reserve(20);
+
+        bool inblock = true;
+
+        while (inblock) {
+            const auto& t = peek();
+            switch (t.type()) {
+                case token_type::LBRACE:
+                    advance();
+                    stmts.push_back(block(m));
+                    break;
+                case token_type::RBRACE:
+                    advance();
+                    inblock = false;
+                    break;
+                case token_type::EOS:
+                    inblock = false;
+                    break;
+                default:
+                    stmts.push_back(stmt(m));
+                    break;
             }
         }
 
-        ir::untyped_unary_op_base* create_unary_op(const token& nxt)
-        {
-            switch (nxt.type()) {
-                case token_type::MINUS:
-                    return arena_.create<ir::unary_minus>();
-                default:
-                    PCSH_ASSERT_MSG(false, "Invalid binary operation!");
-                    return nullptr;
-            }
+        ir::block* blk = arena_.create<ir::block>(arena_);
+        auto beg = stmts.rbegin();
+        const auto end = stmts.rend();
+        for (; beg != end; ++beg) {
+            blk->push_front_statement(*beg);
         }
-    };
+        return blk;
+    }
+
+    ir::node* parser::parser_engine::stmt(source_map& m)
+    {
+        auto v = var(m);
+        ENSURE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
+        advance(); /* consume = */
+        auto e = expr(m);
+        ENSURE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
+        advance(); /* consume ; */
+        auto op = arena_.create<ir::assign>();
+        op->set_left(v);
+        op->set_right(e);
+        return op;
+    }
+
+    ir::variable* parser::parser_engine::var(source_map& m)
+    {
+        auto t = peek();
+        ENSURE(t.is_a(token_type::SYMBOL),
+               "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
+        cstring nm = arena_.create_string(t.str().ptr, t.length());
+        auto lvar = arena_.create<ir::variable>(nm);
+        m[lvar] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
+        advance();
+        return lvar;
+    }
+
+    ir::node* parser::parser_engine::expr(source_map& m)
+    {
+        ir::node* a = term(m);
+        auto t = peek();
+        while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS)) {
+            a = create_binary_op(t, a, m);
+            t = peek();
+        }
+        return a;
+    }
+
+    ir::node* parser::parser_engine::unop(source_map& m)
+    {
+        auto t = peek();
+        if (is_unary_op(t)) {
+            return create_unary_op(t, m);
+        } else {
+            return factor(m);
+        }
+    }
+
+    ir::untyped_atom_base* parser::parser_engine::atom(source_map& m)
+    {
+        auto t = peek();
+        ir::untyped_atom_base* v = nullptr;
+        switch (t.type()) {
+            case token_type::SYMBOL:
+                v = arena_.create<ir::variable>(arena_.create_string(t.str().ptr, t.length()));
+                break;
+            case token_type::INTEGER:
+                v = arena_.create<ir::int_constant>(conversions::to_int(t));
+                break;
+            case token_type::FLOATING:
+                v = arena_.create<ir::float_constant>(conversions::to_double(t));
+                break;
+            case token_type::QUOTE: {
+                // we have a static string's data here. copy into a new string
+                cstring str = arena_.create_string(t.str().ptr);
+                v = arena_.create<ir::string_constant>(str);
+                break;
+            }
+            default:
+                PCSH_ASSERT_MSG(false, "Invalid atom value!");
+                break;
+        }
+        m[v] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
+        advance();
+        return v;
+    }
+
+    ir::node* parser::parser_engine::term(source_map& m)
+    {
+        ir::node* a = unop(m);
+        auto t = peek();
+        while (t.is_a(token_type::FSLASH) || t.is_a(token_type::ASTERISK)) {
+            advance();
+            a = create_binary_op(peek(), a, m);
+            t = peek();
+        }
+        return a;
+    }
+
+    ir::node* parser::parser_engine::factor(source_map& m)
+    {
+        auto t = peek();
+        if (t.is_a(token_type::LPAREN)) {
+            advance();
+            auto e = expr(m);
+            t = peek();
+            ENSURE(t.is_a(token_type::RPAREN), "Unmatched `(' when parsing an expression.");
+            advance();
+            return e;
+        } else {
+            return atom(m);
+        }
+    }
 
     ir::tree::ptr parser::parse_to_tree()
     {

@@ -46,6 +46,12 @@ namespace ir {
             value_ = static_cast<T>(v->value());
         }
 
+        void visit_impl(const unary_plus* v) override
+        {
+            v->operand()->accept(this);
+            // value_ = value_;
+        }
+
         void visit_impl(const unary_minus* v) override
         {
             v->operand()->accept(this);
@@ -105,6 +111,11 @@ namespace ir {
     }
 
     void evaluator::visit_impl(const string_constant* v)
+    {
+        curr_visitor_->visit(v);
+    }
+
+    void evaluator::visit_impl(const unary_plus* v)
     {
         curr_visitor_->visit(v);
     }

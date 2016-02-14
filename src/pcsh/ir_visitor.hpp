@@ -39,6 +39,11 @@ namespace ir {
             visit_impl(v);
         }
 
+        void visit(const unary_plus* v)
+        {
+            visit_impl(v);
+        }
+
         void visit(const unary_minus* v)
         {
             visit_impl(v);
@@ -93,6 +98,11 @@ namespace ir {
 
         virtual void visit_impl(const string_constant* v)
         { }
+
+        virtual void visit_impl(const unary_plus* v)
+        {
+            visit_impl_unary_op(v);
+        }
 
         virtual void visit_impl(const unary_minus* v)
         {
