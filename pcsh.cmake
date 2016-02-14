@@ -41,6 +41,7 @@ set(pcsh_int_hdr
     ${pcsh_src}/tree_cloner.hpp;
     ${pcsh_src}/tree_validation.hpp;
     ${pcsh_src}/type_checker.hpp;
+    src/linebufistream.hpp;
 )
 
 # -- Sources

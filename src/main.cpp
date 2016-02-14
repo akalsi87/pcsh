@@ -12,7 +12,7 @@ int main(int argc, const char* argv[])
 {
     using namespace pcsh;
 
-    auto& in = linebuff_istream(std::cin);
+    linebuff_istream in(std::cin);
     auto& out = std::cout;
 
     ir::tree::ptr t1;
