@@ -3,6 +3,8 @@
  * \date Jan 31, 2016
  */
 
+#include "pcsh/parser.hpp"
+
 #include "ir_evaluator.hpp"
 #include "ir_nodes.hpp"
 #include "symbol_table.hpp"
@@ -33,7 +35,7 @@ namespace ir {
                 return;
             }
             auto msg = std::string("Variable `") + v->name() + "' used before it is assigned a value!";
-            PCSH_ASSERT_MSG(false, msg.c_str());
+            throw parser::exception(msg, "", "", "");
         }
 
         void visit_impl(const int_constant* v) override

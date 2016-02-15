@@ -945,7 +945,7 @@ namespace parser {
         ir::node* a = unop(m);
         auto t = peek();
         while (t.is_a(token_type::FSLASH) || t.is_a(token_type::ASTERISK)) {
-            a = create_binary_op(peek(), a, m);
+            a = create_binary_op(t, a, m);
             t = peek();
         }
         return a;

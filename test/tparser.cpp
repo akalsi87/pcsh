@@ -146,7 +146,7 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
 {
     using namespace pcsh::parser;
     std::istringstream is(
-        "#/usr/bin/env pcsh\n"
+        "#!/usr/bin/env pcsh\n"
         "foo = 1;## test if double comment works\n"
         "bar = -121;\n"
         "213 + 456123.123;\n"
@@ -266,7 +266,7 @@ CPP_TEST( irCreationBasic )
     using namespace pcsh::parser;
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             "foo = 1;## test if double comment works\n"
             "bar = 2;\n"
             "#{ y = 1; } { z = 2; }\n"
@@ -277,7 +277,7 @@ CPP_TEST( irCreationBasic )
     }
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             "{\n"
             "    a = 1;\n"
             "    b = -42;\n"
@@ -288,7 +288,7 @@ CPP_TEST( irCreationBasic )
     }
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             ""
             "    foo = 1;\n"
             "    doo = -1.0 + foo;\n"
@@ -298,7 +298,7 @@ CPP_TEST( irCreationBasic )
     }
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             "foo = 1;\n"
             "{\n"
             "    doo = -1.0 + foo;\n"
@@ -308,7 +308,7 @@ CPP_TEST( irCreationBasic )
     }
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             "foo = 1;\n"
             "{\n"
             "    doo = \"a literal string.\";\n"
@@ -318,7 +318,7 @@ CPP_TEST( irCreationBasic )
     }
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             "foo = 1;\n"
             "{\n"
             "    doo = \"a\n\";\n"
@@ -328,7 +328,7 @@ CPP_TEST( irCreationBasic )
     }
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             "{\n"
             "    doo = -1.0f;\n"
             "}");
@@ -343,7 +343,7 @@ CPP_TEST( irCreationBasic )
     }
     {
         std::istringstream is(
-            "#/usr/bin/env pcsh\n"
+            "#!/usr/bin/env pcsh\n"
             "{\n"
             "    doo = -1.0;\n"
             "    doo = \"foo\";\n"
@@ -356,5 +356,12 @@ CPP_TEST( irCreationBasic )
             shouldBeTrue = (ex.message().find("Type") != std::string::npos);
         }
         TEST_TRUE(shouldBeTrue);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = 1 + -9 + +9 * 71.5;\n");
+        parser p(is);
+        p.parse_to_tree()->print(std::cout);
     }
 }

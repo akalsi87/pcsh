@@ -58,6 +58,10 @@ namespace pcsh {
                     while (c != EOF) {
                         if (c == '\r' || c == '\n') {
                             istrm_.get();
+                            if ((c == '\r') && (istrm_.peek() == '\n')) {
+                                istrm_.get();
+                            }
+                            buffer_.push_back('\n');
                             break;
                         }
                         if (check_eot_ && 
