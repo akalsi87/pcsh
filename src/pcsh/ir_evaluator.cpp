@@ -12,8 +12,20 @@
 namespace pcsh {
 namespace ir {
 
+    template <bool isint>
+    bool compare_eq(const comp_equals* v, const variable_accessor& acc, arena& ar);
+
     template <class T>
-    class evaluator::typed_evaluate : public node_visitor
+    class typed_evaluate;
+
+    template <>
+    class typed_evaluate<void>;
+
+    template <>
+    class typed_evaluate<cstring>;
+        
+    template <class T>
+    class typed_evaluate : public node_visitor
     {
       public:
         typed_evaluate(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_()
@@ -27,7 +39,7 @@ namespace ir {
         variable_accessor accessor_;
         arena& ar_;
         T value_;
-
+            
         void visit_impl(const variable* v) override
         {
             auto res = accessor_.lookup(v, true);
@@ -111,49 +123,14 @@ namespace ir {
 
         void visit_impl(const comp_equals* v) override
         {
-            if (result_type_of<T>::value == result_type::INTEGER) {
-                ir::node_visitor* vis = nullptr;
-                switch (v->comp_type()) {
-                    case result_type::STRING: {
-                        typed_evaluate<cstring> eval(accessor_.symtab_list(), ar_);
-                        v->left()->accept(&eval);
-                        auto v1 = eval.value();
-                        v->right()->accept(&eval);
-                        auto v2 = eval.value();
-                        value_ = ::strcmp(v1, v2) == 0;
-                        break;
-                    }
-                    case result_type::INTEGER: {
-                        typed_evaluate<int> eval(accessor_.symtab_list(), ar_);
-                        v->left()->accept(&eval);
-                        auto v1 = eval.value();
-                        v->right()->accept(&eval);
-                        auto v2 = eval.value();
-                        value_ = v1 == v2;
-                        break;
-                    }
-                    case result_type::FLOATING: {
-                        typed_evaluate<int> eval(accessor_.symtab_list(), ar_);
-                        v->left()->accept(&eval);
-                        auto v1 = eval.value();
-                        v->right()->accept(&eval);
-                        auto v2 = eval.value();
-                        value_ = v1 == v2;
-                        break;
-                    }
-                    default: {
-                        PCSH_ASSERT_MSG(false, "Invalid comparison type");
-                        break;
-                    }
-                }
-            } else {
-                parser::throw_parser_exception("Invalid use of `=='. Return type of expression must be integer.", "", "", "");
-            }
+            value_ = compare_eq<result_type_of<T>::value == result_type::INTEGER>(v, accessor_, ar_)
+                         ? 1
+                         : 0;
         }
     };
 
     template <>
-    class evaluator::typed_evaluate<cstring> : public node_visitor
+    class typed_evaluate<cstring> : public node_visitor
     {
       public:
         typed_evaluate(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
@@ -203,9 +180,60 @@ namespace ir {
     };
 
     template <>
-    class evaluator::typed_evaluate<void> : public node_visitor
+    class typed_evaluate<void> : public node_visitor
     { };
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// operations
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+    template <>
+    inline bool compare_eq<false>(const comp_equals* v, const variable_accessor& acc, arena& ar)
+    {
+        parser::throw_parser_exception("Invalid use of `=='. Return type of expression must be integer.", "", "", "");
+        return false;
+    }
+
+    template <>
+    inline bool compare_eq<true>(const comp_equals* v, const variable_accessor& acc, arena& ar)
+    {
+        switch (v->comp_type()) {
+            case result_type::STRING: {
+                typed_evaluate<cstring> eval(acc.symtab_list(), ar);
+                v->left()->accept(&eval);
+                auto v1 = eval.value();
+                v->right()->accept(&eval);
+                auto v2 = eval.value();
+                return ::strcmp(v1, v2) == 0;
+            }
+            case result_type::INTEGER: {
+                typed_evaluate<int> eval(acc.symtab_list(), ar);
+                v->left()->accept(&eval);
+                auto v1 = eval.value();
+                v->right()->accept(&eval);
+                auto v2 = eval.value();
+                return v1 == v2;
+                break;
+            }
+            case result_type::FLOATING: {
+                typed_evaluate<int> eval(acc.symtab_list(), ar);
+                v->left()->accept(&eval);
+                auto v1 = eval.value();
+                v->right()->accept(&eval);
+                auto v2 = eval.value();
+                return v1 == v2;
+            }
+            default: {
+                PCSH_ASSERT_MSG(false, "Invalid comparison type");
+                return false;
+            }
+        }                
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// evaluator
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
     void evaluator::visit_impl(const variable* v)
     {
         curr_visitor_->visit(v);
@@ -360,26 +388,26 @@ namespace ir {
         auto c = v->condition();
         auto cty = v->condition_type();
 
-        bool execBody = false;
+        bool runbody = false;
 
         switch (cty) {
             case pcsh::result_type::INTEGER: {
                 typed_evaluate<int> eval(nested_tables_, *ar_);
                 c->accept(&eval);
-                execBody = (eval.value() != 0);
+                runbody = (eval.value() != 0);
                 break;
             }
             case pcsh::result_type::FLOATING: {
                 typed_evaluate<double> eval(nested_tables_, *ar_);
                 c->accept(&eval);
-                execBody = (eval.value() != 0.0);
+                runbody = (eval.value() != 0.0);
                 break;
             }
             case pcsh::result_type::STRING: {
                 typed_evaluate<cstring> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 cstring str = eval.value();
-                execBody = (str[0] != '\0');
+                runbody = (str[0] != '\0');
                 break;
             }
             default:
@@ -387,7 +415,7 @@ namespace ir {
                 break;
         }
 
-        if (execBody) {
+        if (runbody) {
             v->body()->accept(this);
         }
     }

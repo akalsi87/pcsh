@@ -26,9 +26,6 @@ namespace ir {
         sym_table_list nested_tables_;
         node* last_assign_;
 
-        template <class T>
-        class typed_evaluate;
-
         void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;
         void visit_impl(const float_constant* v) override;
