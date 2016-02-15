@@ -785,11 +785,21 @@ namespace parser {
             return curr_;
         }
 
-        void do_peek();
+        void do_peek()
+        {
+            PCSH_ASSERT(ws_ == 0);
+            auto t = parser_.peek_impl(0, &ws_);
+            if (PCSH_UNLIKELY(t.is_a(token_type::FAIL))) {
+                throw_error(t.str().ptr);
+            }
+            PCSH_ASSERT(!parsed_);
+            parsed_ = true;
+            curr_ = t;
+        }
 
         PCSH_INLINE void advance()
         {
-            PCSH_ENFORCE(parsed_);
+            PCSH_ASSERT(parsed_);
             token t = curr_;
             if (!t.is_a(token_type::QUOTE)) {
                 parser_.advance_impl(ws_ + t.length());
@@ -919,34 +929,6 @@ namespace parser {
         return blk;
     }
 
-    ir::node* parser::parser_engine::stmt(source_map& m)
-    {
-        auto t = peek();
-        ir::node* op = nullptr;
-        if (t.is_a(token_type::IF)) {
-            op = ifstmt(m);
-        } else if (t.is_a(token_type::LBRACE)) {
-            op = block(m);
-        } else {
-            op = expr(m);
-            ENSURE(peek().is_a(token_type::SEMICOLON), "Expected the end of a statement with `;'");
-            advance();
-        }
-        return op;
-    }
-
-    ir::variable* parser::parser_engine::var(source_map& m)
-    {
-        auto t = peek();
-        ENSURE(t.is_a(token_type::SYMBOL),
-               "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
-        cstring nm = arena_.create_string(t.str().ptr, t.length());
-        auto lvar = arena_.create<ir::variable>(nm);
-        m[lvar] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
-        advance();
-        return lvar;
-    }
-
     ir::node* parser::parser_engine::expr(source_map& m)
     {
         ir::node* a = term(m);
@@ -962,43 +944,20 @@ namespace parser {
         return a;
     }
 
-    ir::node* parser::parser_engine::unop(source_map& m)
+    ir::node* parser::parser_engine::stmt(source_map& m)
     {
         auto t = peek();
-        if (is_unary_op(t)) {
-            return create_unary_op(t, m);
+        ir::node* op = nullptr;
+        if (t.is_a(token_type::IF)) {
+            op = ifstmt(m);
+        } else if (t.is_a(token_type::LBRACE)) {
+            op = block(m);
         } else {
-            return factor(m);
+            op = expr(m);
+            ENSURE(peek().is_a(token_type::SEMICOLON), "Expected the end of a statement with `;'");
+            advance();
         }
-    }
-
-    ir::untyped_atom_base* parser::parser_engine::atom(source_map& m)
-    {
-        auto t = peek();
-        ir::untyped_atom_base* v = nullptr;
-        switch (t.type()) {
-            case token_type::SYMBOL:
-                v = arena_.create<ir::variable>(arena_.create_string(t.str().ptr, t.length()));
-                break;
-            case token_type::INTEGER:
-                v = arena_.create<ir::int_constant>(conversions::to_int(t));
-                break;
-            case token_type::FLOATING:
-                v = arena_.create<ir::float_constant>(conversions::to_double(t));
-                break;
-            case token_type::QUOTE: {
-                // we have a static string's data here. copy into a new string
-                cstring str = arena_.create_string(t.str().ptr);
-                v = arena_.create<ir::string_constant>(str);
-                break;
-            }
-            default:
-                PCSH_ASSERT_MSG(false, "Invalid atom value!");
-                break;
-        }
-        m[v] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
-        advance();
-        return v;
+        return op;
     }
 
     ir::node* parser::parser_engine::term(source_map& m)
@@ -1042,16 +1001,55 @@ namespace parser {
         return arena_.create<ir::if_stmt>(cond, stmt(m));
     }
 
-    void parser::parser_engine::do_peek()
+    ir::variable* parser::parser_engine::var(source_map& m)
     {
-        PCSH_ASSERT(ws_ == 0);
-        auto t = parser_.peek_impl(0, &ws_);
-        if (PCSH_UNLIKELY(t.is_a(token_type::FAIL))) {
-            throw_error(t.str().ptr);
+        auto t = peek();
+        ENSURE(t.is_a(token_type::SYMBOL),
+               "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
+        cstring nm = arena_.create_string(t.str().ptr, t.length());
+        auto lvar = arena_.create<ir::variable>(nm);
+        m[lvar] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
+        advance();
+        return lvar;
+    }
+
+    ir::node* parser::parser_engine::unop(source_map& m)
+    {
+        auto t = peek();
+        if (is_unary_op(t)) {
+            return create_unary_op(t, m);
+        } else {
+            return factor(m);
         }
-        PCSH_ASSERT(!parsed_);
-        parsed_ = true;
-        curr_ = t;
+    }
+
+    ir::untyped_atom_base* parser::parser_engine::atom(source_map& m)
+    {
+        auto t = peek();
+        ir::untyped_atom_base* v = nullptr;
+        switch (t.type()) {
+            case token_type::SYMBOL:
+                v = arena_.create<ir::variable>(arena_.create_string(t.str().ptr, t.length()));
+                break;
+            case token_type::INTEGER:
+                v = arena_.create<ir::int_constant>(conversions::to_int(t));
+                break;
+            case token_type::FLOATING:
+                v = arena_.create<ir::float_constant>(conversions::to_double(t));
+                break;
+            case token_type::QUOTE: {
+                // we have a static string's data here. copy into a new string
+                cstring str = arena_.create_string(t.str().ptr);
+                v = arena_.create<ir::string_constant>(str);
+                break;
+            }
+            default:
+                PCSH_ASSERT_MSG(false, "Invalid atom value!");
+                break;
+        }
+        m[v] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
+        advance();
+        return v;
     }
 
     ir::tree::ptr parser::parse_to_tree()
