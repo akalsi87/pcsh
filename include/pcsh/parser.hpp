@@ -44,6 +44,7 @@ namespace parser {
         FLOATING,
         EOS,
         IF,
+        ISEQUAL,
         NONE,
         FAIL
     };
@@ -118,13 +119,11 @@ namespace parser {
     /// parser exception
     //////////////////////////////////////////////////////////////////////////
 
+    void throw_parser_exception(const std::string& msg, const std::string& fname, const std::string& func, const std::string& line);
+
     class exception
     {
       public:
-        inline exception(const std::string& msg, const std::string& fname, const std::string& func, const std::string& line)
-          : msg_(msg), fname_(fname), func_(func), line_(line)
-        { }
-
         inline ~exception()
         { }
 
@@ -140,6 +139,12 @@ namespace parser {
         std::string fname_;
         std::string func_;
         std::string line_;
+
+        inline exception(const std::string& msg, const std::string& fname, const std::string& func, const std::string& line)
+          : msg_(msg), fname_(fname), func_(func), line_(line)
+        { }
+
+        friend void throw_parser_exception(const std::string&, const std::string&, const std::string&, const std::string&);
     };
 
     //////////////////////////////////////////////////////////////////////////

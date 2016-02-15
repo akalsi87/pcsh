@@ -220,11 +220,32 @@ namespace ir {
     class assign : public binary_op<assign>
     {
       public:
-        variable* var() const
+        inline variable* var() const
         {
             PCSH_ASSERT_MSG(dynamic_cast<variable*>(left_) != nullptr, "Assignment node left must be a variable.");
             return reinterpret_cast<variable*>(left_);
         }
+    };
+
+    class comp_equals : public binary_op<comp_equals>
+    {
+      public:
+        comp_equals()
+          : comp_ty_(result_type::UNDETERMINED)
+        { }
+
+        inline result_type comp_type() const
+        {
+            return comp_ty_;
+        }
+
+        inline void set_comp_type(result_type ty) const
+        {
+            comp_ty_ = ty;
+        }
+
+      private:
+        mutable result_type comp_ty_;
     };
 
     class block : public atom_base<block>

@@ -424,3 +424,68 @@ CPP_TEST( irCreationBasic )
         TEST_TRUE(ir::query(ptree.get(), "car").dbl_val == 20.0);
     }
 }
+
+CPP_TEST( eqOp )
+{
+    using namespace pcsh;
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (1 == 1);\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (1 == 1.0);\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (1 == 0);\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 0);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (1 == 0.0);\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 0);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (\"a\" == \"b\");\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 0);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (\"a\" == \"a\");\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+    }
+}

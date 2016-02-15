@@ -76,37 +76,16 @@ namespace ir {
     class variable_accessor
     {
       public:
-        variable_accessor(const sym_table_list& l) : list_(l)
+        inline variable_accessor(const sym_table_list& l) : list_(l)
         { }
 
-        symbol_table::entry lookup(const ir::variable* v, bool findevaluated = false) const
-        {
-            auto it = list_.rbegin();
-            auto end = list_.rend();
-            for (; it != end; ++it) {
-                const auto& tblptr = *it;
-                auto res = symbol_table::lookup(*tblptr, v);
-                if (res.ptr) {
-                    if (!findevaluated || res.evaluated) {
-                        return res;
-                    }
-                }
-            }
-            return { nullptr, result_type::UNDETERMINED, false };
-        }
+        symbol_table::entry lookup(const ir::variable* v, bool findevaluated = false) const;
 
-        void set(const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED, bool eval = false) const
+        void set(const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED, bool eval = false) const;
+
+        inline const sym_table_list& symtab_list() const
         {
-            auto it = list_.rbegin();
-            auto end = list_.rend();
-            for (; it != end; ++it) {
-                const auto& tblptr = *it;
-                auto res = symbol_table::lookup(*tblptr, v);
-                if (res.ptr) {
-                    symbol_table::set(*tblptr, v, value, ty, eval);
-                    return;
-                }
-            }
+            return list_;
         }
       private:
         const sym_table_list& list_;

@@ -150,6 +150,9 @@ namespace parser {
                 PCSH_ASSERT(nm);
                 len = strlen(nm);
                 break;
+            case token_type::ISEQUAL:
+                PCSH_ASSERT((len == 2) && (nm[0] == '=') && (nm[1] == '='));
+                break;
             default:
                 PCSH_ASSERT_MSG(false, "Invalid token type!");
                 break;
@@ -217,6 +220,9 @@ namespace parser {
                 break;
             case token_type::IF:
                 str += "if            |";
+                break;
+            case token_type::ISEQUAL:
+                str += "isequal       |";
                 break;
         }
         return str.append(str_, str_ + len_);
@@ -492,7 +498,8 @@ namespace parser {
             case ';':
                 return token::get(token_type::SEMICOLON, ";", 1);
             case '=':
-                return token::get(token_type::ASSIGN, "=", 1);
+                return (strm_->peek_at(p + 1) == '=') ? token::get(token_type::ISEQUAL, "==", 2)
+                                                      : token::get(token_type::ASSIGN, "=", 1);
             case '+':
                 return token::get(token_type::PLUS, "+", 1);
             case '-':
@@ -593,8 +600,8 @@ namespace parser {
         static std::string buffer;
         buffer.reserve(1024);
         buffer.resize(0);
-        pos_t startp = 1;
-        int c = strm_->peek_at(++p);
+        pos_t startp = ++p; // skip past start quote
+        int c = strm_->peek_at(p);
         while (true) {
             if (c == strm_->EOS) {
                 return token::get(token_type::FAIL, "End-of-stream while reading string literal.");
@@ -710,7 +717,12 @@ namespace parser {
     class parser::parser_engine
     {
       public:
-        parser_engine(parser& p, arena& a) : parser_(p), arena_(a), func_("(main)")
+        parser_engine(parser& p, arena& a)
+          : parser_(p), arena_(a)
+          , func_("(main)")
+          , parsed_(false)
+          , ws_(0)
+          , curr_(token::get(token_type::EOS, "\xFF", 1))
         { }
 
         //
@@ -724,6 +736,9 @@ namespace parser {
         parser& parser_;
         arena&  arena_;
         std::string func_;
+        bool parsed_;
+        pos_t ws_;
+        token curr_;
 
         int throw_error(cstring msg)
         {
@@ -733,7 +748,7 @@ namespace parser {
             const auto& linestr = "line " + std::to_string(parser_.line()) + ", char " + std::to_string(parser_.curr_pos() - parser_.line_start());
             std::string message(msg);
             message += "\n\tnear: \"" + parser_.copy_line(0) + "\"";
-            throw exception(message, parser_.filename_, func_, linestr);
+            throw_parser_exception(message, parser_.filename_, func_, linestr);
             return 0;
         }
 
@@ -762,20 +777,30 @@ namespace parser {
 
         // parser manipulation
 
-        token peek()
+        PCSH_INLINE token peek()
         {
-            auto t = parser_.peek_impl();
-            if (PCSH_UNLIKELY(t.is_a(token_type::FAIL))) {
-                throw_error(t.str().ptr);
+            if (!parsed_) {
+                do_peek();
             }
-            return t;
+            return curr_;
         }
 
-        void advance()
+        void do_peek();
+
+        PCSH_INLINE void advance()
         {
-            pos_t ws = 0;
-            auto t = parser_.peek_impl(ws, &ws);
-            parser_.advance_impl(ws + t.length() + (t.is_a(token_type::QUOTE) ? 1 : 0));
+            PCSH_ENFORCE(parsed_);
+            token t = curr_;
+            if (!t.is_a(token_type::QUOTE)) {
+                parser_.advance_impl(ws_ + t.length());
+            } else {
+                parser_.advance_impl(ws_ + t.length() + 2, false);
+            }
+            parsed_ = false;
+            ws_ = 0;
+#if !defined(NDEBUG)
+            t = token::get(token_type::EOS, "\xFF", 1);
+#endif // !defined(NDEBUG)
         }
 
         bool is_unary_op(const token& t)
@@ -791,6 +816,7 @@ namespace parser {
                 case token_type::ASTERISK:
                 case token_type::FSLASH:
                 case token_type::ASSIGN:
+                case token_type::ISEQUAL:
                     return true;
                 default:
                     return false;
@@ -812,6 +838,9 @@ namespace parser {
                     break;
                 case token_type::FSLASH:
                     op = arena_.create<ir::binary_div>();
+                    break;
+                case token_type::ISEQUAL:
+                    op = arena_.create<ir::comp_equals>();
                     break;
                 case token_type::ASSIGN:
                     op = arena_.create<ir::assign>();
@@ -922,7 +951,11 @@ namespace parser {
     {
         ir::node* a = term(m);
         auto t = peek();
-        while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS) || t.is_a(token_type::ASSIGN)) {
+        while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS) || t.is_a(token_type::LPAREN)) {
+            if (t.is_a(token_type::LPAREN)) {
+                a = factor(m);
+                continue;
+            }
             a = create_binary_op(t, a, m);
             t = peek();
         }
@@ -1009,6 +1042,18 @@ namespace parser {
         return arena_.create<ir::if_stmt>(cond, stmt(m));
     }
 
+    void parser::parser_engine::do_peek()
+    {
+        PCSH_ASSERT(ws_ == 0);
+        auto t = parser_.peek_impl(0, &ws_);
+        if (PCSH_UNLIKELY(t.is_a(token_type::FAIL))) {
+            throw_error(t.str().ptr);
+        }
+        PCSH_ASSERT(!parsed_);
+        parsed_ = true;
+        curr_ = t;
+    }
+
     ir::tree::ptr parser::parse_to_tree()
     {
         auto treeptr = ir::tree::create();
@@ -1020,7 +1065,7 @@ namespace parser {
             validate_tree(treeptr);
         } catch(const ir::type_checker_error& ex) {
             const source_info& info = sm[ex.left];
-            throw exception(ex.msg, info.filename, info.function, info.line);
+            throw_parser_exception(ex.msg, info.filename, info.function, info.line);
         }
         return treeptr;
     }
@@ -1033,6 +1078,11 @@ namespace parser {
             str.push_back(c);
         }
         return str;
+    }
+
+    void throw_parser_exception(const std::string& msg, const std::string& fname, const std::string& func, const std::string& line)
+    {
+        throw exception(msg, fname, func, line);
     }
 
 }// namespace parser

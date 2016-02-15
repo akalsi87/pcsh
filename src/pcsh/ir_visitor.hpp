@@ -23,67 +23,72 @@ namespace ir {
         inline virtual ~node_visitor()
         { }
 
-        void visit(const variable* v)
+        inline void visit(const variable* v)
         {
             visit_impl(v);
         }
 
-        void visit(const int_constant* v)
+        inline void visit(const int_constant* v)
         {
             visit_impl(v);
         }
 
-        void visit(const float_constant* v)
+        inline void visit(const float_constant* v)
         {
             visit_impl(v);
         }
 
-        void visit(const string_constant* v)
+        inline void visit(const string_constant* v)
         {
             visit_impl(v);
         }
 
-        void visit(const unary_plus* v)
+        inline void visit(const unary_plus* v)
         {
             visit_impl(v);
         }
 
-        void visit(const unary_minus* v)
+        inline void visit(const unary_minus* v)
         {
             visit_impl(v);
         }
 
-        void visit(const binary_div* v)
+        inline void visit(const binary_div* v)
         {
             visit_impl(v);
         }
 
-        void visit(const binary_minus* v)
+        inline void visit(const binary_minus* v)
         {
             visit_impl(v);
         }
 
-        void visit(const binary_mult* v)
+        inline void visit(const binary_mult* v)
         {
             visit_impl(v);
         }
 
-        void visit(const binary_plus* v)
+        inline void visit(const binary_plus* v)
         {
             visit_impl(v);
         }
 
-        void visit(const assign* v)
+        inline void visit(const assign* v)
         {
             visit_impl(v);
         }
 
-        void visit(const block* v)
+        inline void visit(const block* v)
         {
             visit_impl(v);
         }
 
-        void visit(const if_stmt* v)
+        inline void visit(const if_stmt* v)
+        {
+            visit_impl(v);
+        }
+
+        inline void visit(const comp_equals* v)
         {
             visit_impl(v);
         }
@@ -137,6 +142,11 @@ namespace ir {
         }
 
         virtual void visit_impl(const binary_plus* v)
+        {
+            visit_impl_binary_op(v);
+        }
+
+        virtual void visit_impl(const comp_equals* v)
         {
             visit_impl_binary_op(v);
         }

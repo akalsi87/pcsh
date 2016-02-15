@@ -93,4 +93,39 @@ namespace detail {
     }
 
 }//namespace symbol_table
+
+namespace ir {
+
+    symbol_table::entry variable_accessor::lookup(const variable* v, bool findevaluated) const
+    {
+        auto it = list_.rbegin();
+        auto end = list_.rend();
+        for (; it != end; ++it) {
+            const auto& tblptr = *it;
+            auto res = symbol_table::lookup(*tblptr, v);
+            if (res.ptr) {
+                if (!findevaluated || res.evaluated) {
+                    return res;
+                }
+            }
+        }
+        return{ nullptr, result_type::UNDETERMINED, false };
+    }
+
+    void variable_accessor::set(const variable* v, node* value, result_type ty, bool eval) const
+    {
+        auto it = list_.rbegin();
+        auto end = list_.rend();
+        for (; it != end; ++it) {
+            const auto& tblptr = *it;
+            auto res = symbol_table::lookup(*tblptr, v);
+            if (res.ptr) {
+                symbol_table::set(*tblptr, v, value, ty, eval);
+                return;
+            }
+        }
+    }
+
+}//namespace ir
+
 }//namespace pcsh

@@ -180,6 +180,20 @@ namespace ir {
         cloned_ = ifs;
     }
 
+    void tree_cloner::visit_impl(const comp_equals* v)
+    {
+        v->left()->accept(this);
+        auto newleft = cloned_;
+        v->right()->accept(this);
+        auto newright = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newbinop = ar.create<comp_equals>();
+        newbinop->set_left(newleft);
+        newbinop->set_right(newright);
+        cloned_ = newbinop;
+    }
+
     tree::ptr tree_cloner::cloned_tree()
     {
         tree_->set_root(root_);

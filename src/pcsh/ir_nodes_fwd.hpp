@@ -34,6 +34,8 @@ namespace ir {
 
     class assign;
 
+    class comp_equals;
+
     // container
     class block;
 

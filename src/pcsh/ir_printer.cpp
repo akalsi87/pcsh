@@ -143,6 +143,15 @@ namespace ir {
         strm_ << ")";
     }
 
+    void printer::visit_impl(const comp_equals* v)
+    {
+        strm_ << "(eq ";
+        v->left()->accept(this);
+        strm_ << " ";
+        v->right()->accept(this);
+        strm_ << ")";
+    }
+
     void printer::print_types(const block* v)
     {
         if (!types_) { return; }

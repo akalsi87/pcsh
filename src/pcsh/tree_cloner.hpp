@@ -38,6 +38,7 @@ namespace ir {
         void visit_impl(const binary_mult* v) override;
         void visit_impl(const binary_plus* v) override;
         void visit_impl(const assign* v) override;
+        void visit_impl(const comp_equals* v) override;
         void visit_impl(const block* v) override;
         void visit_impl(const if_stmt* v) override;
     };

@@ -36,7 +36,7 @@ namespace ir {
                 return;
             }
             auto msg = std::string("Variable `") + v->name() + "' used before it is assigned a value!";
-            throw parser::exception(msg, "", "", "");
+            parser::throw_parser_exception(msg, "", "", "");
         }
 
         void visit_impl(const int_constant* v) override
@@ -108,6 +108,48 @@ namespace ir {
                 res.ptr->accept(this);
             }
         }
+
+        void visit_impl(const comp_equals* v) override
+        {
+            if (result_type_of<T>::value == result_type::INTEGER) {
+                ir::node_visitor* vis = nullptr;
+                switch (v->comp_type()) {
+                    case result_type::STRING: {
+                        typed_evaluate<cstring> eval(accessor_.symtab_list(), ar_);
+                        v->left()->accept(&eval);
+                        auto v1 = eval.value();
+                        v->right()->accept(&eval);
+                        auto v2 = eval.value();
+                        value_ = ::strcmp(v1, v2) == 0;
+                        break;
+                    }
+                    case result_type::INTEGER: {
+                        typed_evaluate<int> eval(accessor_.symtab_list(), ar_);
+                        v->left()->accept(&eval);
+                        auto v1 = eval.value();
+                        v->right()->accept(&eval);
+                        auto v2 = eval.value();
+                        value_ = v1 == v2;
+                        break;
+                    }
+                    case result_type::FLOATING: {
+                        typed_evaluate<int> eval(accessor_.symtab_list(), ar_);
+                        v->left()->accept(&eval);
+                        auto v1 = eval.value();
+                        v->right()->accept(&eval);
+                        auto v2 = eval.value();
+                        value_ = v1 == v2;
+                        break;
+                    }
+                    default: {
+                        PCSH_ASSERT_MSG(false, "Invalid comparison type");
+                        break;
+                    }
+                }
+            } else {
+                parser::throw_parser_exception("Invalid use of `=='. Return type of expression must be integer.", "", "", "");
+            }
+        }
     };
 
     template <>
@@ -134,7 +176,7 @@ namespace ir {
                 return;
             }
             auto msg = std::string("Variable `") + v->name() + "' used before it is assigned a value!";
-            throw parser::exception(msg, "", "", "");
+            parser::throw_parser_exception(msg, "", "", "");
         }
 
         void visit_impl(const assign* v) override
@@ -152,6 +194,11 @@ namespace ir {
         void visit_impl(const string_constant* v) override
         {
             value_ = v->value();
+        }
+
+        void visit_impl(const comp_equals* v) override
+        {
+            parser::throw_parser_exception("Invalid use of `=='. Return type of expression must be integer.", "", "", "");
         }
     };
 
@@ -276,6 +323,11 @@ namespace ir {
   assign_done_cleanup:
         delete curr_visitor_;
         curr_visitor_ = oldvis;
+    }
+
+    void evaluator::visit_impl(const comp_equals* v)
+    {
+        curr_visitor_->visit(v);
     }
 
     void evaluator::visit_impl(const block* v)
