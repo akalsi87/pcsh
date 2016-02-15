@@ -28,6 +28,12 @@ namespace ir {
         return lfttype;
     }
 
+    void type_checker::visit_impl(const variable* v)
+    {
+        variable_accessor acc(nested_tables_);
+        curr_ = acc.lookup(v).type;
+    }
+
     void type_checker::visit_impl(const int_constant* v)
     {
         curr_ = result_type::INTEGER;

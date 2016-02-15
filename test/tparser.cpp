@@ -364,4 +364,18 @@ CPP_TEST( irCreationBasic )
         parser p(is);
         p.parse_to_tree()->print(std::cout);
     }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "a = 1;\n"
+            "foo = \"asd\";\n"
+            "if (foo) foo = \"bar\";\n"
+            "{\n"
+            "    if (a) {\n"
+            "        a = -1*a;\n"
+            "    }\n"
+            "}\n");
+        parser p(is);
+        p.parse_to_tree()->print(std::cout);
+    }
 }

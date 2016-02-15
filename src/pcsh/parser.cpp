@@ -590,7 +590,7 @@ namespace parser {
         static std::string buffer;
         buffer.reserve(1024);
         buffer.resize(0);
-        pos_t startp = 0;
+        pos_t startp = 1;
         int c = strm_->peek_at(++p);
         while (true) {
             if (c == strm_->EOS) {
@@ -629,7 +629,7 @@ namespace parser {
             c = strm_->peek_at(++p);
         }
 
-        return token::get(token_type::QUOTE, buffer.c_str(), p - startp /* acct for close quote */);
+        return token::get(token_type::QUOTE, buffer.c_str(), p - startp/* acct for close quote */);
     }
 
     token parser::read_number(pos_t p)
@@ -769,7 +769,7 @@ namespace parser {
         {
             pos_t ws = 0;
             auto t = parser_.peek_impl(ws, &ws);
-            parser_.advance_impl(ws + t.length());
+            parser_.advance_impl(ws + t.length() + (t.is_a(token_type::QUOTE) ? 1 : 0));
         }
 
         bool is_unary_op(const token& t)

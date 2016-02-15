@@ -36,6 +36,7 @@ namespace ir {
         const block* curr_blk_;
         sym_table_list nested_tables_;
 
+        void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;
         void visit_impl(const float_constant* v) override;
         void visit_impl(const string_constant* v) override;

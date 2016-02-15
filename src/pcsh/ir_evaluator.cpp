@@ -97,6 +97,38 @@ namespace ir {
         }
     };
 
+    template <>
+    class evaluator::typed_evaluate<cstring> : public node_visitor
+    {
+      public:
+        typed_evaluate(const sym_table_list& p) : accessor_(p), value_(nullptr)
+        { }
+
+        cstring value() const
+        {
+            return value_;
+        }
+      private:
+        variable_accessor accessor_;
+        cstring value_;
+
+        void visit_impl(const variable* v) override
+        {
+            auto res = accessor_.lookup(v, true);
+            if (res.evaluated) {
+                res.ptr->accept(this);
+                return;
+            }
+            auto msg = std::string("Variable `") + v->name() + "' used before it is assigned a value!";
+            throw parser::exception(msg, "", "", "");
+        }
+
+        void visit_impl(const string_constant* v) override
+        {
+            value_ = v->value();
+        }
+    };
+
     void evaluator::visit_impl(const variable* v)
     {
         curr_visitor_->visit(v);
@@ -165,6 +197,7 @@ namespace ir {
                 break;
             case result_type::STRING:
                 // do nothing, we retain the same value as of now
+                curr_visitor_ = new typed_evaluate<cstring>(nested_tables_);
                 break;
             default:
                 PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
@@ -175,8 +208,9 @@ namespace ir {
 
         union
         {
-            double dblval;
-            int    intval;
+            double  dblval;
+            int     intval;
+            cstring strval;
         } uval;
 
         node* newvalue = nullptr;
@@ -191,7 +225,8 @@ namespace ir {
                 newvalue = ar.create<float_constant>(uval.dblval);
                 break;
             case result_type::STRING:
-                newvalue = ent.ptr;
+                uval.strval = static_cast<typed_evaluate<cstring>*>(curr_visitor_)->value();
+                newvalue = ar.create<string_constant>(ar.create_string(uval.strval));
                 break;
             default:
                 PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
@@ -248,8 +283,9 @@ namespace ir {
                 break;
             }
             case pcsh::result_type::STRING: {
-                PCSH_ASSERT_MSG(dynamic_cast<string_constant*>(c) != nullptr, "Expected a string constant.");
-                cstring str = reinterpret_cast<string_constant*>(c)->value();
+                typed_evaluate<cstring> eval(nested_tables_);
+                c->accept(&eval);
+                cstring str = eval.value();
                 execBody = (str[0] != '\0');
                 break;
             }

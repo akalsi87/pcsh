@@ -107,24 +107,18 @@ namespace ir {
     void printer::visit_impl(const block* v)
     {
         {
-            {
-                --nesting_;
-                print_spacing();
-                ++nesting_;
-            }
-            {
-                strm_ << "(block) at " << v;
-                ++nesting_;
-                print_spacing_newline();
-                print_types(v);
-                visit_block_postcbk(v,
-                    [this](const node* a, bool islast) -> void {
-                        if (!islast) {
-                            strm_ << "\n";
-                        }
-                    });
-                --nesting_;
-            }
+            strm_ << "(block) at " << v;
+            print_types(v);
+            ++nesting_;
+            print_spacing_newline();
+            visit_block_postcbk(v,
+                [this](const node* a, bool islast) -> void {
+                    if (!islast) {
+                        strm_ << "\n";
+                        print_spacing();
+                    }
+                });
+            --nesting_;
         }
 
         if (nesting_ == 0) {
@@ -134,19 +128,18 @@ namespace ir {
 
     void printer::visit_impl(const if_stmt* v)
     {
-        print_spacing();
         strm_ << "(if-cond-body ";
         v->condition()->accept(this);
         strm_ << " ";
         auto b = v->body();
+        ++nesting_;
         if (dynamic_cast<block*>(b)) {
             print_spacing_newline();
-            ++nesting_;
             b->accept(this);
-            --nesting_;
         } else {
             b->accept(this);
         }
+        --nesting_;
         strm_ << ")";
     }
 
@@ -154,13 +147,12 @@ namespace ir {
     {
         if (!types_) { return; }
         const auto& tbl = v->table();
-        strm_ << "typemap = { ";
+        strm_ << " | typemap = { ";
         auto ntvec = symbol_table::all_entries(tbl);
         for (const auto& el : ntvec) {
             strm_ << "<" << el.name << ":" << to_string(el.type) << "> ";
         }
         strm_ << "}";
-        print_spacing_newline();
     }
 
     ostream& print(ostream& os, const int_constant* v)
