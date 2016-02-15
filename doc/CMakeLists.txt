@@ -16,11 +16,12 @@ add_hdrs_ide(${doxyfile})
 add_custom_command(OUTPUT doc.done
     COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_CURRENT_BINARY_DIR}/${doxyfile}"
     COMMAND ${CMAKE_COMMAND} -E touch doc.done
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_BINARY_DIR}/html ${CMAKE_CURRENT_SOURCE_DIR}/html
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "-- Generating API documentation with Doxygen..." VERBATIM
-  )
+)
 
-add_custom_target(doc DEPENDS doc.done)
+add_custom_target(doc ALL DEPENDS doc.done)
 
 # html/ <- the trailing slash is important
 file(MAKE_DIRECTORY html)

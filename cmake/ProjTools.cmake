@@ -513,7 +513,7 @@ add_custom_target(check)
 add_custom_target(install_for_check DEPENDS check)
 add_custom_command(OUTPUT install_for_check.done
                    DEPENDS install_for_check
-                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target install
+                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target install --config ${CMAKE_BUILD_TYPE}
                    COMMAND ${CMAKE_COMMAND} -E touch install_for_check.done)
 
 add_custom_target(install_for_check_done DEPENDS install_for_check.done)
