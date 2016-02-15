@@ -4,6 +4,8 @@
  */
 
 #include "pcsh/assert.hpp"
+#include "pcsh/ir.hpp"
+#include "pcsh/ir_operations.hpp"
 #include "pcsh/parser.hpp"
 
 #include "linebufistream.hpp"
@@ -36,16 +38,16 @@ int main(int argc, const char* argv[])
     }
 
     out << "\n";
-    treep->print(out);
+    ir::print(treep.get(), out);
 
     out << "--- Evaluation\n";
     try {
-        treep->evaluate();
+        ir::evaluate(treep.get());
     } catch (...) {
         die_handling_exception();
     }
 
-    treep->print_variables(out);
+    ir::print_variables(treep.get(), out);
 
     return 0;
 }

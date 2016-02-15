@@ -6,8 +6,9 @@
 #ifndef PCSH_TYPE_CHECKER_HPP
 #define PCSH_TYPE_CHECKER_HPP
 
+#include "pcsh/result_type.hpp"
+
 #include "ir_visitor.hpp"
-#include "result_type.hpp"
 #include "symbol_table.hpp"
 
 namespace pcsh {

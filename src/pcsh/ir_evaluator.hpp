@@ -17,13 +17,14 @@ namespace ir {
     class evaluator : public node_visitor
     {
       public:
-        evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_()
+        inline evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_(), last_assign_(nullptr)
         { }
       private:
         const block* curr_;
         node_visitor* curr_visitor_;
         arena* ar_;
         sym_table_list nested_tables_;
+        node* last_assign_;
 
         template <class T>
         class typed_evaluate;

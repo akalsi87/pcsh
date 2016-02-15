@@ -16,7 +16,7 @@ namespace ir {
     class evaluator::typed_evaluate : public node_visitor
     {
       public:
-        typed_evaluate(const sym_table_list& p) : accessor_(p), value_()
+        typed_evaluate(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_()
         { }
 
         T value() const
@@ -25,6 +25,7 @@ namespace ir {
         }
       private:
         variable_accessor accessor_;
+        arena& ar_;
         T value_;
 
         void visit_impl(const variable* v) override
@@ -95,13 +96,25 @@ namespace ir {
             auto right = value_;
             value_ = left + right;
         }
+
+        void visit_impl(const assign* v) override
+        {
+            auto res = accessor_.lookup(v->var());
+            if (!res.evaluated) {
+                v->right()->accept(this);
+                accessor_.set(v->var(), ar_.create<float_constant>(value_),
+                              result_type_of<T>::value, true);
+            } else {
+                res.ptr->accept(this);
+            }
+        }
     };
 
     template <>
     class evaluator::typed_evaluate<cstring> : public node_visitor
     {
       public:
-        typed_evaluate(const sym_table_list& p) : accessor_(p), value_(nullptr)
+        typed_evaluate(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
         { }
 
         cstring value() const
@@ -110,6 +123,7 @@ namespace ir {
         }
       private:
         variable_accessor accessor_;
+        arena& ar_;
         cstring value_;
 
         void visit_impl(const variable* v) override
@@ -123,11 +137,27 @@ namespace ir {
             throw parser::exception(msg, "", "", "");
         }
 
+        void visit_impl(const assign* v) override
+        {
+            auto res = accessor_.lookup(v->var());
+            if (!res.evaluated) {
+                v->right()->accept(this);
+                accessor_.set(v->var(), ar_.create<string_constant>(ar_.create_string(value_)),
+                              result_type::STRING, true);
+            } else {
+                res.ptr->accept(this);
+            }
+        }
+
         void visit_impl(const string_constant* v) override
         {
             value_ = v->value();
         }
     };
+
+    template <>
+    class evaluator::typed_evaluate<void> : public node_visitor
+    { };
 
     void evaluator::visit_impl(const variable* v)
     {
@@ -181,6 +211,8 @@ namespace ir {
 
     void evaluator::visit_impl(const assign* v)
     {
+        auto oldvis = curr_visitor_;
+
         arena& ar = *ar_;
 
         variable_accessor acc(nested_tables_);
@@ -190,21 +222,26 @@ namespace ir {
 
         switch (outty) {
             case result_type::INTEGER:
-                curr_visitor_ = new typed_evaluate<int>(nested_tables_);
+                curr_visitor_ = new typed_evaluate<int>(nested_tables_, ar);
                 break;
             case result_type::FLOATING:
-                curr_visitor_ = new typed_evaluate<double>(nested_tables_);
+                curr_visitor_ = new typed_evaluate<double>(nested_tables_, ar);
                 break;
             case result_type::STRING:
                 // do nothing, we retain the same value as of now
-                curr_visitor_ = new typed_evaluate<cstring>(nested_tables_);
+                curr_visitor_ = new typed_evaluate<cstring>(nested_tables_, ar);
                 break;
             default:
                 PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
                 break;
         }
 
+        auto oldlastasgn = last_assign_;
         v->right()->accept(this);
+        if (oldlastasgn != last_assign_) {
+            acc.set(v->var(), last_assign_, outty, true);
+            goto assign_done_cleanup;
+        }
 
         union
         {
@@ -234,9 +271,10 @@ namespace ir {
         }
 
         acc.set(v->var(), newvalue, outty, true);
-
+        last_assign_ = newvalue;
+  assign_done_cleanup:
         delete curr_visitor_;
-        curr_visitor_ = nullptr;
+        curr_visitor_ = oldvis;
     }
 
     void evaluator::visit_impl(const block* v)
@@ -250,7 +288,9 @@ namespace ir {
 
         {// visit this block
             curr_ = v;
-            curr_visitor_ = nullptr;
+            typed_evaluate<void> donothing;
+            curr_visitor_ = &donothing;
+
             nested_tables_.push_back(&(v->table()));
 
             visit_block(v);
@@ -271,19 +311,19 @@ namespace ir {
 
         switch (cty) {
             case pcsh::result_type::INTEGER: {
-                typed_evaluate<int> eval(nested_tables_);
+                typed_evaluate<int> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 execBody = (eval.value() != 0);
                 break;
             }
             case pcsh::result_type::FLOATING: {
-                typed_evaluate<double> eval(nested_tables_);
+                typed_evaluate<double> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 execBody = (eval.value() != 0.0);
                 break;
             }
             case pcsh::result_type::STRING: {
-                typed_evaluate<cstring> eval(nested_tables_);
+                typed_evaluate<cstring> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 cstring str = eval.value();
                 execBody = (str[0] != '\0');

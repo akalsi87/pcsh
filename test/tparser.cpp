@@ -6,6 +6,7 @@
 #include "unittest.hpp"
 
 #include "pcsh/ir.hpp"
+#include "pcsh/ir_operations.hpp"
 #include "pcsh/parser.hpp"
 
 #include <sstream>
@@ -263,17 +264,21 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
 
 CPP_TEST( irCreationBasic )
 {
-    using namespace pcsh::parser;
+    using namespace pcsh;
     {
         std::istringstream is(
             "#!/usr/bin/env pcsh\n"
             "foo = 1;## test if double comment works\n"
             "bar = 2;\n"
             "#{ y = 1; } { z = 2; }\n"
-            "#213 + 456123.123; - cannot handle this line yet as it is not a statement\n"
+            "213 + 456123.123; # cannot handle this line yet as it is not a statement\n"
             "#{ a.b } - cannot handle this line yet as it is unsupported\n");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ir::query(ptree.get(), "bar").int_val == 2);
     }
     {
         std::istringstream is(
@@ -283,18 +288,27 @@ CPP_TEST( irCreationBasic )
             "    b = -42;\n"
             "    c = a + b;\n"
             "}\n");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "a").int_val == 1);
+        TEST_TRUE(ir::query(ptree.get(), "b").int_val == -42);
+        TEST_TRUE(ir::query(ptree.get(), "c").int_val == -41);
     }
     {
         std::istringstream is(
             "#!/usr/bin/env pcsh\n"
-            ""
+            "\n"
             "    foo = 1;\n"
             "    doo = -1.0 + foo;\n"
             "");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ir::query(ptree.get(), "doo").dbl_val == 0.0);
     }
     {
         std::istringstream is(
@@ -303,8 +317,12 @@ CPP_TEST( irCreationBasic )
             "{\n"
             "    doo = -1.0 + foo;\n"
             "}");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ir::query(ptree.get(), "doo").dbl_val == 0.0);
     }
     {
         std::istringstream is(
@@ -313,8 +331,12 @@ CPP_TEST( irCreationBasic )
             "{\n"
             "    doo = \"a literal string.\";\n"
             "}");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ir::query(ptree.get(), "doo").str_val == std::string("a literal string."));
     }
     {
         std::istringstream is(
@@ -323,8 +345,12 @@ CPP_TEST( irCreationBasic )
             "{\n"
             "    doo = \"a\n\";\n"
             "}");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ir::query(ptree.get(), "doo").str_val == std::string("a\n"));
     }
     {
         std::istringstream is(
@@ -332,11 +358,11 @@ CPP_TEST( irCreationBasic )
             "{\n"
             "    doo = -1.0f;\n"
             "}");
-        parser p(is);
+        parser::parser p(is);
         bool shouldBeTrue = false;
         try {
             p.parse_to_tree();
-        } catch (const exception&) {
+        } catch (const parser::exception&) {
             shouldBeTrue = true;
         }
         TEST_TRUE(shouldBeTrue);
@@ -348,11 +374,11 @@ CPP_TEST( irCreationBasic )
             "    doo = -1.0;\n"
             "    doo = \"foo\";\n"
             "}");
-        parser p(is);
+        parser::parser p(is);
         bool shouldBeTrue = false;
         try {
             p.parse_to_tree();
-        } catch (const exception& ex) {
+        } catch (const parser::exception& ex) {
             shouldBeTrue = (ex.message().find("Type") != std::string::npos);
         }
         TEST_TRUE(shouldBeTrue);
@@ -361,8 +387,11 @@ CPP_TEST( irCreationBasic )
         std::istringstream is(
             "#!/usr/bin/env pcsh\n"
             "foo = 1 + -9 + +9 * 71.5;\n");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").dbl_val == 635.5);
     }
     {
         std::istringstream is(
@@ -375,7 +404,23 @@ CPP_TEST( irCreationBasic )
             "        a = -1*a;\n"
             "    }\n"
             "}\n");
-        parser p(is);
-        p.parse_to_tree()->print(std::cout);
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "a").int_val == -1);
+        TEST_TRUE(ir::query(ptree.get(), "foo").str_val == std::string("bar"));
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = bar = (1 + (car = 20.0));\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").dbl_val == 21.0);
+        TEST_TRUE(ir::query(ptree.get(), "bar").dbl_val == 21.0);
+        TEST_TRUE(ir::query(ptree.get(), "car").dbl_val == 20.0);
     }
 }

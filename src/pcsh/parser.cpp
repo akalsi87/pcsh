@@ -44,8 +44,8 @@
 /*
 Grammar:
 -------
-block ::= ['{'] stmt ['}']
-stmt ::= assign ';' | block
+block ::= ['{'] [stmt]+ ['}']
+stmt ::= expr ';' | block | if '(' expr ')' stmt
 expr ::= expr '+' term | expr '-' term | var '=' term | term
 term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | '+' unary | factor
@@ -620,6 +620,9 @@ namespace parser {
                     case 'r':
                         c = '\r';
                         break;
+                    case 'b':
+                        c = '\b';
+                        break;
                     default:
                         c = n;
                         break;
@@ -809,6 +812,7 @@ namespace parser {
                     break;
                 case token_type::ASSIGN:
                     op = arena_.create<ir::assign>();
+                    PCSH_ASSERT_MSG(dynamic_cast<ir::variable*>(a) != nullptr, "Ensure left of assignment is a variable.");
                     break;
                 default:
                     PCSH_ASSERT_MSG(false, "Invalid binary operation!");
@@ -892,16 +896,9 @@ namespace parser {
         } else if (t.is_a(token_type::LBRACE)) {
             op = block(m);
         } else {
-            auto v = var(m);
-            ENSURE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
-            advance(); /* consume = */
-            auto e = expr(m);
-            ENSURE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
-            advance(); /* consume ; */
-            auto asgn = arena_.create<ir::assign>();
-            asgn->set_left(v);
-            asgn->set_right(e);
-            op = asgn;
+            op = expr(m);
+            ENSURE(peek().is_a(token_type::SEMICOLON), "Expected the end of a statement with `;'");
+            advance();
         }
         return op;
     }
@@ -922,7 +919,7 @@ namespace parser {
     {
         ir::node* a = term(m);
         auto t = peek();
-        while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS)) {
+        while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS) || t.is_a(token_type::ASSIGN)) {
             a = create_binary_op(t, a, m);
             t = peek();
         }
@@ -972,7 +969,7 @@ namespace parser {
     {
         ir::node* a = unop(m);
         auto t = peek();
-        while (t.is_a(token_type::FSLASH) || t.is_a(token_type::ASTERISK)) {
+        while (is_binary_op(t)) {
             a = create_binary_op(t, a, m);
             t = peek();
         }
@@ -1006,8 +1003,6 @@ namespace parser {
         t = peek();
         ENSURE(t.is_a(token_type::RPAREN), "Expected a `)' after an if statement expression.");
         advance();
-        //t = peek();
-        //ENSURE(t.is_a(token_type::LBRACE), "Expected an if expression to be followed by a `{'.");
         return arena_.create<ir::if_stmt>(cond, stmt(m));
     }
 

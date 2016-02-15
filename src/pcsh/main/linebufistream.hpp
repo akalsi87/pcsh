@@ -6,6 +6,7 @@
 #ifndef PCSH_LINEBUFISTREAM_HPP
 #define PCSH_LINEBUFISTREAM_HPP
 
+#include <cstdlib>
 #include <string>
 
 #if defined(_WIN32)
@@ -70,7 +71,7 @@ namespace pcsh {
                             || (c == EOT_CHAR_UNIX_DEF)
 #endif//defined(_WIN32)
                             )
-                            ) {
+                           ) {
                             eos_ = true;
                             break;
                         }

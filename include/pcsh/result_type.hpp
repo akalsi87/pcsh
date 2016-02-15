@@ -20,6 +20,11 @@ namespace pcsh {
         FAILED
     };
 
+    template <class T> struct result_type_of;
+    template <> struct result_type_of<int> { static const auto value = result_type::INTEGER; };
+    template <> struct result_type_of<double> { static const auto value = result_type::FLOATING; };
+    template <> struct result_type_of<cstring> { static const auto value = result_type::STRING; };
+
     inline cstring to_string(result_type t)
     {
         switch (t) {

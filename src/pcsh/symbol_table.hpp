@@ -8,9 +8,9 @@
 
 #include "pcsh/arena.hpp"
 #include "pcsh/ir.hpp"
+#include "pcsh/result_type.hpp"
 
 #include "ir_nodes_fwd.hpp"
-#include "result_type.hpp"
 
 #include <list>
 #include <memory>

@@ -16,6 +16,7 @@ namespace ir {
         if (!(res.ptr)) {
             symbol_table::set(*(nested_list_.back()), v->var(), v->right());
         }
+        v->right()->accept(this);
     }
 
     void populate_symbol_table::visit_impl(const block* v)

@@ -9,7 +9,6 @@
 #include "pcsh/arena.hpp"
 #include "pcsh/exportsym.h"
 #include "pcsh/noncopyable.hpp"
-#include "pcsh/ostream.hpp"
 #include "pcsh/types.hpp"
 
 #include <memory>
@@ -50,7 +49,7 @@ namespace ir {
       private:
         struct tree_destroyer
         {
-            void operator()(tree* p) const
+            inline void operator()(tree* p) const
             {
                 delete p->arena_;
             }
@@ -58,7 +57,7 @@ namespace ir {
       public:
         typedef std::unique_ptr<tree, tree_destroyer> ptr;
 
-        static ptr create()
+        inline static ptr create()
         {
             arena* parena = new arena;
             ptr p(parena->create<tree>());
@@ -66,7 +65,7 @@ namespace ir {
             return std::move(p);
         }
 
-        tree(node* root = nullptr) : root_(root), arena_(nullptr)
+        inline tree(node* root = nullptr) : root_(root), arena_(nullptr)
         { }
 
         inline node* root() const
@@ -88,14 +87,6 @@ namespace ir {
         {
             root_ = p;
         }
-
-        void print(ostream& os, bool vartypes = true) const;
-
-        void print_variables(ostream& os) const;
-
-        ptr clone() const;
-
-        const tree& evaluate() const;
       private:
         node* root_;
         arena* arena_;

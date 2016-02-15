@@ -20,9 +20,11 @@ set(pcsh_hdr
     ${hdr_dir}/assert.hpp;
     ${hdr_dir}/arena.hpp;
     ${hdr_dir}/ir.hpp;
+    ${hdr_dir}/ir_operations.hpp;
     ${hdr_dir}/noncopyable.hpp;
     ${hdr_dir}/ostream.hpp;
     ${hdr_dir}/parser.hpp;
+    ${hdr_dir}/result_type.hpp;
     ${hdr_dir}/types.hpp;
     ${hdr_dir}/version.hpp;
 )
@@ -36,7 +38,6 @@ set(pcsh_int_hdr
     ${src_dir}/ir_variable_printer.hpp;
     ${src_dir}/ir_visitor.hpp;
     ${src_dir}/populate_symbol_table.hpp;
-    ${src_dir}/result_type.hpp;
     ${src_dir}/symbol_table.hpp;
     ${src_dir}/tree_cloner.hpp;
     ${src_dir}/tree_validation.hpp;
@@ -47,8 +48,8 @@ set(pcsh_int_hdr
 set(pcsh_src
     ${src_dir}/assert.cpp;
     ${src_dir}/arena.cpp;
-    ${src_dir}/ir.cpp;
     ${src_dir}/ir_evaluator.cpp;
+    ${src_dir}/ir_operations.cpp;
     ${src_dir}/ir_printer.cpp;
     ${src_dir}/ir_variable_printer.cpp;
     ${src_dir}/ir_visitor.cpp;
