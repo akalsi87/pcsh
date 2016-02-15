@@ -81,6 +81,7 @@ namespace detail {
             name_and_type nt;
             nt.name = el.first->name();
             nt.type = el.second.type;
+            nt.evaluated = el.second.evaluated;
             v.push_back(nt);
         }
         return v;

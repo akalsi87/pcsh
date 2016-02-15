@@ -43,6 +43,7 @@ namespace parser {
         INTEGER,
         FLOATING,
         EOS,
+        IF,
         NONE,
         FAIL
     };
@@ -190,7 +191,7 @@ namespace parser {
         pos_t skip_till_line_end(pos_t p);
         token read_string(pos_t p);
         token read_number(pos_t p);
-        token read_symbol(pos_t p);
+        token read_name(pos_t p);
         std::string copy_line(pos_t p);
     };
 

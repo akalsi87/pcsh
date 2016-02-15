@@ -92,6 +92,9 @@ namespace parser {
                 PCSH_ASSERT(len == 1);
                 nm = "/";
                 break;
+            case token_type::IF:
+                PCSH_ASSERT(::strncmp(nm, "if", len) == 0);
+                break;
             case token_type::INTEGER:
                 PCSH_ASSERT(nm);
                 break;
@@ -500,7 +503,7 @@ namespace parser {
             case '/':
                 return token::get(token_type::FSLASH, "/", 1);
             default:
-                return (is_digit(c) ? read_number(p) : read_symbol(p));
+                return (is_digit(c) ? read_number(p) : read_name(p));
         }
     }
 
@@ -661,14 +664,23 @@ namespace parser {
         }
     }
 
-    token parser::read_symbol(pos_t p)
+    token parser::read_name(pos_t p)
     {
         using namespace tokenize;
         auto pstart = p;
         while (is_symbol_char(strm_->peek_at(p))) {
             ++p;
         }
-
+        if (p != pstart) {
+            buff_string bs { strm_->buff() + pstart, p - pstart };
+            if (bs.equals("if")) {
+                return token::get(token_type::IF, bs.ptr, bs.len);
+            } else {
+                return token::get(token_type::SYMBOL, bs.ptr, bs.len);
+            }
+        } else {
+            return token::get(token_type::FAIL, "Error reading symbol");
+        }
         return (p != pstart) ? token::get(token_type::SYMBOL, strm_->buff() + pstart, p - pstart)
                              : token::get(token_type::FAIL, "Error reading symbol");
     }
@@ -739,6 +751,8 @@ namespace parser {
         ir::node* unop(source_map& m);
 
         ir::untyped_atom_base* atom(source_map& m);
+
+        ir::if_stmt* ifstmt(source_map& m);
 
         // parser manipulation
 
@@ -833,26 +847,31 @@ namespace parser {
         std::vector<ir::node*> stmts;
         stmts.reserve(20);
 
-        bool inblock = true;
+        auto t = peek();
+        bool startWithLbrace = t.is_a(token_type::LBRACE);
 
-        while (inblock) {
-            const auto& t = peek();
-            switch (t.type()) {
-                case token_type::LBRACE:
-                    advance();
-                    stmts.push_back(block(m));
+        if (startWithLbrace) {
+            advance();
+        }
+
+        while (true) {
+            if (t.is_a(token_type::EOS)) {
+                if (!startWithLbrace) {
                     break;
-                case token_type::RBRACE:
-                    advance();
-                    inblock = false;
-                    break;
-                case token_type::EOS:
-                    inblock = false;
-                    break;
-                default:
-                    stmts.push_back(stmt(m));
-                    break;
+                } else {
+                    ENSURE(false, "Unexpected end of stream while reading a block. Expected a `}' before termination.");
+                }
             }
+            if (t.is_a(token_type::RBRACE)) {
+                if (!startWithLbrace) {
+                    ENSURE(false, "Unexpected `}'. Did not see a `{' to start a block.");
+                } else {
+                    advance();
+                    break;
+                }
+            }
+            stmts.push_back(stmt(m));
+            t = peek();
         }
 
         ir::block* blk = arena_.create<ir::block>(arena_);
@@ -866,15 +885,24 @@ namespace parser {
 
     ir::node* parser::parser_engine::stmt(source_map& m)
     {
-        auto v = var(m);
-        ENSURE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
-        advance(); /* consume = */
-        auto e = expr(m);
-        ENSURE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
-        advance(); /* consume ; */
-        auto op = arena_.create<ir::assign>();
-        op->set_left(v);
-        op->set_right(e);
+        auto t = peek();
+        ir::node* op = nullptr;
+        if (t.is_a(token_type::IF)) {
+            op = ifstmt(m);
+        } else if (t.is_a(token_type::LBRACE)) {
+            op = block(m);
+        } else {
+            auto v = var(m);
+            ENSURE(peek().is_a(token_type::ASSIGN), "Expected assignment in a statement.");
+            advance(); /* consume = */
+            auto e = expr(m);
+            ENSURE(peek().is_a(token_type::SEMICOLON), "Expected a semicolon to end a statement.");
+            advance(); /* consume ; */
+            auto asgn = arena_.create<ir::assign>();
+            asgn->set_left(v);
+            asgn->set_right(e);
+            op = asgn;
+        }
         return op;
     }
 
@@ -964,6 +992,23 @@ namespace parser {
         } else {
             return atom(m);
         }
+    }
+
+    ir::if_stmt* parser::parser_engine::ifstmt(source_map& m)
+    {
+        auto t = peek();
+        PCSH_ASSERT_MSG(t.is_a(token_type::IF), "Expected an `if' statement.");
+        advance();
+        t = peek();
+        ENSURE(t.is_a(token_type::LPAREN), "Expected a `(' after an if.");
+        advance();
+        auto cond = expr(m);
+        t = peek();
+        ENSURE(t.is_a(token_type::RPAREN), "Expected a `)' after an if statement expression.");
+        advance();
+        //t = peek();
+        //ENSURE(t.is_a(token_type::LBRACE), "Expected an if expression to be followed by a `{'.");
+        return arena_.create<ir::if_stmt>(cond, stmt(m));
     }
 
     ir::tree::ptr parser::parse_to_tree()

@@ -102,26 +102,52 @@ namespace ir {
         strm_ << " ";
         v->right()->accept(this);
         strm_ << ")";
-        print_spacing_newline();
     }
 
     void printer::visit_impl(const block* v)
     {
         {
-            --nesting_;
-            print_spacing();
-            ++nesting_;
-            strm_ << "(block) at " << v;
-            ++nesting_;
-            print_spacing_newline();
-            print_types(v);            
-            visit_block(v);
-            --nesting_;
+            {
+                --nesting_;
+                print_spacing();
+                ++nesting_;
+            }
+            {
+                strm_ << "(block) at " << v;
+                ++nesting_;
+                print_spacing_newline();
+                print_types(v);
+                visit_block_postcbk(v,
+                    [this](const node* a, bool islast) -> void {
+                        if (!islast) {
+                            strm_ << "\n";
+                        }
+                    });
+                --nesting_;
+            }
         }
 
         if (nesting_ == 0) {
-            strm_ << "\n";
+            strm_ << "\n\n";
         }
+    }
+
+    void printer::visit_impl(const if_stmt* v)
+    {
+        print_spacing();
+        strm_ << "(if-cond-body ";
+        v->condition()->accept(this);
+        strm_ << " ";
+        auto b = v->body();
+        if (dynamic_cast<block*>(b)) {
+            print_spacing_newline();
+            ++nesting_;
+            b->accept(this);
+            --nesting_;
+        } else {
+            b->accept(this);
+        }
+        strm_ << ")";
     }
 
     void printer::print_types(const block* v)

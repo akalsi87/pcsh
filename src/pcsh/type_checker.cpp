@@ -150,5 +150,14 @@ namespace ir {
         curr_blk_ = oldblk;
     }
 
+    void type_checker::visit_impl(const if_stmt* v)
+    {
+        v->condition()->accept(this);
+        auto condty = curr_;
+        PCSH_ASSERT_MSG(condty != result_type::FAILED, "If condition result type is undefined well.");
+        v->set_condition_type(condty);
+        v->body()->accept(this);
+    }
+
 }//namespace ir
 }//namespace pcsh

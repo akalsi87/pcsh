@@ -10,8 +10,12 @@
 
 #include "ir_nodes_fwd.hpp"
 
+#include <functional>
+
 namespace pcsh {
 namespace ir {
+
+    using stmt_visit_cbk = std::function<void(const node* a, bool islast)>;
 
     class node_visitor
     {
@@ -79,12 +83,20 @@ namespace ir {
             visit_impl(v);
         }
 
+        void visit(const if_stmt* v)
+        {
+            visit_impl(v);
+        }
+
       private:
         void visit_impl_binary_op(const void* v);
         void visit_impl_unary_op(const void* v);
 
       protected:
         void visit_block(const block* v);
+        void visit_block_precbk(const block* v, stmt_visit_cbk cbk);
+        void visit_block_postcbk(const block* v, stmt_visit_cbk cbk);
+        void visit_block_cbk(const block* v, stmt_visit_cbk precbk, stmt_visit_cbk postcbk);
 
       private:
         virtual void visit_impl(const variable* v)
@@ -131,6 +143,7 @@ namespace ir {
 
         virtual void visit_impl(const assign* v);
         virtual void visit_impl(const block* v);
+        virtual void visit_impl(const if_stmt* v);
     };
 
 }//namespace ir

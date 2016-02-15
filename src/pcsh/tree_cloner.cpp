@@ -123,11 +123,11 @@ namespace ir {
         auto newasgn = ar.create<assign>();
         newasgn->set_left(newvar);
         newasgn->set_right(newval);
-        out_stmts_.push_back(newasgn);
 
         auto ty = symbol_table::lookup(curr_->table(), v->var()).type;
         symbol_table::set(root_->table(), newvar, newval, ty);
-        /* don't assign to cloned_, push back statement */
+
+        cloned_ = newasgn;
     }
 
     void tree_cloner::visit_impl(const block* v)
@@ -145,7 +145,10 @@ namespace ir {
             root_ = ar.create<block>(ar);
             cloned_ = nullptr;
 
-            visit_block(v);
+            visit_block_postcbk(v,
+                [this] (const node* a, bool) -> void {
+                    out_stmts_.push_back(const_cast<node*>(a));
+                });
 
             {// make a block out of all statements
                 auto beg = out_stmts_.rbegin();
@@ -163,6 +166,18 @@ namespace ir {
             root_ = oldroot;
         }
         cloned_ = oldcloned;
+    }
+
+    void tree_cloner::visit_impl(const if_stmt* v)
+    {
+        v->condition()->accept(this);
+        auto cclone = cloned_;
+        v->body()->accept(this);
+        auto bclone = cloned_;
+        arena& ar = tree_->get_arena();
+        auto ifs = ar.create<if_stmt>(cclone, bclone);
+        ifs->set_condition_type(v->condition_type());
+        cloned_ = ifs;
     }
 
     tree::ptr tree_cloner::cloned_tree()

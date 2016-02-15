@@ -37,6 +37,9 @@ namespace ir {
     // container
     class block;
 
+    // keyword statements
+    class if_stmt;
+
 }//namespace ir
 }//namespace pcsh
 

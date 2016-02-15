@@ -227,6 +227,42 @@ namespace ir {
         curr_visitor_ = oldvis;
     }
 
+    void evaluator::visit_impl(const if_stmt* v)
+    {
+        auto c = v->condition();
+        auto cty = v->condition_type();
+
+        bool execBody = false;
+
+        switch (cty) {
+            case pcsh::result_type::INTEGER: {
+                typed_evaluate<int> eval(nested_tables_);
+                c->accept(&eval);
+                execBody = (eval.value() != 0);
+                break;
+            }
+            case pcsh::result_type::FLOATING: {
+                typed_evaluate<double> eval(nested_tables_);
+                c->accept(&eval);
+                execBody = (eval.value() != 0.0);
+                break;
+            }
+            case pcsh::result_type::STRING: {
+                PCSH_ASSERT_MSG(dynamic_cast<string_constant*>(c) != nullptr, "Expected a string constant.");
+                cstring str = reinterpret_cast<string_constant*>(c)->value();
+                execBody = (str[0] != '\0');
+                break;
+            }
+            default:
+                PCSH_ASSERT_MSG(false, "Unknown condition type evaluation in if statement.");
+                break;
+        }
+
+        if (execBody) {
+            v->body()->accept(this);
+        }
+    }
+
 }//namespace ir
 }//namespace pcsh
 

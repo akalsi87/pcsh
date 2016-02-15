@@ -56,6 +56,7 @@ namespace detail {
     {
         cstring name;
         result_type type;
+        bool evaluated;
     };
 
     void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty = result_type::UNDETERMINED, bool eval = false);

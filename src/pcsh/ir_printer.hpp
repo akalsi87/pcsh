@@ -43,6 +43,7 @@ namespace ir {
         void visit_impl(const binary_plus* v) override;
         void visit_impl(const assign* v) override;
         void visit_impl(const block* v) override;
+        void visit_impl(const if_stmt* v) override;
 
         void print_types(const block* v);
         void print_spacing_newline();

@@ -273,6 +273,48 @@ namespace ir {
         symbol_table::ptr symtab_;
     };
 
+    class if_stmt : public atom_base<if_stmt>
+    {
+      public:
+        if_stmt(node* c = nullptr, node* b = nullptr)
+          : cond_(c), body_(b), cond_ty_(result_type::UNDETERMINED)
+        { }
+
+        inline node* condition() const
+        {
+            return cond_;
+        }
+
+        inline node* body() const
+        {
+            return body_;
+        }
+
+        inline result_type condition_type() const
+        {
+            return cond_ty_;
+        }
+
+        inline void set_condition(node* c)
+        {
+            cond_ = c;
+        }
+
+        inline void set_body(node* b)
+        {
+            body_ = b;
+        }
+
+        inline void set_condition_type(result_type ty) const
+        {
+            cond_ty_ = ty;
+        }
+      private:
+        node* cond_;
+        node* body_;
+        mutable result_type cond_ty_;
+    };
+
 }//namespace ir
 }//namespace pcsh
 

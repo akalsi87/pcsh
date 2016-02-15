@@ -35,11 +35,48 @@ namespace ir {
         visit_block(v);
     }
 
+    void node_visitor::visit_impl(const if_stmt* v)
+    {
+        v->condition()->accept(this);
+        v->body()->accept(this);
+    }
+
     void node_visitor::visit_block(const block* v)
     {
         auto h = v->head();
         while (h != nullptr) {
             h->entry->accept(this);
+            h = h->next;
+        }
+    }
+
+    void node_visitor::visit_block_postcbk(const block* v, stmt_visit_cbk cbk)
+    {
+        auto h = v->head();
+        while (h != nullptr) {
+            h->entry->accept(this);
+            cbk(h->entry, h->next == nullptr);
+            h = h->next;
+        }
+    }
+
+    void node_visitor::visit_block_precbk(const block* v, stmt_visit_cbk cbk)
+    {
+        auto h = v->head();
+        while (h != nullptr) {
+            cbk(h->entry, h->next == nullptr);
+            h->entry->accept(this);
+            h = h->next;
+        }
+    }
+
+    void node_visitor::visit_block_cbk(const block* v, stmt_visit_cbk precbk, stmt_visit_cbk postcbk)
+    {
+        auto h = v->head();
+        while (h != nullptr) {
+            precbk(h->entry, h->next == nullptr);
+            h->entry->accept(this);
+            postcbk(h->entry, h->next == nullptr);
             h = h->next;
         }
     }

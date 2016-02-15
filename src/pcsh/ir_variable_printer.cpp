@@ -30,12 +30,15 @@ namespace ir {
                 variable tmp(nullptr);
                 for (const auto& el : nv) {
                     tmp.set_name(el.name);
-                    auto val = symbol_table::lookup((*tbl_), &tmp).ptr;
                     strm_ << "\n";
                     print_spacing();
                     tmp.accept(prn_);
                     strm_ << " -> ";
-                    val->accept(prn_);
+                    if (el.evaluated) {
+                        symbol_table::lookup((*tbl_), &tmp).ptr->accept(prn_);
+                    } else {
+                        strm_ << "<unassigned>";
+                    }
                 }
             }
             visit_block(v);
