@@ -160,6 +160,7 @@ namespace parser {
         return token(t, nm, len);
     }
 
+#if 0
     std::string token::to_string() const
     {
         auto str = std::string();
@@ -227,6 +228,8 @@ namespace parser {
         }
         return str.append(str_, str_ + len_);
     }
+
+#endif // 0
 
     //////////////////////////////////////////////////////////////////////////
     /// parser
@@ -352,7 +355,7 @@ namespace parser {
 
         inline void resize(size_t s)
         {
-            if (!useheap && (s < N)) {
+            if (!useheap && (s <= N)) {
                 sz = s;
                 return;
             }

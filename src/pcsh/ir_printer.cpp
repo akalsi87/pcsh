@@ -197,6 +197,12 @@ namespace ir {
                 case '\a':
                     os << "\\a";
                     break;
+                case '\b':
+                    os << "\\b";
+                    break;
+                case '\v':
+                    os << "\\v";
+                    break;
                 default:
                     os << c;
                     break;

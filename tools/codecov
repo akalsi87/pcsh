@@ -13,7 +13,10 @@ cd build
 export VERBOSE=1
 cmake --build . --target code_cov
 
+mkdir -p ../coverage
+cp -rf coverage/* ../coverage
+
 echo "--------------------------------------------"
-echo "| See results in `pwd`/coverage/index.html"
+echo "| See results in `dirname pwd`/coverage/index.html"
 echo "--------------------------------------------"
 

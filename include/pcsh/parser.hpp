@@ -100,8 +100,6 @@ namespace parser {
             return rv;
         }
 
-        std::string to_string() const;
-
       private:
         token(token_type t, cstring s, size_t l) : type_(t), str_(s), len_(l)
         { }

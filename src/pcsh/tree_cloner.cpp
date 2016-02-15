@@ -146,8 +146,11 @@ namespace ir {
             cloned_ = nullptr;
 
             visit_block_postcbk(v,
-                [this] (const node* a, bool) -> void {
+                [this] (const node* a, bool islast) -> void {
                     out_stmts_.push_back(const_cast<node*>(a));
+                    if (islast) {
+                        symbol_table::copy_into(root_->table(), curr_->table()); 
+                    }
                 });
 
             {// make a block out of all statements
@@ -161,8 +164,7 @@ namespace ir {
 
         curr_ = oldblk;
         out_stmts_ = std::move(oldstmts);
-        if (oldroot) {
-            oldroot->push_front_statement(root_);
+        if (oldroot != nullptr) {
             root_ = oldroot;
         }
         cloned_ = oldcloned;
