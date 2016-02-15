@@ -25,7 +25,6 @@ namespace pcsh {
           private:
             std::istream&   istrm_;
             std::string     buffer_;
-            char            ch_;
             bool            eos_;
             bool            check_eot_;
 
@@ -34,7 +33,7 @@ namespace pcsh {
             static const int EOT_CHAR = EOT_CHAR_DEF;
           public:
             linebuff(std::istream& strm, bool checkeot)
-              : istrm_(strm), buffer_(), ch_(-1), eos_(false), check_eot_(checkeot)
+              : istrm_(strm), buffer_(), eos_(false), check_eot_(checkeot)
             {
                 istrm_.rdbuf()->pubsetbuf(0, 0);
                 buffer_.reserve(120);

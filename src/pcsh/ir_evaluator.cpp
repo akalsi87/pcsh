@@ -238,10 +238,6 @@ namespace ir {
 
         auto oldlastasgn = last_assign_;
         v->right()->accept(this);
-        if (oldlastasgn != last_assign_) {
-            acc.set(v->var(), last_assign_, outty, true);
-            goto assign_done_cleanup;
-        }
 
         union
         {
@@ -251,6 +247,11 @@ namespace ir {
         } uval;
 
         node* newvalue = nullptr;
+
+        if (oldlastasgn != last_assign_) {
+            acc.set(v->var(), last_assign_, outty, true);
+            goto assign_done_cleanup;
+        }
 
         switch (outty) {
             case result_type::INTEGER:

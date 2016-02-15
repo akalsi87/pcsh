@@ -215,6 +215,9 @@ namespace parser {
             case token_type::FAIL:
                 str += "fail          | ";
                 break;
+            case token_type::IF:
+                str += "if            |";
+                break;
         }
         return str.append(str_, str_ + len_);
     }

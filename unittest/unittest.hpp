@@ -30,7 +30,8 @@
       return 0; \
   } \
   \
-  static const int cls_test_reg_##x = register_test_class##x()
+  extern const int cls_test_reg_##x; \
+  const int cls_test_reg_##x = register_test_class##x()
 
 #define CLS_TEST_RUN() \
   void run(int* TEST_RET_VAL_PTR_NAME)
