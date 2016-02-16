@@ -42,6 +42,7 @@ set(pcsh_int_hdr
     ${src_dir}/ir/symbol_table.hpp;
     ${src_dir}/ir/tree_validation.hpp;
     ${src_dir}/ir/visitor.hpp;
+    ${src_dir}/parser_engine.hpp;
 )
 
 # -- Sources
@@ -58,6 +59,7 @@ set(pcsh_src
     ${src_dir}/ir/passes/type_checker.cpp;
     ${src_dir}/ir/symbol_table.cpp;
     ${src_dir}/ir/tree_validation.cpp;
+    ${src_dir}/parser_engine.cpp;
     ${src_dir}/parser.cpp;
     ${src_dir}/version.cpp;
 )

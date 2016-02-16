@@ -49,14 +49,14 @@ namespace pcsh {
 
     }//namespace
 
-    int assert_fail(const char* msg, const char* file, const char* line, const char* function)
+    int assert_fail(const char* msg, const char* file, const char* line, const char* fcn)
     {
         write_string_stderr("ASSERTION failed\n  ");
         write_string_stderr(file);
         write_string_stderr(" (");
         write_string_stderr(line);
         write_string_stderr(") : ");
-        write_string_stderr(function);
+        write_string_stderr(fcn);
         write_string_stderr(" : ");
         write_string_stderr(msg);
         write_string_stderr("\n");      

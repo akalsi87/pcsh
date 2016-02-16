@@ -129,7 +129,7 @@ namespace parser {
 
         inline const std::string& filename() const { return fname_; }
 
-        inline const std::string& function() const { return func_; }
+        inline const std::string& fcn() const { return func_; }
 
         inline const std::string& line() const { return line_; }
       private:
@@ -149,7 +149,7 @@ namespace parser {
     /// parser
     //////////////////////////////////////////////////////////////////////////
 
-    typedef size_t pos_t;
+    using pos_t = size_t;
 
     class PCSH_API parser
     {

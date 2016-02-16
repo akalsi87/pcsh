@@ -23,7 +23,7 @@ void die_handling_exception()
     try {
         throw;
     } catch (const pcsh::parser::exception& ex) {
-        pcsh::assert_fail(ex.message().c_str(), ex.filename().c_str(), ex.line().c_str(), ex.function().c_str());
+        pcsh::assert_fail(ex.message().c_str(), ex.filename().c_str(), ex.line().c_str(), ex.fcn().c_str());
     } catch (const std::bad_alloc&) {
         PCSH_ENFORCE_MSG(false, "Out of memory!");
     } catch (...) {

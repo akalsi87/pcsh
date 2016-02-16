@@ -37,7 +37,7 @@ namespace ir {
 
     void evaluate(const tree* ptree)
     {
-        evaluator e;
+        executor e;
         ptree->accept(&e);
     }
 

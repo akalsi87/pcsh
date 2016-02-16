@@ -14,10 +14,10 @@
 namespace pcsh {
 namespace ir {
 
-    class evaluator : public node_visitor
+    class executor : public node_visitor
     {
       public:
-        inline evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_(), last_assign_(nullptr)
+        inline executor() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_(), last_assign_(nullptr)
         { }
       private:
         const block* curr_;

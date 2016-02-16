@@ -16,19 +16,19 @@ namespace ir {
     bool compare_eq(const comp_equals* v, const variable_accessor& acc, arena& ar);
 
     template <class T>
-    class typed_evaluate;
+    class typed_executor;
 
     template <>
-    class typed_evaluate<void>;
+    class typed_executor<void>;
 
     template <>
-    class typed_evaluate<cstring>;
+    class typed_executor<cstring>;
 
     template <class T>
-    class typed_evaluate : public node_visitor
+    class typed_executor : public node_visitor
     {
       public:
-        typed_evaluate(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_()
+        typed_executor(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_()
         { }
 
         T value() const
@@ -130,10 +130,10 @@ namespace ir {
     };
 
     template <>
-    class typed_evaluate<cstring> : public node_visitor
+    class typed_executor<cstring> : public node_visitor
     {
       public:
-        typed_evaluate(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
+        typed_executor(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
         { }
 
         cstring value() const
@@ -180,7 +180,7 @@ namespace ir {
     };
 
     template <>
-    class typed_evaluate<void> : public node_visitor
+    class typed_executor<void> : public node_visitor
     { };
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ namespace ir {
     {
         switch (v->comp_type()) {
             case result_type::STRING: {
-                typed_evaluate<cstring> eval(acc.symtab_list(), ar);
+                typed_executor<cstring> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -207,7 +207,7 @@ namespace ir {
                 return ::strcmp(v1, v2) == 0;
             }
             case result_type::INTEGER: {
-                typed_evaluate<int> eval(acc.symtab_list(), ar);
+                typed_executor<int> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -216,7 +216,7 @@ namespace ir {
                 break;
             }
             case result_type::FLOATING: {
-                typed_evaluate<int> eval(acc.symtab_list(), ar);
+                typed_executor<int> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -234,57 +234,57 @@ namespace ir {
     /// evaluator
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void evaluator::visit_impl(const variable* v)
+    void executor::visit_impl(const variable* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const int_constant* v)
+    void executor::visit_impl(const int_constant* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const float_constant* v)
+    void executor::visit_impl(const float_constant* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const string_constant* v)
+    void executor::visit_impl(const string_constant* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const unary_plus* v)
+    void executor::visit_impl(const unary_plus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const unary_minus* v)
+    void executor::visit_impl(const unary_minus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const binary_div* v)
+    void executor::visit_impl(const binary_div* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const binary_minus* v)
+    void executor::visit_impl(const binary_minus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const binary_mult* v)
+    void executor::visit_impl(const binary_mult* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const binary_plus* v)
+    void executor::visit_impl(const binary_plus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const assign* v)
+    void executor::visit_impl(const assign* v)
     {
         auto oldvis = curr_visitor_;
 
@@ -297,14 +297,14 @@ namespace ir {
 
         switch (outty) {
             case result_type::INTEGER:
-                curr_visitor_ = new typed_evaluate<int>(nested_tables_, ar);
+                curr_visitor_ = new typed_executor<int>(nested_tables_, ar);
                 break;
             case result_type::FLOATING:
-                curr_visitor_ = new typed_evaluate<double>(nested_tables_, ar);
+                curr_visitor_ = new typed_executor<double>(nested_tables_, ar);
                 break;
             case result_type::STRING:
                 // do nothing, we retain the same value as of now
-                curr_visitor_ = new typed_evaluate<cstring>(nested_tables_, ar);
+                curr_visitor_ = new typed_executor<cstring>(nested_tables_, ar);
                 break;
             default:
                 PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
@@ -330,15 +330,15 @@ namespace ir {
 
         switch (outty) {
             case result_type::INTEGER:
-                uval.intval = static_cast<typed_evaluate<int>*>(curr_visitor_)->value();
+                uval.intval = static_cast<typed_executor<int>*>(curr_visitor_)->value();
                 newvalue = ar.create<int_constant>(uval.intval);
                 break;
             case result_type::FLOATING:
-                uval.dblval = static_cast<typed_evaluate<double>*>(curr_visitor_)->value();
+                uval.dblval = static_cast<typed_executor<double>*>(curr_visitor_)->value();
                 newvalue = ar.create<float_constant>(uval.dblval);
                 break;
             case result_type::STRING:
-                uval.strval = static_cast<typed_evaluate<cstring>*>(curr_visitor_)->value();
+                uval.strval = static_cast<typed_executor<cstring>*>(curr_visitor_)->value();
                 newvalue = ar.create<string_constant>(ar.create_string(uval.strval));
                 break;
             default:
@@ -353,12 +353,12 @@ namespace ir {
         curr_visitor_ = oldvis;
     }
 
-    void evaluator::visit_impl(const comp_equals* v)
+    void executor::visit_impl(const comp_equals* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void evaluator::visit_impl(const block* v)
+    void executor::visit_impl(const block* v)
     {
         auto oldblk = curr_;
         auto oldvis = curr_visitor_;
@@ -369,7 +369,7 @@ namespace ir {
 
         {// visit this block
             curr_ = v;
-            typed_evaluate<void> donothing;
+            typed_executor<void> donothing;
             curr_visitor_ = &donothing;
 
             nested_tables_.push_back(&(v->table()));
@@ -383,7 +383,7 @@ namespace ir {
         curr_visitor_ = oldvis;
     }
 
-    void evaluator::visit_impl(const if_stmt* v)
+    void executor::visit_impl(const if_stmt* v)
     {
         auto c = v->condition();
         auto cty = v->condition_type();
@@ -392,19 +392,19 @@ namespace ir {
 
         switch (cty) {
             case pcsh::result_type::INTEGER: {
-                typed_evaluate<int> eval(nested_tables_, *ar_);
+                typed_executor<int> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 runbody = (eval.value() != 0);
                 break;
             }
             case pcsh::result_type::FLOATING: {
-                typed_evaluate<double> eval(nested_tables_, *ar_);
+                typed_executor<double> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 runbody = (eval.value() != 0.0);
                 break;
             }
             case pcsh::result_type::STRING: {
-                typed_evaluate<cstring> eval(nested_tables_, *ar_);
+                typed_executor<cstring> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 cstring str = eval.value();
                 runbody = (str[0] != '\0');
