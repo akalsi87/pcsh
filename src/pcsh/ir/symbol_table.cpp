@@ -5,8 +5,8 @@
 
 #include "pcsh/assert.hpp"
 
-#include "ir_nodes.hpp"
-#include "symbol_table.hpp"
+#include "ir/nodes.hpp"
+#include "ir/symbol_table.hpp"
 
 #include <unordered_map>
 

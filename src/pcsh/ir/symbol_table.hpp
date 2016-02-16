@@ -10,7 +10,7 @@
 #include "pcsh/ir.hpp"
 #include "pcsh/result_type.hpp"
 
-#include "ir_nodes_fwd.hpp"
+#include "ir/nodes_fwd.hpp"
 
 #include <list>
 #include <memory>

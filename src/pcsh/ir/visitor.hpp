@@ -1,5 +1,5 @@
 /**
- * \file ir_visitor.hpp
+ * \file visitor.hpp
  * \date Jan 31, 2016
  */
 
@@ -8,7 +8,7 @@
 
 #include "pcsh/ir.hpp"
 
-#include "ir_nodes_fwd.hpp"
+#include "ir/nodes_fwd.hpp"
 
 #include <functional>
 

@@ -1,5 +1,5 @@
 /**
- * \file ir_printer.hpp
+ * \file printer.hpp
  * \date Jan 31, 2016
  */
 
@@ -8,7 +8,7 @@
 
 #include "pcsh/ostream.hpp"
 
-#include "ir_visitor.hpp"
+#include "ir/visitor.hpp"
 
 namespace pcsh {
 namespace ir {

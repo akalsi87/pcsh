@@ -1,14 +1,14 @@
 /**
- * \file ir_variable_printer.hpp
+ * \file variable_printer.hpp
  * \date Feb 01, 2016
  */
 
 #ifndef PCSH_IR_VARIABLE_PRINTER_HPP
 #define PCSH_IR_VARIABLE_PRINTER_HPP
 
-#include "ir_printer.hpp"
-#include "ir_visitor.hpp"
-#include "symbol_table.hpp"
+#include "ir/ops/printer.hpp"
+#include "ir/symbol_table.hpp"
+#include "ir/visitor.hpp"
 
 namespace pcsh {
 namespace ir {

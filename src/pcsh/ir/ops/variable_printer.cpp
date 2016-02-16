@@ -1,11 +1,11 @@
 /**
- * \file ir_variable_printer.cpp
+ * \file variable_printer.cpp
  * \date Feb 01, 2016
  */
 
-#include "ir_nodes.hpp"
-#include "ir_printer.hpp"
-#include "ir_variable_printer.hpp"
+#include "ir/nodes.hpp"
+#include "ir/ops/printer.hpp"
+#include "ir/ops/variable_printer.hpp"
 
 namespace pcsh {
 namespace ir {
@@ -46,7 +46,7 @@ namespace ir {
 
         --nesting_;
         tbl_ = oldtbl;
-        
+
         if (tbl_ == nullptr) {
             // print ending new line
             strm_ << "\n";

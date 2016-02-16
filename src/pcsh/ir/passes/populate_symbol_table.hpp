@@ -6,8 +6,8 @@
 #ifndef PCSH_POPULATE_SYMBOL_TABLE_HPP
 #define PCSH_POPULATE_SYMBOL_TABLE_HPP
 
-#include "ir_visitor.hpp"
-#include "symbol_table.hpp"
+#include "ir/symbol_table.hpp"
+#include "ir/visitor.hpp"
 
 namespace pcsh {
 namespace ir {

@@ -3,8 +3,8 @@
  * \date Jan 31, 2016
  */
 
-#include "ir_nodes.hpp"
-#include "type_checker.hpp"
+#include "ir/nodes.hpp"
+#include "ir/passes/type_checker.hpp"
 
 namespace pcsh {
 namespace ir {

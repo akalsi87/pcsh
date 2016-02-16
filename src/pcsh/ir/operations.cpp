@@ -1,17 +1,17 @@
 /**
- * \file ir_operations.cpp
+ * \file operations.cpp
  * \date Jan 28, 2016
  */
 
 #include "pcsh/ir.hpp"
 #include "pcsh/ir_operations.hpp"
 
-#include "ir_evaluator.hpp"
-#include "ir_nodes.hpp"
-#include "ir_printer.hpp"
-#include "ir_variable_printer.hpp"
-#include "symbol_table.hpp"
-#include "tree_cloner.hpp"
+#include "ir/execution/executor.hpp"
+#include "ir/nodes.hpp"
+#include "ir/ops/printer.hpp"
+#include "ir/ops/tree_cloner.hpp"
+#include "ir/ops/variable_printer.hpp"
+#include "ir/symbol_table.hpp"
 
 namespace pcsh {
 namespace ir {

@@ -31,34 +31,34 @@ set(pcsh_hdr
 
 # internal
 set(pcsh_int_hdr
-    ${src_dir}/ir_evaluator.hpp;
-    ${src_dir}/ir_nodes.hpp;
-    ${src_dir}/ir_nodes_fwd.hpp;
-    ${src_dir}/ir_printer.hpp;
-    ${src_dir}/ir_variable_printer.hpp;
-    ${src_dir}/ir_visitor.hpp;
-    ${src_dir}/populate_symbol_table.hpp;
-    ${src_dir}/symbol_table.hpp;
-    ${src_dir}/tree_cloner.hpp;
-    ${src_dir}/tree_validation.hpp;
-    ${src_dir}/type_checker.hpp;
+    ${src_dir}/ir/execution/executor.hpp;
+    ${src_dir}/ir/nodes.hpp;
+    ${src_dir}/ir/nodes_fwd.hpp;
+    ${src_dir}/ir/ops/printer.hpp;
+    ${src_dir}/ir/ops/tree_cloner.hpp;
+    ${src_dir}/ir/ops/variable_printer.hpp;
+    ${src_dir}/ir/passes/populate_symbol_table.hpp;
+    ${src_dir}/ir/passes/type_checker.hpp;
+    ${src_dir}/ir/symbol_table.hpp;
+    ${src_dir}/ir/tree_validation.hpp;
+    ${src_dir}/ir/visitor.hpp;
 )
 
 # -- Sources
 set(pcsh_src
     ${src_dir}/assert.cpp;
     ${src_dir}/arena.cpp;
-    ${src_dir}/ir_evaluator.cpp;
-    ${src_dir}/ir_operations.cpp;
-    ${src_dir}/ir_printer.cpp;
-    ${src_dir}/ir_variable_printer.cpp;
-    ${src_dir}/ir_visitor.cpp;
+    ${src_dir}/ir/execution/executor.cpp;
+    ${src_dir}/ir/operations.cpp;
+    ${src_dir}/ir/ops/printer.cpp;
+    ${src_dir}/ir/ops/tree_cloner.cpp;
+    ${src_dir}/ir/ops/variable_printer.cpp;
+    ${src_dir}/ir/visitor.cpp;
+    ${src_dir}/ir/passes/populate_symbol_table.cpp;
+    ${src_dir}/ir/passes/type_checker.cpp;
+    ${src_dir}/ir/symbol_table.cpp;
+    ${src_dir}/ir/tree_validation.cpp;
     ${src_dir}/parser.cpp;
-    ${src_dir}/populate_symbol_table.cpp;
-    ${src_dir}/symbol_table.cpp;
-    ${src_dir}/tree_cloner.cpp;
-    ${src_dir}/tree_validation.cpp;
-    ${src_dir}/type_checker.cpp;
     ${src_dir}/version.cpp;
 )
 
@@ -66,6 +66,7 @@ set(pcsh_src
 # --- shared
 add_lib(libpcsh SHARED ${pcsh_src} ${pcsh_int_hdr} ${pcsh_hdr})
 add_lib_build_def(libpcsh include/pcsh/exportsym.h PCSH)
+add_inc_dir(libpcsh ${CMAKE_CURRENT_SOURCE_DIR}/${src_dir})
 add_comp_def(libpcsh PCSH_MAJ=${pcsh_maj_ver})
 add_comp_def(libpcsh PCSH_MIN=${pcsh_min_ver})
 add_comp_def(libpcsh PCSH_PAT=${pcsh_pat_ver})

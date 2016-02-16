@@ -1,10 +1,10 @@
 /**
- * \file ir_printer.cpp
+ * \file printer.cpp
  * \date Jan 31, 2016
  */
 
-#include "ir_nodes.hpp"
-#include "ir_printer.hpp"
+#include "ir/nodes.hpp"
+#include "ir/ops/printer.hpp"
 
 namespace pcsh {
 namespace ir {

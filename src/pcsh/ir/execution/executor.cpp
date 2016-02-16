@@ -1,13 +1,13 @@
 /**
- * \file ir_evaluator.cpp
+ * \file executor.cpp
  * \date Jan 31, 2016
  */
 
 #include "pcsh/parser.hpp"
 
-#include "ir_evaluator.hpp"
-#include "ir_nodes.hpp"
-#include "symbol_table.hpp"
+#include "ir/execution/executor.hpp"
+#include "ir/nodes.hpp"
+#include "ir/symbol_table.hpp"
 
 namespace pcsh {
 namespace ir {
@@ -23,7 +23,7 @@ namespace ir {
 
     template <>
     class typed_evaluate<cstring>;
-        
+
     template <class T>
     class typed_evaluate : public node_visitor
     {
@@ -39,7 +39,7 @@ namespace ir {
         variable_accessor accessor_;
         arena& ar_;
         T value_;
-            
+
         void visit_impl(const variable* v) override
         {
             auto res = accessor_.lookup(v, true);
@@ -186,7 +186,7 @@ namespace ir {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// operations
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
     template <>
     inline bool compare_eq<false>(const comp_equals* v, const variable_accessor& acc, arena& ar)
     {
@@ -227,13 +227,13 @@ namespace ir {
                 PCSH_ASSERT_MSG(false, "Invalid comparison type");
                 return false;
             }
-        }                
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// evaluator
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+
     void evaluator::visit_impl(const variable* v)
     {
         curr_visitor_->visit(v);
@@ -422,4 +422,3 @@ namespace ir {
 
 }//namespace ir
 }//namespace pcsh
-

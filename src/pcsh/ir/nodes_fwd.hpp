@@ -1,5 +1,5 @@
 /**
- * \file ir_nodes_fwd.hpp
+ * \file nodes_fwd.hpp
  * \date Jan 31, 2016
  */
 

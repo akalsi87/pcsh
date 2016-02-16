@@ -3,9 +3,9 @@
  * \date Feb 01, 2016
  */
 
-#include "ir_nodes.hpp"
-#include "symbol_table.hpp"
-#include "tree_cloner.hpp"
+#include "ir/nodes.hpp"
+#include "ir/ops/tree_cloner.hpp"
+#include "ir/symbol_table.hpp"
 
 namespace pcsh {
 namespace ir {
@@ -118,7 +118,7 @@ namespace ir {
         auto newvar = reinterpret_cast<variable*>(cloned_);
         v->right()->accept(this);
         auto newval = cloned_;
-        
+
         auto& ar = root_->get_arena();
         auto newasgn = ar.create<assign>();
         newasgn->set_left(newvar);

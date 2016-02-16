@@ -5,9 +5,9 @@
 
 #include "pcsh/assert.hpp"
 
-#include "populate_symbol_table.hpp"
-#include "tree_validation.hpp"
-#include "type_checker.hpp"
+#include "ir/passes/populate_symbol_table.hpp"
+#include "ir/passes/type_checker.hpp"
+#include "ir/tree_validation.hpp"
 
 namespace pcsh {
 

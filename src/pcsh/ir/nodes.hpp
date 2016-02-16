@@ -1,5 +1,5 @@
 /**
- * \file ir_nodes.hpp
+ * \file nodes.hpp
  * \date Jan 31, 2016
  */
 
@@ -10,8 +10,8 @@
 #include "pcsh/assert.hpp"
 #include "pcsh/ir.hpp"
 
-#include "ir_visitor.hpp"
-#include "symbol_table.hpp"
+#include "ir/visitor.hpp"
+#include "ir/symbol_table.hpp"
 
 #include <sstream>
 

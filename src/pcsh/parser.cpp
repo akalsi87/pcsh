@@ -11,9 +11,9 @@
 #include "pcsh/assert.hpp"
 #include "pcsh/parser.hpp"
 
-#include "ir_nodes.hpp"
-#include "tree_validation.hpp"
-#include "type_checker.hpp"
+#include "ir/nodes.hpp"
+#include "ir/passes/type_checker.hpp"
+#include "ir/tree_validation.hpp"
 
 #include <cstring>
 #include <string>

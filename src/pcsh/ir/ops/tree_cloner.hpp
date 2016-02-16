@@ -1,30 +1,31 @@
 /**
- * \file ir_evaluator.hpp
- * \date Jan 31, 2016
+ * \file tree_cloner.hpp
+ * \date Feb 01, 2016
  */
 
-#ifndef PCSH_IR_EVALUATOR_HPP
-#define PCSH_IR_EVALUATOR_HPP
+#ifndef PCSH_TREE_CLONER_HPP
+#define PCSH_TREE_CLONER_HPP
 
-#include "ir_visitor.hpp"
-#include "symbol_table.hpp"
-
-#include <list>
+#include "ir/visitor.hpp"
 
 namespace pcsh {
 namespace ir {
 
-    class evaluator : public node_visitor
+    class tree_cloner : public node_visitor
     {
       public:
-        inline evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_(), last_assign_(nullptr)
+        tree_cloner() : curr_(nullptr), tree_(tree::create()), root_(nullptr), out_stmts_(), cloned_(nullptr)
         { }
+
+        tree::ptr cloned_tree();
       private:
         const block* curr_;
-        node_visitor* curr_visitor_;
-        arena* ar_;
-        sym_table_list nested_tables_;
-        node* last_assign_;
+
+        tree::ptr tree_;
+        block* root_;
+        std::vector<node*> out_stmts_;
+
+        node* cloned_;
 
         void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;
@@ -45,4 +46,4 @@ namespace ir {
 }//namespace ir
 }//namespace pcsh
 
-#endif/*PCSH_IR_EVALUATOR_HPP*/
+#endif/*PCSH_TREE_CLONER_HPP*/

@@ -3,8 +3,8 @@
  * \date Jan 31, 2016
  */
 
-#include "populate_symbol_table.hpp"
-#include "ir_nodes.hpp"
+#include "ir/nodes.hpp"
+#include "ir/passes/populate_symbol_table.hpp"
 
 namespace pcsh {
 namespace ir {

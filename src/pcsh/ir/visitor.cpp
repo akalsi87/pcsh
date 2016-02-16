@@ -1,12 +1,12 @@
 /**
- * \file ir_visitor.cpp
+ * \file visitor.cpp
  * \date Jan 31, 2016
  */
 
 #include "pcsh/ir.hpp"
 
-#include "ir_nodes.hpp"
-#include "ir_visitor.hpp"
+#include "ir/nodes.hpp"
+#include "ir/visitor.hpp"
 
 namespace pcsh {
 namespace ir {

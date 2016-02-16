@@ -1,41 +1,30 @@
 /**
- * \file type_checker.hpp
+ * \file executor.hpp
  * \date Jan 31, 2016
  */
 
-#ifndef PCSH_TYPE_CHECKER_HPP
-#define PCSH_TYPE_CHECKER_HPP
+#ifndef PCSH_IR_EVALUATOR_HPP
+#define PCSH_IR_EVALUATOR_HPP
 
-#include "pcsh/result_type.hpp"
+#include "ir/symbol_table.hpp"
+#include "ir/visitor.hpp"
 
-#include "ir_visitor.hpp"
-#include "symbol_table.hpp"
+#include <list>
 
 namespace pcsh {
 namespace ir {
 
-    struct type_checker_error
-    {
-        std::string msg;
-        ir::node* left;
-        ir::node* right;
-
-        type_checker_error(const std::string& m, ir::node* a, ir::node* b)
-          : msg(m)
-          , left(a)
-          , right(b)
-        { }
-    };
-
-    class type_checker : public node_visitor
+    class evaluator : public node_visitor
     {
       public:
-        type_checker() : curr_(result_type::UNDETERMINED), curr_blk_(nullptr), nested_tables_()
+        inline evaluator() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_(), last_assign_(nullptr)
         { }
       private:
-        result_type curr_;
-        const block* curr_blk_;
+        const block* curr_;
+        node_visitor* curr_visitor_;
+        arena* ar_;
         sym_table_list nested_tables_;
+        node* last_assign_;
 
         void visit_impl(const variable* v) override;
         void visit_impl(const int_constant* v) override;
@@ -56,4 +45,4 @@ namespace ir {
 }//namespace ir
 }//namespace pcsh
 
-#endif/*PCSH_TYPE_CHECKER_HPP*/
+#endif/*PCSH_IR_EVALUATOR_HPP*/
