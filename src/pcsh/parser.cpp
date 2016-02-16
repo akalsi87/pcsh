@@ -46,7 +46,8 @@ Grammar:
 -------
 block ::= ['{'] [stmt]+ ['}']
 stmt ::= expr ';' | block | if '(' expr ')' stmt
-expr ::= expr '+' term | expr '-' term | var '=' term | term
+expr ::= expr '==' arith | var '=' arith | arith
+arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | '+' unary | factor
 factor ::= '( expr ')' | atom
@@ -764,13 +765,13 @@ namespace parser {
 
         ir::node* stmt(source_map& m);
 
-        ir::variable* var(source_map& m);
-
         ir::node* factor(source_map& m);
 
         ir::node* term(source_map& m);
 
         ir::node* expr(source_map& m);
+
+        ir::node* arith(source_map& m);
 
         ir::node* unop(source_map& m);
 
@@ -836,10 +837,17 @@ namespace parser {
             }
         }
 
-        ir::untyped_binary_op_base* create_binary_op(const token& nxt, ir::node* a, source_map& m)
+        typedef ir::node* (parser_engine::*nexttermfcn)(source_map&);
+
+        ir::node* call_mem_fn(parser_engine* p, nexttermfcn pfn, source_map& m)
+        {
+            return ((*p).*(pfn))(m);
+        }
+
+        ir::untyped_binary_op_base* create_binary_op(const token& currtok, ir::node* a, source_map& m, nexttermfcn rghtgen)
         {
             ir::untyped_binary_op_base* op = nullptr;
-            switch (nxt.type()) {
+            switch (currtok.type()) {
                 case token_type::PLUS:
                     op = arena_.create<ir::binary_plus>();
                     break;
@@ -857,7 +865,9 @@ namespace parser {
                     break;
                 case token_type::ASSIGN:
                     op = arena_.create<ir::assign>();
-                    PCSH_ASSERT_MSG(dynamic_cast<ir::variable*>(a) != nullptr, "Ensure left of assignment is a variable.");
+                    ENSURE(dynamic_cast<ir::variable*>(a) != nullptr,
+                           "Left term of assignment is not a variable. Variable name must be a non keyword, alpha - numeric and should not start with a digit.");
+                    rghtgen = &parser_engine::expr;
                     break;
                 default:
                     PCSH_ASSERT_MSG(false, "Invalid binary operation!");
@@ -866,7 +876,7 @@ namespace parser {
             m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
             advance();
             op->set_left(a);
-            op->set_right(term(m));
+            op->set_right(call_mem_fn(this, rghtgen, m));
             return op;
         }
 
@@ -934,14 +944,10 @@ namespace parser {
 
     ir::node* parser::parser_engine::expr(source_map& m)
     {
-        ir::node* a = term(m);
+        ir::node* a = arith(m);
         auto t = peek();
-        while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS) || t.is_a(token_type::LPAREN)) {
-            if (t.is_a(token_type::LPAREN)) {
-                a = factor(m);
-                continue;
-            }
-            a = create_binary_op(t, a, m);
+        while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS) || t.is_a(token_type::ISEQUAL)) {
+            a = create_binary_op(t, a, m, &parser_engine::arith);
             t = peek();
         }
         return a;
@@ -963,13 +969,23 @@ namespace parser {
         return op;
     }
 
+    ir::node* parser::parser_engine::arith(source_map& m)
+    {
+        auto *a = term(m);
+        auto t = peek();
+        while (is_binary_op(t)) {
+            a = create_binary_op(t, a, m, &parser_engine::term);
+            t = peek();
+        }
+        return a;
+    }
+
     ir::node* parser::parser_engine::term(source_map& m)
     {
         ir::node* a = unop(m);
         auto t = peek();
-        while (is_binary_op(t)) {
-            a = create_binary_op(t, a, m);
-            t = peek();
+        if (is_binary_op(t)) {
+             a = create_binary_op(t, a, m, &parser_engine::unop);
         }
         return a;
     }
@@ -1002,18 +1018,6 @@ namespace parser {
         ENSURE(t.is_a(token_type::RPAREN), "Expected a `)' after an if statement expression.");
         advance();
         return arena_.create<ir::if_stmt>(cond, stmt(m));
-    }
-
-    ir::variable* parser::parser_engine::var(source_map& m)
-    {
-        auto t = peek();
-        ENSURE(t.is_a(token_type::SYMBOL),
-               "Variable name must be a non keyword, alpha-numeric and should not start with a digit.");
-        cstring nm = arena_.create_string(t.str().ptr, t.length());
-        auto lvar = arena_.create<ir::variable>(nm);
-        m[lvar] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
-        advance();
-        return lvar;
     }
 
     ir::node* parser::parser_engine::unop(source_map& m)

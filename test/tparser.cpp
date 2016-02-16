@@ -497,7 +497,7 @@ CPP_TEST( irCreationBasic )
         TEST_TRUE(ir::query(ptree.get(), "cr").str_val == std::string("somestr"));
         TEST_TRUE(ir::query(ptree.get(), "cz").str_val == std::string("somestr"));
         TEST_TRUE(ir::query(ptree.get(), "y").dbl_val == 0.1);
-        //fixme: TEST_TRUE(ir::query(ptree.get(), "x").dbl_val == 0.9);
+        TEST_TRUE(ir::query(ptree.get(), "x").dbl_val == 0.9);
         ir::print_variables(ptree.get(), std::cout);
     }
 }
@@ -570,6 +570,30 @@ CPP_TEST( eqOp )
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
         TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
+        ir::print_variables(ptree.get(), std::cout);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (1 + \"a\" == \"a\");\n");
+        parser::parser p(is);
+        auto shouldBeTrue = false;
+        try {
+            p.parse_to_tree();
+        } catch (const parser::exception& ex) {
+            shouldBeTrue = (ex.message().find("`+'") != std::string::npos);
+        }
+        TEST_TRUE(shouldBeTrue);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "foo = (1 + (\"a\" == \"a\"));\n");
+        parser::parser p(is);
+        auto ptree = p.parse_to_tree();
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 2);
         ir::print_variables(ptree.get(), std::cout);
     }
 }
