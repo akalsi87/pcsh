@@ -14,15 +14,15 @@ namespace ir {
     {
         if (!prn_) {
             prn_ = new printer(strm_, true);
+        } else {
+            strm_ << "\n";
         }
 
-        strm_ << "\n";
-        print_spacing();
         strm_ << "(block) at " << v;
 
         auto oldtbl = tbl_;
         ++nesting_;
-
+        print_spacing();
         tbl_ = &v->table();
         {// visit this block
             {// print this block

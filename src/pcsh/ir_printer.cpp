@@ -122,7 +122,7 @@ namespace ir {
         }
 
         if (nesting_ == 0) {
-            strm_ << "\n\n";
+            strm_ << "\n";
         }
     }
 

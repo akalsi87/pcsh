@@ -13,7 +13,7 @@ namespace ir {
     void tree_cloner::visit_impl(const variable* v)
     {
         auto& ar = root_->get_arena();
-        cloned_ = ar.create<variable>(v->name());
+        cloned_ = ar.create<variable>(ar.create_string(v->name()));
     }
 
     void tree_cloner::visit_impl(const int_constant* v)
@@ -31,7 +31,7 @@ namespace ir {
     void tree_cloner::visit_impl(const string_constant* v)
     {
         auto& ar = root_->get_arena();
-        cloned_ = ar.create<string_constant>(v->value());
+        cloned_ = ar.create<string_constant>(ar.create_string(v->value()));
     }
 
     void tree_cloner::visit_impl(const unary_plus* v)
@@ -146,11 +146,8 @@ namespace ir {
             cloned_ = nullptr;
 
             visit_block_postcbk(v,
-                [this] (const node* a, bool islast) -> void {
-                    out_stmts_.push_back(const_cast<node*>(a));
-                    if (islast) {
-                        symbol_table::copy_into(root_->table(), curr_->table()); 
-                    }
+                [this] (const node* a, bool) -> void {
+                    out_stmts_.push_back(cloned_);
                 });
 
             {// make a block out of all statements

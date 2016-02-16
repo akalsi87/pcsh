@@ -277,9 +277,9 @@ CPP_TEST( irTreeClone )
         parser::parser p(is);
         auto ptree = p.parse_to_tree();
         ptree = ir::clone(ptree.get());
-        //fixme: ir::print(ptree.get(), std::cout);
-        //fixme: ir::evaluate(ptree.get());
-        //fixme: ir::print_variables(ptree.get(), std::cout);
+        ir::print(ptree.get(), std::cout);
+        ir::evaluate(ptree.get());
+        ir::print_variables(ptree.get(), std::cout);
     }
 }
 
