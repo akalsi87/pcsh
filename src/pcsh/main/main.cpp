@@ -10,6 +10,14 @@
 
 #include "linebufistream.hpp"
 
+#include <fstream>
+
+void die_usage(int e)
+{
+    std::cout << "pcsh [-h | filename]\n";
+    exit(e);
+}
+
 void die_handling_exception()
 {
     try {
@@ -23,12 +31,17 @@ void die_handling_exception()
     }
 }
 
-int main(int argc, const char* argv[])
+void die_if_unable_to_open_file(std::ifstream& in, const std::string& fn)
+{
+    if (in.fail() && !in.bad()) {
+        auto msg = "Failed to open file `" + fn + "'.";
+        pcsh::assert_fail(msg.c_str(), "", "", "");
+    }
+}
+
+void run(std::istream& in, pcsh::ostream& out)
 {
     using namespace pcsh;
-
-    linebuff_istream in(std::cin);
-    auto& out = std::cout;
 
     ir::tree::ptr treep;
     try {
@@ -37,17 +50,36 @@ int main(int argc, const char* argv[])
         die_handling_exception();
     }
 
-    out << "\n";
-    ir::print(treep.get(), out);
+    //ir::print(treep.get(), out);
 
-    out << "--- Evaluation\n";
     try {
         ir::evaluate(treep.get());
     } catch (...) {
         die_handling_exception();
     }
 
-    ir::print_variables(treep.get(), out);
+    //ir::print_variables(treep.get(), out);
+}
+
+int main(int argc, const char* argv[])
+{
+    if (argc == 1) {
+        pcsh::linebuff_istream in(std::cin);
+        auto& out = std::cout;
+        run(in, out);
+    } else if (argc == 2) {
+        std::string filename(argv[1]);
+        if (filename.compare("-h") == 0) {
+            die_usage(0);
+        }
+        std::ifstream fs(filename, std::ios_base::in | std::ios_base::binary);
+        die_if_unable_to_open_file(fs, filename);
+        pcsh::linebuff_istream in(fs);
+        auto& out = std::cout;
+        run(in, out);
+    } else {
+        die_usage(1);
+    }
 
     return 0;
 }
