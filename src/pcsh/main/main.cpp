@@ -33,9 +33,9 @@ void die_handling_exception()
 
 void die_if_unable_to_open_file(std::ifstream& in, const std::string& fn)
 {
-    if (in.fail() && !in.bad()) {
+        if (in.fail()) {
         auto msg = "Failed to open file `" + fn + "'.";
-        pcsh::assert_fail(msg.c_str(), "", "", "");
+        PCSH_ENFORCE_MSG(!in.fail(), msg.c_str());
     }
 }
 
@@ -68,12 +68,11 @@ int main(int argc, const char* argv[])
         auto& out = std::cout;
         run(in, out);
     } else if (argc == 2) {
-        std::string filename(argv[1]);
-        if (filename.compare("-h") == 0) {
+        if (::strcmp(argv[1], "-h") == 0) {
             die_usage(0);
         }
-        std::ifstream fs(filename, std::ios_base::in | std::ios_base::binary);
-        die_if_unable_to_open_file(fs, filename);
+        std::ifstream fs(argv[1], std::ios_base::in | std::ios_base::binary);
+        die_if_unable_to_open_file(fs, argv[1]);
         pcsh::linebuff_istream in(fs);
         auto& out = std::cout;
         run(in, out);
