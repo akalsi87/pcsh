@@ -1,0 +1,629 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info.cleaned - unittest/unittest.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">unittest</a> - unittest.h<span style="font-size: 80%;"> (source / <a href="unittest.h.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info.cleaned</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntryHi">95.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2016-02-20</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">33</td>
+            <td class="headerCovTableEntryLo">51.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /**</a>
+<span class="lineNum">       2 </span>                :            :  * @file unittest.h
+<span class="lineNum">       3 </span>                :            :  * Definitions for writing unit test C/CPP files
+<span class="lineNum">       4 </span>                :            :  *
+<span class="lineNum">       5 </span>                :            :  * Writing unittests:
+<span class="lineNum">       6 </span>                :            :  * ------------------
+<span class="lineNum">       7 </span>                :            :  * ------------------
+<span class="lineNum">       8 </span>                :            :  *
+<span class="lineNum">       9 </span>                :            :  * The only convention is to use a name for a test consistently in the
+<span class="lineNum">      10 </span>                :            :  * test source file.
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  * Writing &quot;simple&quot; tests:
+<span class="lineNum">      13 </span>                :            :  * -----------------------
+<span class="lineNum">      14 </span>                :            :  *
+<span class="lineNum">      15 </span>                :            :  * \code{.c}
+<span class="lineNum">      16 </span>                :            :  *
+<span class="lineNum">      17 </span>                :            :  * TEST_FUNC( MyTestName ) {
+<span class="lineNum">      18 </span>                :            :  *     // if a test setup function was used,
+<span class="lineNum">      19 </span>                :            :  *     // its return value is available as
+<span class="lineNum">      20 </span>                :            :  *     // value of the input variable &quot;testdata&quot;
+<span class="lineNum">      21 </span>                :            :  *     // which is otherwise, NULL.
+<span class="lineNum">      22 </span>                :            :  *
+<span class="lineNum">      23 </span>                :            :  *     mySetupData* p = (mySetupData*)testdata;
+<span class="lineNum">      24 </span>                :            :  *     TEST_TRUE( 1 );
+<span class="lineNum">      25 </span>                :            :  *     TEST_FALSE( 1 ); // Prints error message and ensures test fails
+<span class="lineNum">      26 </span>                :            :  *     ASSERT_FALSE( 1 ); // We now abort because, tl; dw
+<span class="lineNum">      27 </span>                :            :  *     // ASSERT_TRUE is available also
+<span class="lineNum">      28 </span>                :            :  * }
+<span class="lineNum">      29 </span>                :            :  *
+<span class="lineNum">      30 </span>                :            :  * \endcode
+<span class="lineNum">      31 </span>                :            :  *
+<span class="lineNum">      32 </span>                :            :  * You may optionally add test setup and cleanup
+<span class="lineNum">      33 </span>                :            :  * functions as shown below. Note that the same test name
+<span class="lineNum">      34 </span>                :            :  * is used as before to give a complete example.
+<span class="lineNum">      35 </span>                :            :  *
+<span class="lineNum">      36 </span>                :            :  * \code{.c}
+<span class="lineNum">      37 </span>                :            :  *
+<span class="lineNum">      38 </span>                :            :  * TEST_SETUP( MyTestName ) {
+<span class="lineNum">      39 </span>                :            :  *     static mySetupData data;
+<span class="lineNum">      40 </span>                :            :  *     SomeInitFunction(&amp;data);
+<span class="lineNum">      41 </span>                :            :  *     return (void*)&amp;data;
+<span class="lineNum">      42 </span>                :            :  * }
+<span class="lineNum">      43 </span>                :            :  *
+<span class="lineNum">      44 </span>                :            :  * TEST_CLEANUP( MyTestName ) {
+<span class="lineNum">      45 </span>                :            :  *     // testdata implicitly available.
+<span class="lineNum">      46 </span>                :            :  *     mySetupData* myData = (mySetupData*)testdata;
+<span class="lineNum">      47 </span>                :            :  *     SomeDestroyFunction(myData);
+<span class="lineNum">      48 </span>                :            :  * }
+<span class="lineNum">      49 </span>                :            :  *
+<span class="lineNum">      50 </span>                :            :  * \endcode
+<span class="lineNum">      51 </span>                :            :  *
+<span class="lineNum">      52 </span>                :            :  * The SetupTests function.
+<span class="lineNum">      53 </span>                :            :  * ------------------------
+<span class="lineNum">      54 </span>                :            :  *
+<span class="lineNum">      55 </span>                :            :  * This function must be defined in every unit test source file
+<span class="lineNum">      56 </span>                :            :  * where the calls to REG_TEST or REG_TEST_CASE will be made, and you
+<span class="lineNum">      57 </span>                :            :  * can optionally add static state for your tests.
+<span class="lineNum">      58 </span>                :            :  *
+<span class="lineNum">      59 </span>                :            :  * \code{.c}
+<span class="lineNum">      60 </span>                :            :  *
+<span class="lineNum">      61 </span>                :            :  * void SetupTests(void) {
+<span class="lineNum">      62 </span>                :            :  *     REG_TEST( MyTestName ); // If just using a simple test
+<span class="lineNum">      63 </span>                :            :  *     REG_TEST_CASE( MyTestName ); // With setup/cleanup we register a test case
+<span class="lineNum">      64 </span>                :            :  * }
+<span class="lineNum">      65 </span>                :            :  *
+<span class="lineNum">      66 </span>                :            :  * \endcode
+<span class="lineNum">      67 </span>                :            :  *
+<span class="lineNum">      68 </span>                :            :  * For a full example, see:
+<span class="lineNum">      69 </span>                :            :  *
+<span class="lineNum">      70 </span>                :            :  * \include unittest/test/test_unittest.c
+<span class="lineNum">      71 </span>                :            :  *
+<span class="lineNum">      72 </span>                :            :  */
+<span class="lineNum">      73 </span>                :            : 
+<span class="lineNum">      74 </span>                :            : #ifndef PROJ_UNITTEST_UNITTEST_H
+<span class="lineNum">      75 </span>                :            : #define PROJ_UNITTEST_UNITTEST_H
+<span class="lineNum">      76 </span>                :            : 
+<span class="lineNum">      77 </span>                :            : 
+<span class="lineNum">      78 </span>                :            : #include &lt;stdio.h&gt;
+<span class="lineNum">      79 </span>                :            : #include &lt;time.h&gt;
+<span class="lineNum">      80 </span>                :            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      81 </span>                :            : 
+<span class="lineNum">      82 </span>                :            : #define ERR_STRM stderr
+<span class="lineNum">      83 </span>                :            : 
+<span class="lineNum">      84 </span>                :            : const char* EXE_NAME = NULL;
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>                :            : /* --- Test function types --- */
+<span class="lineNum">      87 </span>                :            : 
+<span class="lineNum">      88 </span>                :            : /**
+<span class="lineNum">      89 </span>                :            :  * Expected function signatures for the test case components.
+<span class="lineNum">      90 </span>                :            :  */
+<span class="lineNum">      91 </span>                :            : 
+<span class="lineNum">      92 </span>                :            : /**
+<span class="lineNum">      93 </span>                :            :  * TestSetupFunc.
+<span class="lineNum">      94 </span>                :            :  *
+<span class="lineNum">      95 </span>                :            :  * This function is expected to return a void pointer that points to the data
+<span class="lineNum">      96 </span>                :            :  * that may be useful for the test function, and must be cleaned up with
+<span class="lineNum">      97 </span>                :            :  * the cleanup function.
+<span class="lineNum">      98 </span>                :            :  */
+<span class="lineNum">      99 </span>                :            : typedef void* (*TestSetupFunc)(void) ;
+<span class="lineNum">     100 </span>                :            : 
+<span class="lineNum">     101 </span>                :            : /* --- Macros to use in tests --- */
+<span class="lineNum">     102 </span>                :            : 
+<span class="lineNum">     103 </span>                :            : /**
+<span class="lineNum">     104 </span>                :            :  * This variable name is used by the test framework in the test function.
+<span class="lineNum">     105 </span>                :            :  * @note Avoid using this variable name in test functions.
+<span class="lineNum">     106 </span>                :            :  */
+<span class="lineNum">     107 </span>                :            : #define TEST_RET_VAL_PTR_NAME p_test_ret_val_
+<span class="lineNum">     108 </span>                :            : 
+<span class="lineNum">     109 </span>                :            : /**
+<span class="lineNum">     110 </span>                :            :  * TestFunc.
+<span class="lineNum">     111 </span>                :            :  *
+<span class="lineNum">     112 </span>                :            :  * This function takes the test data returned by the test setup
+<span class="lineNum">     113 </span>                :            :  * function and sets the int* value to false if the test failed.
+<span class="lineNum">     114 </span>                :            :  *
+<span class="lineNum">     115 </span>                :            :  * If there is no setup function, i.e. for a simple REG_TEST,
+<span class="lineNum">     116 </span>                :            :  * then the first input will be NULL
+<span class="lineNum">     117 </span>                :            :  *
+<span class="lineNum">     118 </span>                :            :  *
+<span class="lineNum">     119 </span>                :            :  */
+<span class="lineNum">     120 </span>                :            : typedef void (*TestFunc)(void*,int*);
+<span class="lineNum">     121 </span>                :            : 
+<span class="lineNum">     122 </span>                :            : /**
+<span class="lineNum">     123 </span>                :            :  * TestClnupFunc
+<span class="lineNum">     124 </span>                :            :  *
+<span class="lineNum">     125 </span>                :            :  * This function takes the test data returned by the test setup
+<span class="lineNum">     126 </span>                :            :  * function, after it may be possibly modified by the test function,
+<span class="lineNum">     127 </span>                :            :  * and performs resource cleanup and/or other tasks to complete the test.
+<span class="lineNum">     128 </span>                :            :  */
+<span class="lineNum">     129 </span>                :            : typedef void (*TestClnupFunc)(void*);
+<span class="lineNum">     130 </span>                :            : 
+<span class="lineNum">     131 </span>                :            : /* ------------------------------ */
+<span class="lineNum">     132 </span>                :            : 
+<span class="lineNum">     133 </span>                :            : static const double BAD_TIME = -1.0;
+<span class="lineNum">     134 </span>                :            : 
+<span class="lineNum">     135 </span>                :            : /* (No Doxygen)
+<span class="lineNum">     136 </span>                :            :  * TimeCacheOper
+<span class="lineNum">     137 </span>                :            :  * Contains operations that can be performed by the
+<span class="lineNum">     138 </span>                :            :  * TimeCache function.
+<span class="lineNum">     139 </span>                :            :  *   - TIC op: Resets the timer to 0.
+<span class="lineNum">     140 </span>                :            :  *   - TOC op: Records the time elapsed between the previous toc op.
+<span class="lineNum">     141 </span>                :            :  */
+<span class="lineNum">     142 </span>                :            : enum TimeCacheOper {
+<span class="lineNum">     143 </span>                :            :     START_OP = 0,
+<span class="lineNum">     144 </span>                :            :     STOP_OP  = 1
+<span class="lineNum">     145 </span>                :            : };
+<span class="lineNum">     146 </span>                :            : 
+<span class="lineNum">     147 </span>                :            : typedef enum TimeCacheOper TimeCacheOp;
+<span class="lineNum">     148 </span>                :            : 
+<span class="lineNum">     149 </span>                :            : #if !defined(_WIN32)
+<span class="lineNum">     150 </span>                :            : 
+<span class="lineNum">     151 </span>                :            : /* (No Doxygen)
+<span class="lineNum">     152 </span>                :            :  * Cache the current time when op is TIC_OP,
+<span class="lineNum">     153 </span>                :            :  * and return the time elapsed since last cache
+<a name="154"><span class="lineNum">     154 </span>                :            :  * when op is TOC_OP</a>
+<span class="lineNum">     155 </span>                :            :  */
+<span class="lineNum">     156 </span>                :<span class="lineCov">         32 : static double TimeCache(TimeCacheOp op) {</span>
+<span class="lineNum">     157 </span>                :            :     static clock_t start;
+<span class="lineNum">     158 </span>                :            :     static clock_t end;
+<span class="lineNum">     159 </span>     [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         32 :     switch (op) {</span>
+<span class="lineNum">     160 </span>                :            :       case START_OP:
+<span class="lineNum">     161 </span>                :<span class="lineCov">         16 :         start = clock();</span>
+<span class="lineNum">     162 </span>                :<span class="lineCov">         16 :         return BAD_TIME;</span>
+<span class="lineNum">     163 </span>                :            :       case STOP_OP:
+<span class="lineNum">     164 </span>                :<span class="lineCov">         16 :         end = clock();</span>
+<span class="lineNum">     165 </span>                :<span class="lineCov">         16 :         return (double)(end-start) / CLOCKS_PER_SEC;</span>
+<span class="lineNum">     166 </span>                :            :     }
+<span class="lineNum">     167 </span>                :<span class="lineNoCov">          0 :     return BAD_TIME;</span>
+<span class="lineNum">     168 </span>                :            : }
+<span class="lineNum">     169 </span>                :            : 
+<span class="lineNum">     170 </span>                :            : #else // Windows
+<span class="lineNum">     171 </span>                :            : 
+<span class="lineNum">     172 </span>                :            : #include &lt;Windows.h&gt;
+<span class="lineNum">     173 </span>                :            : 
+<span class="lineNum">     174 </span>                :            : double  PCFreq = 0.0;
+<span class="lineNum">     175 </span>                :            : __int64 CounterStart = 0;
+<span class="lineNum">     176 </span>                :            : static void InitPCFreq(void) {
+<span class="lineNum">     177 </span>                :            :     LARGE_INTEGER li;
+<span class="lineNum">     178 </span>                :            :     QueryPerformanceFrequency(&amp;li);
+<span class="lineNum">     179 </span>                :            :     PCFreq = (double)(li.QuadPart);
+<span class="lineNum">     180 </span>                :            : }
+<span class="lineNum">     181 </span>                :            : static void StartCounter(void) {
+<span class="lineNum">     182 </span>                :            :     LARGE_INTEGER li;
+<span class="lineNum">     183 </span>                :            :     QueryPerformanceCounter(&amp;li);
+<span class="lineNum">     184 </span>                :            :     CounterStart = li.QuadPart;
+<span class="lineNum">     185 </span>                :            : }
+<span class="lineNum">     186 </span>                :            : static double GetCounter(void) {
+<span class="lineNum">     187 </span>                :            :     LARGE_INTEGER li;
+<span class="lineNum">     188 </span>                :            :     QueryPerformanceCounter(&amp;li);
+<span class="lineNum">     189 </span>                :            :     return (double)(li.QuadPart - CounterStart) / PCFreq;
+<span class="lineNum">     190 </span>                :            : }
+<span class="lineNum">     191 </span>                :            : 
+<span class="lineNum">     192 </span>                :            : /* (No Doxygen)
+<span class="lineNum">     193 </span>                :            :  * Cache the current time when op is TIC_OP,
+<span class="lineNum">     194 </span>                :            :  * and return the time elapsed since last cache
+<span class="lineNum">     195 </span>                :            :  * when op is TOC_OP
+<span class="lineNum">     196 </span>                :            :  */
+<span class="lineNum">     197 </span>                :            : static double TimeCache(TimeCacheOp op) {
+<span class="lineNum">     198 </span>                :            :     static int dummy_ = -1;
+<span class="lineNum">     199 </span>                :            :     if (dummy_ == -1) {
+<span class="lineNum">     200 </span>                :            :         InitPCFreq();
+<span class="lineNum">     201 </span>                :            :         dummy_ = 0;
+<span class="lineNum">     202 </span>                :            :     }
+<span class="lineNum">     203 </span>                :            :     switch (op) {
+<span class="lineNum">     204 </span>                :            :     case START_OP:
+<span class="lineNum">     205 </span>                :            :         StartCounter();
+<span class="lineNum">     206 </span>                :            :         return BAD_TIME;
+<span class="lineNum">     207 </span>                :            :     case STOP_OP:
+<span class="lineNum">     208 </span>                :            :         return GetCounter();
+<span class="lineNum">     209 </span>                :            :     }
+<span class="lineNum">     210 </span>                :            :     return BAD_TIME;
+<span class="lineNum">     211 </span>                :            : }
+<span class="lineNum">     212 </span>                :            : 
+<span class="lineNum">     213 </span>                :            : #endif
+<span class="lineNum">     214 </span>                :            : 
+<span class="lineNum">     215 </span>                :            : /* ------------------  MACROS FOR PRINTING -------------------- */
+<span class="lineNum">     216 </span>                :            : #ifndef _WIN32
+<span class="lineNum">     217 </span>                :            : #define RESET   &quot;\033[0m&quot;
+<span class="lineNum">     218 </span>                :            : #define BLACK   &quot;\033[30m&quot;      /* Black */
+<span class="lineNum">     219 </span>                :            : #define RED     &quot;\033[31m&quot;      /* Red */
+<span class="lineNum">     220 </span>                :            : #define GREEN   &quot;\033[32m&quot;      /* Green */
+<span class="lineNum">     221 </span>                :            : #define BLUE    &quot;\033[34m&quot;      /* Blue */
+<span class="lineNum">     222 </span>                :            : #define WHITE   &quot;\033[37m&quot;      /* White */
+<span class="lineNum">     223 </span>                :            : #define BOLDBLACK   &quot;\033[1m\033[30m&quot;      /* Bold Black */
+<span class="lineNum">     224 </span>                :            : #define BOLDRED     &quot;\033[1m\033[31m&quot;      /* Bold Red */
+<span class="lineNum">     225 </span>                :            : #define BOLDGREEN   &quot;\033[1m\033[32m&quot;      /* Bold Green */
+<span class="lineNum">     226 </span>                :            : #define BOLDWHITE   &quot;\033[1m\033[37m&quot;      /* Bold White */
+<span class="lineNum">     227 </span>                :            : #endif
+<span class="lineNum">     228 </span>                :            : 
+<span class="lineNum">     229 </span>                :            : /* Debug printing is always on */
+<span class="lineNum">     230 </span>                :            : #define DEBUG_PRINT_ON 1
+<span class="lineNum">     231 </span>                :            : 
+<span class="lineNum">     232 </span>                :            : #if defined(_WIN32)
+<span class="lineNum">     233 </span>                :            : 
+<span class="lineNum">     234 </span>                :            : #define FOREGROUND_WHITE 15
+<span class="lineNum">     235 </span>                :            : 
+<span class="lineNum">     236 </span>                :            : /**
+<span class="lineNum">     237 </span>                :            :  * Print debugging info. Only prints if DEBUG_ON is defined
+<span class="lineNum">     238 </span>                :            :  * before including this header file.
+<span class="lineNum">     239 </span>                :            :  */
+<span class="lineNum">     240 </span>                :            : #define DEBUG_PRINT(fmt, ...) \
+<span class="lineNum">     241 </span>                :            : do { \
+<span class="lineNum">     242 </span>                :            :     printf(fmt, ##__VA_ARGS__); \
+<span class="lineNum">     243 </span>                :            : } while(0)
+<span class="lineNum">     244 </span>                :            : 
+<span class="lineNum">     245 </span>                :            : /**
+<span class="lineNum">     246 </span>                :            :  * Print to standard error.
+<span class="lineNum">     247 </span>                :            :  */
+<span class="lineNum">     248 </span>                :            : #define ERROR_PRINT(fmt, ...) \
+<span class="lineNum">     249 </span>                :            : do { \
+<span class="lineNum">     250 </span>                :            :     HANDLE hConsole; \
+<span class="lineNum">     251 </span>                :            :     hConsole = GetStdHandle(STD_ERROR_HANDLE); \
+<span class="lineNum">     252 </span>                :            :     SetConsoleTextAttribute(hConsole, FOREGROUND_RED); \
+<span class="lineNum">     253 </span>                :            :     fprintf(ERR_STRM, &quot;ERROR: &quot;); \
+<span class="lineNum">     254 </span>                :            :     fflush(stderr); \
+<span class="lineNum">     255 </span>                :            :     SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE); \
+<span class="lineNum">     256 </span>                :            :     fprintf(ERR_STRM, fmt, ##__VA_ARGS__); \
+<span class="lineNum">     257 </span>                :            : } while(0)
+<span class="lineNum">     258 </span>                :            : 
+<span class="lineNum">     259 </span>                :            : /**
+<span class="lineNum">     260 </span>                :            :  * Test passed.
+<span class="lineNum">     261 </span>                :            :  */
+<span class="lineNum">     262 </span>                :            : #define TEST_PASSED_PRINT(testName, timeTaken) \
+<span class="lineNum">     263 </span>                :            : do { \
+<span class="lineNum">     264 </span>                :            :     HANDLE hConsole; \
+<span class="lineNum">     265 </span>                :            :     hConsole = GetStdHandle(STD_OUTPUT_HANDLE); \
+<span class="lineNum">     266 </span>                :            :     printf(&quot;Test passed:\t&quot;); \
+<span class="lineNum">     267 </span>                :            :     SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN); \
+<span class="lineNum">     268 </span>                :            :     printf(&quot;'%s'&quot;, (testName)); \
+<span class="lineNum">     269 </span>                :            :     fflush(stdout); \
+<span class="lineNum">     270 </span>                :            :     SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE); \
+<span class="lineNum">     271 </span>                :            :     printf(&quot;\t %f sec\n&quot;, (timeTaken)); \
+<span class="lineNum">     272 </span>                :            : } while(0)
+<span class="lineNum">     273 </span>                :            : 
+<span class="lineNum">     274 </span>                :            : /**
+<span class="lineNum">     275 </span>                :            :  * Test failed.
+<span class="lineNum">     276 </span>                :            :  */
+<span class="lineNum">     277 </span>                :            : #define TEST_FAILED_PRINT(testName) \
+<span class="lineNum">     278 </span>                :            : do { \
+<span class="lineNum">     279 </span>                :            :     HANDLE hConsole; \
+<span class="lineNum">     280 </span>                :            :     hConsole = GetStdHandle(STD_OUTPUT_HANDLE); \
+<span class="lineNum">     281 </span>                :            :     printf(&quot;Failed    :\t&quot;); \
+<span class="lineNum">     282 </span>                :            :     SetConsoleTextAttribute(hConsole, FOREGROUND_RED); \
+<span class="lineNum">     283 </span>                :            :     printf(&quot;'%s'&quot;, (testName)); \
+<span class="lineNum">     284 </span>                :            :     fflush(stdout); \
+<span class="lineNum">     285 </span>                :            :     SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE); \
+<span class="lineNum">     286 </span>                :            : } while(0)
+<span class="lineNum">     287 </span>                :            : 
+<span class="lineNum">     288 </span>                :            : #else/*UNIX*/
+<span class="lineNum">     289 </span>                :            : 
+<span class="lineNum">     290 </span>                :            : /**
+<span class="lineNum">     291 </span>                :            :  * Print debugging info. Only prints if DEBUG_ON is defined
+<span class="lineNum">     292 </span>                :            :  * before including this header file.
+<span class="lineNum">     293 </span>                :            :  */
+<span class="lineNum">     294 </span>                :            : #define DEBUG_PRINT(fmt, ...) \
+<span class="lineNum">     295 </span>                :            : do { \
+<span class="lineNum">     296 </span>                :            :     printf(fmt, ##__VA_ARGS__); \
+<span class="lineNum">     297 </span>                :            : } while(0)
+<span class="lineNum">     298 </span>                :            : 
+<span class="lineNum">     299 </span>                :            : /**
+<span class="lineNum">     300 </span>                :            :  * Print to standard error.
+<span class="lineNum">     301 </span>                :            :  */
+<span class="lineNum">     302 </span>                :            : #define ERROR_PRINT(fmt, ...) \
+<span class="lineNum">     303 </span>                :            : do { \
+<span class="lineNum">     304 </span>                :            :     fprintf(ERR_STRM, RED &quot;ERROR: &quot; RESET fmt, ##__VA_ARGS__); \
+<span class="lineNum">     305 </span>                :            : } while(0)
+<span class="lineNum">     306 </span>                :            : 
+<span class="lineNum">     307 </span>                :            : /**
+<span class="lineNum">     308 </span>                :            :  * Test passed.
+<span class="lineNum">     309 </span>                :            :  */
+<span class="lineNum">     310 </span>                :            : #define TEST_PASSED_PRINT(testName, timeTaken) \
+<span class="lineNum">     311 </span>                :            : do { \
+<span class="lineNum">     312 </span>                :            :     printf(&quot;Test passed:\t&quot; GREEN &quot;'%s'&quot; RESET &quot;\t %f sec\n&quot;, (testName), (timeTaken)); \
+<span class="lineNum">     313 </span>                :            : } while(0)
+<span class="lineNum">     314 </span>                :            : 
+<span class="lineNum">     315 </span>                :            : /**
+<span class="lineNum">     316 </span>                :            :  * Test failed.
+<span class="lineNum">     317 </span>                :            :  */
+<span class="lineNum">     318 </span>                :            : #define TEST_FAILED_PRINT(testName) \
+<span class="lineNum">     319 </span>                :            : do { \
+<span class="lineNum">     320 </span>                :            :     printf(&quot;Failed    :\t&quot; RED &quot;'%s'&quot; RESET&quot;\n\n&quot;, (testName)); \
+<span class="lineNum">     321 </span>                :            : } while(0)
+<span class="lineNum">     322 </span>                :            : 
+<span class="lineNum">     323 </span>                :            : #endif
+<span class="lineNum">     324 </span>                :            : 
+<span class="lineNum">     325 </span>                :            : 
+<span class="lineNum">     326 </span>                :            : /* ----------------------------------------------------------- */
+<span class="lineNum">     327 </span>                :            : 
+<a name="328"><span class="lineNum">     328 </span>                :            : </a>
+<span class="lineNum">     329 </span>                :            : static
+<span class="lineNum">     330 </span>                :<span class="lineCov">         16 : int RunTest(const char* testname,</span>
+<span class="lineNum">     331 </span>                :            :             TestSetupFunc testsetupfn,
+<span class="lineNum">     332 </span>                :            :             TestFunc testfn,
+<span class="lineNum">     333 </span>                :            :             TestClnupFunc testcleanupfn) {
+<span class="lineNum">     334 </span>                :<span class="lineCov">         16 :     int retval = 1;</span>
+<span class="lineNum">     335 </span>                :<span class="lineCov">         16 :     void* testdata = NULL;</span>
+<span class="lineNum">     336 </span>                :<span class="lineCov">         16 :     double timeTaken = -1.0;</span>
+<span class="lineNum">     337 </span>                :            : 
+<span class="lineNum">     338 </span>        [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         16 :     if (testsetupfn) {</span>
+<span class="lineNum">     339 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :         DEBUG_PRINT(&quot;Test setup:\t'%s'\n&quot;, testname);</span>
+<span class="lineNum">     340 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :         testdata = testsetupfn();</span>
+<span class="lineNum">     341 </span>                :            :     }
+<span class="lineNum">     342 </span>                :            : 
+<span class="lineNum">     343 </span>                :            : 
+<span class="lineNum">     344 </span>                :<span class="lineCov">         16 :     TimeCache(START_OP);</span>
+<span class="lineNum">     345 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :     testfn(testdata, &amp;retval);</span>
+<span class="lineNum">     346 </span>                :<span class="lineCov">         16 :     timeTaken = TimeCache(STOP_OP);</span>
+<span class="lineNum">     347 </span>                :            : 
+<span class="lineNum">     348 </span>        [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         16 :     if (retval) {</span>
+<span class="lineNum">     349 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :         TEST_PASSED_PRINT(testname, timeTaken);</span>
+<span class="lineNum">     350 </span>                :            :     }
+<span class="lineNum">     351 </span>                :            : 
+<span class="lineNum">     352 </span>        [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         16 :     if (testcleanupfn) {</span>
+<span class="lineNum">     353 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :         DEBUG_PRINT(&quot;Test cleanup:\t'%s'\n&quot;, testname);</span>
+<span class="lineNum">     354 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :         testcleanupfn(testdata);</span>
+<span class="lineNum">     355 </span>                :            :     }
+<span class="lineNum">     356 </span>                :            : 
+<span class="lineNum">     357 </span>        [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         16 :     if (retval) {</span>
+<span class="lineNum">     358 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :         DEBUG_PRINT(&quot;Successful:\t'%s'\n\n&quot;, testname);</span>
+<span class="lineNum">     359 </span>                :            :     } else {
+<span class="lineNum">     360 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         TEST_FAILED_PRINT(testname);</span>
+<span class="lineNum">     361 </span>                :            :     }
+<span class="lineNum">     362 </span>                :<span class="lineCov">         16 :     return retval;</span>
+<span class="lineNum">     363 </span>                :            : }
+<span class="lineNum">     364 </span>                :            : 
+<span class="lineNum">     365 </span>                :            : 
+<span class="lineNum">     366 </span>                :            : 
+<span class="lineNum">     367 </span>                :            : /**
+<span class="lineNum">     368 </span>                :            :  * TEST_TRUE
+<span class="lineNum">     369 </span>                :            :  * Tests a condition in a test.
+<span class="lineNum">     370 </span>                :            :  *  - does nothing if the test condition is true
+<span class="lineNum">     371 </span>                :            :  *  - prints to standard error and returns from the
+<span class="lineNum">     372 </span>                :            :  *    test function if the condition is false.
+<span class="lineNum">     373 </span>                :            :  */
+<span class="lineNum">     374 </span>                :            : #define TEST_TRUE(expr) \
+<span class="lineNum">     375 </span>                :            : do { \
+<span class="lineNum">     376 </span>                :            :     if(!(expr)) { \
+<span class="lineNum">     377 </span>                :            :         ERROR_PRINT(&quot;Condition '%s' failed in file '%s:%d' in function '%s'.\n&quot;, #expr, __FILE__, __LINE__, __FUNCTION__); \
+<span class="lineNum">     378 </span>                :            :         *(TEST_RET_VAL_PTR_NAME) = 0; \
+<span class="lineNum">     379 </span>                :            :     } \
+<span class="lineNum">     380 </span>                :            : } while(0)
+<span class="lineNum">     381 </span>                :            : 
+<span class="lineNum">     382 </span>                :            : /**
+<span class="lineNum">     383 </span>                :            :  * TEST_FALSE
+<span class="lineNum">     384 </span>                :            :  * Tests a condition in a test.
+<span class="lineNum">     385 </span>                :            :  *  - does nothing if the test condition is false
+<span class="lineNum">     386 </span>                :            :  *  - prints to standard error and returns from the
+<span class="lineNum">     387 </span>                :            :  *    test function if the condition is true.
+<span class="lineNum">     388 </span>                :            :  */
+<span class="lineNum">     389 </span>                :            : #define TEST_FALSE(expr) TEST_TRUE(!(expr))
+<span class="lineNum">     390 </span>                :            : 
+<span class="lineNum">     391 </span>                :            : /**
+<span class="lineNum">     392 </span>                :            :  * ASSERT_TRUE
+<span class="lineNum">     393 </span>                :            :  * Asserts a condition in a test.
+<span class="lineNum">     394 </span>                :            :  *  - does nothing if the test condition is true
+<span class="lineNum">     395 </span>                :            :  *  - prints to standard error and exits with failure
+<span class="lineNum">     396 </span>                :            :  */
+<span class="lineNum">     397 </span>                :            : #define ASSERT_TRUE(expr) \
+<span class="lineNum">     398 </span>                :            : do { \
+<span class="lineNum">     399 </span>                :            :     if(!(expr)) { \
+<span class="lineNum">     400 </span>                :            :         ERROR_PRINT(&quot;Condition '%s' failed at file '%s:%d' in function '%s'.\n&quot;, #expr, __FILE__, __LINE__, __FUNCTION__); \
+<span class="lineNum">     401 </span>                :            :         fflush(ERR_STRM); \
+<span class="lineNum">     402 </span>                :            :         exit(1); \
+<span class="lineNum">     403 </span>                :            :     } \
+<span class="lineNum">     404 </span>                :            : } while(0)
+<span class="lineNum">     405 </span>                :            : 
+<span class="lineNum">     406 </span>                :            : /**
+<span class="lineNum">     407 </span>                :            :  * ASSERT_FALSE
+<span class="lineNum">     408 </span>                :            :  * Asserts a condition in a test.
+<span class="lineNum">     409 </span>                :            :  *  - does nothing if the test condition is false
+<span class="lineNum">     410 </span>                :            :  *  - prints to standard error and exits with failure
+<span class="lineNum">     411 </span>                :            :  */
+<span class="lineNum">     412 </span>                :            : #define ASSERT_FALSE(expr) ASSERT_TRUE(!(expr))
+<span class="lineNum">     413 </span>                :            : 
+<span class="lineNum">     414 </span>                :            : /**
+<span class="lineNum">     415 </span>                :            :  * FILTER_IF
+<span class="lineNum">     416 </span>                :            :  * Skip remaining test if the filter is true.
+<span class="lineNum">     417 </span>                :            :  */
+<span class="lineNum">     418 </span>                :            : #define FILTER_IF(cond) return
+<span class="lineNum">     419 </span>                :            : 
+<span class="lineNum">     420 </span>                :            : /* ------------------------------ */
+<span class="lineNum">     421 </span>                :            : 
+<span class="lineNum">     422 </span>                :            : 
+<span class="lineNum">     423 </span>                :            : /* --- Add main and ADD_TEST* --- */
+<span class="lineNum">     424 </span>                :            : 
+<span class="lineNum">     425 </span>                :            : struct cusr_testcase_t {
+<span class="lineNum">     426 </span>                :            :     const char*     test_name_  ;
+<span class="lineNum">     427 </span>                :            :     TestSetupFunc   test_setup_ ;
+<span class="lineNum">     428 </span>                :            :     TestFunc        test_func_  ;
+<span class="lineNum">     429 </span>                :            :     TestClnupFunc   test_clnup_ ;
+<span class="lineNum">     430 </span>                :            : };
+<span class="lineNum">     431 </span>                :            : 
+<span class="lineNum">     432 </span>                :            : typedef struct cusr_testcase_t testcase_t;
+<span class="lineNum">     433 </span>                :            : 
+<span class="lineNum">     434 </span>                :            : /**
+<span class="lineNum">     435 </span>                :            :  * If you have more than 512 tests (consider writing a new file?)
+<span class="lineNum">     436 </span>                :            :  * or just define MAX_TESTS in your .c file before the include
+<span class="lineNum">     437 </span>                :            :  * of unittest
+<span class="lineNum">     438 </span>                :            :  */
+<span class="lineNum">     439 </span>                :            : #ifndef MAX_TESTS
+<span class="lineNum">     440 </span>                :            : #define MAX_TESTS 512
+<span class="lineNum">     441 </span>                :            : #endif
+<span class="lineNum">     442 </span>                :            : 
+<span class="lineNum">     443 </span>                :            : static testcase_t TESTS_[MAX_TESTS];
+<span class="lineNum">     444 </span>                :            : static int        CURR_TEST_ = 0;
+<span class="lineNum">     445 </span>                :            : 
+<span class="lineNum">     446 </span>                :            : 
+<span class="lineNum">     447 </span>                :            : /**
+<span class="lineNum">     448 </span>                :            :  * Macro to define test setup
+<span class="lineNum">     449 </span>                :            :  */
+<span class="lineNum">     450 </span>                :            : #define TEST_SETUP(name) \
+<span class="lineNum">     451 </span>                :            : void* test_setup_##name(void)
+<span class="lineNum">     452 </span>                :            : 
+<span class="lineNum">     453 </span>                :            : /**
+<span class="lineNum">     454 </span>                :            :  * Macro to define test function
+<span class="lineNum">     455 </span>                :            :  */
+<span class="lineNum">     456 </span>                :            : #define TEST_FUNC(name) \
+<span class="lineNum">     457 </span>                :            : void  test_func_##name(void* testdata, int* TEST_RET_VAL_PTR_NAME)
+<span class="lineNum">     458 </span>                :            : 
+<span class="lineNum">     459 </span>                :            : /**
+<span class="lineNum">     460 </span>                :            :  * Macro to define test cleanup
+<span class="lineNum">     461 </span>                :            :  */
+<span class="lineNum">     462 </span>                :            : #define TEST_CLEANUP(name) \
+<span class="lineNum">     463 </span>                :            : void  test_clnup_##name(void* testdata)
+<span class="lineNum">     464 </span>                :            : 
+<span class="lineNum">     465 </span>                :            : /**
+<span class="lineNum">     466 </span>                :            :  * Macro to register a simple test for the framework.
+<span class="lineNum">     467 </span>                :            :  * Simple tests do not have a setup and cleanup function.
+<span class="lineNum">     468 </span>                :            :  */
+<span class="lineNum">     469 </span>                :            : #define REG_TEST(name) \
+<span class="lineNum">     470 </span>                :            : do { \
+<span class="lineNum">     471 </span>                :            :     TESTS_[CURR_TEST_].test_name_  = #name; \
+<span class="lineNum">     472 </span>                :            :     TESTS_[CURR_TEST_].test_setup_ = NULL; \
+<span class="lineNum">     473 </span>                :            :     TESTS_[CURR_TEST_].test_func_  = test_func_##name; \
+<span class="lineNum">     474 </span>                :            :     TESTS_[CURR_TEST_].test_clnup_ = NULL; \
+<span class="lineNum">     475 </span>                :            :     CURR_TEST_++; \
+<span class="lineNum">     476 </span>                :            : } while(0)
+<span class="lineNum">     477 </span>                :            : 
+<span class="lineNum">     478 </span>                :            : /**
+<span class="lineNum">     479 </span>                :            :  * REG_TEST_CASE
+<span class="lineNum">     480 </span>                :            :  *
+<span class="lineNum">     481 </span>                :            :  * Macro to define a test case with setup, test, cleanup
+<span class="lineNum">     482 </span>                :            :  * functions being used.
+<span class="lineNum">     483 </span>                :            :  */
+<span class="lineNum">     484 </span>                :            : #define REG_TEST_CASE(name) \
+<span class="lineNum">     485 </span>                :            : do { \
+<span class="lineNum">     486 </span>                :            :     TESTS_[CURR_TEST_].test_name_  = #name; \
+<span class="lineNum">     487 </span>                :            :     TESTS_[CURR_TEST_].test_setup_ = test_setup_##name; \
+<span class="lineNum">     488 </span>                :            :     TESTS_[CURR_TEST_].test_func_  = test_func_##name; \
+<span class="lineNum">     489 </span>                :            :     TESTS_[CURR_TEST_].test_clnup_ = test_clnup_##name; \
+<span class="lineNum">     490 </span>                :            :     CURR_TEST_++; \
+<span class="lineNum">     491 </span>                :            : } while(0)
+<span class="lineNum">     492 </span>                :            : 
+<span class="lineNum">     493 </span>                :            : 
+<span class="lineNum">     494 </span>                :            : /**
+<span class="lineNum">     495 </span>                :            :  * Every test file must have a SetupTests function
+<span class="lineNum">     496 </span>                :            :  * which calls REG_TEST/REG_TEST_CASE for the required
+<span class="lineNum">     497 </span>                :            :  * tests
+<span class="lineNum">     498 </span>                :            :  */
+<span class="lineNum">     499 </span>                :            : extern void SetupTests();
+<span class="lineNum">     500 </span>                :            : 
+<span class="lineNum">     501 </span>                :            : 
+<span class="lineNum">     502 </span>                :            : /* (No Doxygen)
+<span class="lineNum">     503 </span>                :            :  * Main function for test file
+<span class="lineNum">     504 </span>                :            :  * Returns process exit code 0 on success
+<a name="505"><span class="lineNum">     505 </span>                :            :  * and non-zero on failure</a>
+<span class="lineNum">     506 </span>                :            :  */
+<span class="lineNum">     507 </span>                :<span class="lineCov">          3 : int main(int argc, const char* argv[]) {</span>
+<span class="lineNum">     508 </span>                :<span class="lineCov">          3 :     int allPassed = 1;</span>
+<span class="lineNum">     509 </span>                :<span class="lineCov">          3 :     int tidx = 0;</span>
+<span class="lineNum">     510 </span>                :<span class="lineCov">          3 :     int currPassed = 0;</span>
+<span class="lineNum">     511 </span>                :            : #if defined(_WIN32)
+<span class="lineNum">     512 </span>                :            :     // Initialize color attributes
+<span class="lineNum">     513 </span>                :            :     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_WHITE);
+<span class="lineNum">     514 </span>                :            :     SetConsoleTextAttribute(GetStdHandle(STD_ERROR_HANDLE), FOREGROUND_WHITE);
+<span class="lineNum">     515 </span>                :            : #endif
+<span class="lineNum">     516 </span>                :            : 
+<span class="lineNum">     517 </span>                :<span class="lineCov">          3 :     EXE_NAME = argv[0];</span>
+<span class="lineNum">     518 </span>                :            : 
+<span class="lineNum">     519 </span>                :<span class="lineCov">          3 :     SetupTests();</span>
+<span class="lineNum">     520 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">          3 :     ASSERT_TRUE(CURR_TEST_ &lt; MAX_TESTS);</span>
+<span class="lineNum">     521 </span>        [<span class="branchCov" title="Branch 0 was taken 8 times"> + </span><span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">         11 :     for(; tidx &lt; CURR_TEST_; ++tidx) {</span>
+<span class="lineNum">     522 </span>                :            :         /* a test could abort with asserts */
+<span class="lineNum">     523 </span>                :<span class="lineCov">          8 :          DEBUG_PRINT(&quot;Running test\n&quot;);</span>
+<span class="lineNum">     524 </span>                :            :          currPassed = RunTest(
+<span class="lineNum">     525 </span>                :            :                         TESTS_[tidx].test_name_,
+<span class="lineNum">     526 </span>                :            :                         TESTS_[tidx].test_setup_,
+<span class="lineNum">     527 </span>                :            :                         TESTS_[tidx].test_func_,
+<span class="lineNum">     528 </span>                :<span class="lineCov">          8 :                         TESTS_[tidx].test_clnup_);</span>
+<span class="lineNum">     529 </span>                :<span class="lineCov">          8 :          allPassed &amp;= currPassed;</span>
+<span class="lineNum">     530 </span>        [<span class="branchCov" title="Branch 0 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">          8 :          if (currPassed) {</span>
+<span class="lineNum">     531 </span>                :<span class="lineCov">          8 :              DEBUG_PRINT(&quot;Re-running test to ensure pass on rerun\n&quot;);</span>
+<span class="lineNum">     532 </span>                :            :              allPassed &amp;= RunTest(
+<span class="lineNum">     533 </span>                :            :                             TESTS_[tidx].test_name_,
+<span class="lineNum">     534 </span>                :            :                             TESTS_[tidx].test_setup_,
+<span class="lineNum">     535 </span>                :            :                             TESTS_[tidx].test_func_,
+<span class="lineNum">     536 </span>                :<span class="lineCov">          8 :                             TESTS_[tidx].test_clnup_);   </span>
+<span class="lineNum">     537 </span>                :            :          }
+<span class="lineNum">     538 </span>                :            :     }
+<span class="lineNum">     539 </span>                :<span class="lineCov">          3 :     return allPassed ? 0 : 1;</span>
+<span class="lineNum">     540 </span>                :            : }
+<span class="lineNum">     541 </span>                :            : 
+<span class="lineNum">     542 </span>                :            : /* ------------------------------ */
+<span class="lineNum">     543 </span>                :            : 
+<span class="lineNum">     544 </span>                :            : #endif/*PROJ_UNITTEST_UNITTEST_H*/
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

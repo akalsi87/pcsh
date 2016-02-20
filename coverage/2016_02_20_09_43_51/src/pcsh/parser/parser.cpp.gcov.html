@@ -1,0 +1,825 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info.cleaned - src/pcsh/parser/parser.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">src/pcsh/parser</a> - parser.cpp<span style="font-size: 80%;"> (source / <a href="parser.cpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info.cleaned</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">271</td>
+            <td class="headerCovTableEntry">284</td>
+            <td class="headerCovTableEntryHi">95.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2016-02-20</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">304</td>
+            <td class="headerCovTableEntry">443</td>
+            <td class="headerCovTableEntryLo">68.6 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /**</a>
+<span class="lineNum">       2 </span>                :            :  * \file parser.cpp
+<span class="lineNum">       3 </span>                :            :  * \date Jan 27, 2016
+<span class="lineNum">       4 </span>                :            :  */
+<span class="lineNum">       5 </span>                :            : 
+<span class="lineNum">       6 </span>                :            : // disable security warnings for MSVC for std::copy()
+<span class="lineNum">       7 </span>                :            : #if defined(_MSC_VER)
+<span class="lineNum">       8 </span>                :            : #  define _SCL_SECURE_NO_WARNINGS
+<span class="lineNum">       9 </span>                :            : #endif // defined(_MSC_VER)
+<span class="lineNum">      10 </span>                :            : 
+<span class="lineNum">      11 </span>                :            : #include &quot;pcsh/assert.hpp&quot;
+<span class="lineNum">      12 </span>                :            : #include &quot;pcsh/parser.hpp&quot;
+<span class="lineNum">      13 </span>                :            : 
+<span class="lineNum">      14 </span>                :            : #include &quot;ir/nodes.hpp&quot;
+<span class="lineNum">      15 </span>                :            : #include &quot;ir/passes/type_checker.hpp&quot;
+<span class="lineNum">      16 </span>                :            : #include &quot;ir/tree_validation.hpp&quot;
+<span class="lineNum">      17 </span>                :            : #include &quot;parser/parser_engine.hpp&quot;
+<span class="lineNum">      18 </span>                :            : 
+<span class="lineNum">      19 </span>                :            : #include &lt;cstring&gt;
+<span class="lineNum">      20 </span>                :            : #include &lt;string&gt;
+<span class="lineNum">      21 </span>                :            : 
+<span class="lineNum">      22 </span>                :            : ///
+<span class="lineNum">      23 </span>                :            : // Based on Bish
+<span class="lineNum">      24 </span>                :            : // http://www.github.com/tdenniston/bish
+<span class="lineNum">      25 </span>                :            : //
+<span class="lineNum">      26 </span>                :            : 
+<span class="lineNum">      27 </span>                :            : /*
+<span class="lineNum">      28 </span>                :            : Grammar:
+<span class="lineNum">      29 </span>                :            : -------
+<span class="lineNum">      30 </span>                :            : block ::= ['{'] [stmt]+ ['}']
+<span class="lineNum">      31 </span>                :            : stmt ::= expr ';' | block | if '(' expr ')' stmt
+<span class="lineNum">      32 </span>                :            : expr ::= expr '==' arith | var '=' arith | arith
+<span class="lineNum">      33 </span>                :            : arith ::= arith '+' term | arith '-' term | term
+<span class="lineNum">      34 </span>                :            : term ::= term '*' unary | term '/' unary | unary
+<span class="lineNum">      35 </span>                :            : unary ::= '-' unary | '+' unary | factor
+<span class="lineNum">      36 </span>                :            : factor ::= '( expr ')' | atom
+<span class="lineNum">      37 </span>                :            : atom ::= var | NUMBER | '&quot;' STRING '&quot;'
+<span class="lineNum">      38 </span>                :            : var ::= STRING
+<span class="lineNum">      39 </span>                :            : */
+<span class="lineNum">      40 </span>                :            : 
+<span class="lineNum">      41 </span>                :            : namespace pcsh {
+<span class="lineNum">      42 </span>                :            : namespace parser {
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            :     //////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      45 </span>                :            :     /// token
+<a name="46"><span class="lineNum">      46 </span>                :            :     //////////////////////////////////////////////////////////////////////////</a>
+<span class="lineNum">      47 </span>                :            : 
+<span class="lineNum">      48 </span>                :<span class="lineCov">       1484 :     token token::get(token_type t, cstring nm, size_t len)</span>
+<span class="lineNum">      49 </span>                :            :     {
+<span class="lineNum">      50 </span>  [<span class="branchCov" title="Branch 0 was taken 110 times"> + </span><span class="branchCov" title="Branch 1 was taken 10 times"> + </span><span class="branchCov" title="Branch 2 was taken 4 times"> + </span><span class="branchCov" title="Branch 3 was taken 748 times"> + </span> :<span class="lineCov">       1484 :         switch (t) {</span>
+<span class="lineNum">         </span><span class="branchCov" title="Branch 4 was taken 30 times"> + </span><span class="branchCov" title="Branch 5 was taken 4 times"> + </span><span class="branchCov" title="Branch 6 was taken 8 times"> + </span><span class="branchCov" title="Branch 7 was taken 74 times"> + </span><span class="branchCov" title="Branch 8 was taken 26 times"> + </span> 
+<span class="lineNum">         </span><span class="branchCov" title="Branch 9 was taken 46 times"> + </span><span class="branchCov" title="Branch 10 was taken 22 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span><span class="branchCov" title="Branch 12 was taken 30 times"> + </span><span class="branchCov" title="Branch 13 was taken 36 times"> + </span> 
+<span class="lineNum">         </span><span class="branchCov" title="Branch 14 was taken 24 times"> + </span><span class="branchCov" title="Branch 15 was taken 46 times"> + </span><span class="branchCov" title="Branch 16 was taken 100 times"> + </span><span class="branchCov" title="Branch 17 was taken 146 times"> + </span><span class="branchCov" title="Branch 18 was taken 4 times"> + </span> 
+<span class="lineNum">         </span>         <span class="branchCov" title="Branch 19 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 20 was not taken"> - </span>]
+<span class="lineNum">      51 </span>                :            :             case token_type::ASSIGN:
+<span class="lineNum">      52 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 110 times"> + </span>]:<span class="lineCov">        110 :                 PCSH_ASSERT(nm[0] == '=');</span>
+<span class="lineNum">      53 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 110 times"> + </span>]:<span class="lineCov">        110 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      54 </span>                :<span class="lineCov">        110 :                 nm = &quot;=&quot;;</span>
+<span class="lineNum">      55 </span>                :<span class="lineCov">        110 :                 break;</span>
+<span class="lineNum">      56 </span>                :            :             case token_type::ASTERISK:
+<span class="lineNum">      57 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 10 times"> + </span>]:<span class="lineCov">         10 :                 PCSH_ASSERT(nm[0] == '*');</span>
+<span class="lineNum">      58 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 10 times"> + </span>]:<span class="lineCov">         10 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      59 </span>                :<span class="lineCov">         10 :                 nm = &quot;*&quot;;</span>
+<span class="lineNum">      60 </span>                :<span class="lineCov">         10 :                 break;</span>
+<span class="lineNum">      61 </span>                :            :             case token_type::DOT:
+<span class="lineNum">      62 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          4 :                 PCSH_ASSERT(nm[0] == '.');</span>
+<span class="lineNum">      63 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          4 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      64 </span>                :<span class="lineCov">          4 :                 nm = &quot;.&quot;;</span>
+<span class="lineNum">      65 </span>                :<span class="lineCov">          4 :                 break;</span>
+<span class="lineNum">      66 </span>                :            :             case token_type::EOS:
+<span class="lineNum">      67 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 748 times"> + </span>]:<span class="lineCov">        748 :                 PCSH_ASSERT(nm[0] == '\xFF');</span>
+<span class="lineNum">      68 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 748 times"> + </span>]:<span class="lineCov">        748 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      69 </span>                :<span class="lineCov">        748 :                 nm = &quot;\xFF&quot;;</span>
+<span class="lineNum">      70 </span>                :<span class="lineCov">        748 :                 break;</span>
+<span class="lineNum">      71 </span>                :            :             case token_type::FLOATING:
+<span class="lineNum">      72 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 30 times"> + </span>]:<span class="lineCov">         30 :                 PCSH_ASSERT(nm);</span>
+<span class="lineNum">      73 </span>                :<span class="lineCov">         30 :                 break;</span>
+<span class="lineNum">      74 </span>                :            :             case token_type::FSLASH:
+<span class="lineNum">      75 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          4 :                 PCSH_ASSERT(nm[0] == '/');</span>
+<span class="lineNum">      76 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          4 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      77 </span>                :<span class="lineCov">          4 :                 nm = &quot;/&quot;;</span>
+<span class="lineNum">      78 </span>                :<span class="lineCov">          4 :                 break;</span>
+<span class="lineNum">      79 </span>                :            :             case token_type::IF:
+<span class="lineNum">      80 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 8 times"> + </span>]:<span class="lineCov">          8 :                 PCSH_ASSERT(::strncmp(nm, &quot;if&quot;, len) == 0);</span>
+<span class="lineNum">      81 </span>                :<span class="lineCov">          8 :                 break;</span>
+<span class="lineNum">      82 </span>                :            :             case token_type::INTEGER:
+<span class="lineNum">      83 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 74 times"> + </span>]:<span class="lineCov">         74 :                 PCSH_ASSERT(nm);</span>
+<span class="lineNum">      84 </span>                :<span class="lineCov">         74 :                 break;</span>
+<span class="lineNum">      85 </span>                :            :             case token_type::LBRACE:
+<span class="lineNum">      86 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 26 times"> + </span>]:<span class="lineCov">         26 :                 PCSH_ASSERT(nm[0] == '{');</span>
+<span class="lineNum">      87 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 26 times"> + </span>]:<span class="lineCov">         26 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      88 </span>                :<span class="lineCov">         26 :                 nm = &quot;{&quot;;</span>
+<span class="lineNum">      89 </span>                :<span class="lineCov">         26 :                 break;</span>
+<span class="lineNum">      90 </span>                :            :             case token_type::LPAREN:
+<span class="lineNum">      91 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 46 times"> + </span>]:<span class="lineCov">         46 :                 PCSH_ASSERT(nm[0] == '(');</span>
+<span class="lineNum">      92 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 46 times"> + </span>]:<span class="lineCov">         46 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      93 </span>                :<span class="lineCov">         46 :                 nm = &quot;(&quot;;</span>
+<span class="lineNum">      94 </span>                :<span class="lineCov">         46 :                 break;</span>
+<span class="lineNum">      95 </span>                :            :             case token_type::MINUS:
+<span class="lineNum">      96 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 22 times"> + </span>]:<span class="lineCov">         22 :                 PCSH_ASSERT(nm[0] == '-');</span>
+<span class="lineNum">      97 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 22 times"> + </span>]:<span class="lineCov">         22 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">      98 </span>                :<span class="lineCov">         22 :                 nm = &quot;-&quot;;</span>
+<span class="lineNum">      99 </span>                :<span class="lineCov">         22 :                 break;</span>
+<span class="lineNum">     100 </span>                :            :             case token_type::NONE:
+<span class="lineNum">     101 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 PCSH_ASSERT(!nm);</span>
+<span class="lineNum">     102 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 PCSH_ASSERT(len == 0);</span>
+<span class="lineNum">     103 </span>                :<span class="lineNoCov">          0 :                 nm = nullptr;</span>
+<span class="lineNum">     104 </span>                :<span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">     105 </span>                :            :             case token_type::PLUS:
+<span class="lineNum">     106 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 30 times"> + </span>]:<span class="lineCov">         30 :                 PCSH_ASSERT(nm[0] == '+');</span>
+<span class="lineNum">     107 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 30 times"> + </span>]:<span class="lineCov">         30 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">     108 </span>                :<span class="lineCov">         30 :                 nm = &quot;+&quot;;</span>
+<span class="lineNum">     109 </span>                :<span class="lineCov">         30 :                 break;</span>
+<span class="lineNum">     110 </span>                :            :             case token_type::QUOTE:
+<span class="lineNum">     111 </span>                :            :                 //PCSH_ASSERT(nm[0] == '&quot;');
+<span class="lineNum">     112 </span>                :            :                 //PCSH_ASSERT(len == 1);
+<span class="lineNum">     113 </span>                :            :                 //nm = &quot;\&quot;&quot;;
+<span class="lineNum">     114 </span>                :<span class="lineCov">         36 :                 break;</span>
+<span class="lineNum">     115 </span>                :            :             case token_type::RBRACE:
+<span class="lineNum">     116 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 24 times"> + </span>]:<span class="lineCov">         24 :                 PCSH_ASSERT(nm[0] == '}');</span>
+<span class="lineNum">     117 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 24 times"> + </span>]:<span class="lineCov">         24 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">     118 </span>                :<span class="lineCov">         24 :                 nm = &quot;}&quot;;</span>
+<span class="lineNum">     119 </span>                :<span class="lineCov">         24 :                 break;</span>
+<span class="lineNum">     120 </span>                :            :             case token_type::RPAREN:
+<span class="lineNum">     121 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 46 times"> + </span>]:<span class="lineCov">         46 :                 PCSH_ASSERT(nm[0] == ')');</span>
+<span class="lineNum">     122 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 46 times"> + </span>]:<span class="lineCov">         46 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">     123 </span>                :<span class="lineCov">         46 :                 nm = &quot;)&quot;;</span>
+<span class="lineNum">     124 </span>                :<span class="lineCov">         46 :                 break;</span>
+<span class="lineNum">     125 </span>                :            :             case token_type::SEMICOLON:
+<span class="lineNum">     126 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 100 times"> + </span>]:<span class="lineCov">        100 :                 PCSH_ASSERT(nm[0] == ';');</span>
+<span class="lineNum">     127 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 100 times"> + </span>]:<span class="lineCov">        100 :                 PCSH_ASSERT(len == 1);</span>
+<span class="lineNum">     128 </span>                :<span class="lineCov">        100 :                 nm = &quot;;&quot;;</span>
+<span class="lineNum">     129 </span>                :<span class="lineCov">        100 :                 break;</span>
+<span class="lineNum">     130 </span>                :            :             case token_type::SYMBOL:
+<span class="lineNum">     131 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 146 times"> + </span>]:<span class="lineCov">        146 :                 PCSH_ASSERT(nm);</span>
+<span class="lineNum">     132 </span>                :<span class="lineCov">        146 :                 break;</span>
+<span class="lineNum">     133 </span>                :            :             case token_type::FAIL:
+<span class="lineNum">     134 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">          4 :                 PCSH_ASSERT(nm);</span>
+<span class="lineNum">     135 </span>                :<span class="lineCov">          4 :                 len = strlen(nm);</span>
+<span class="lineNum">     136 </span>                :<span class="lineCov">          4 :                 break;</span>
+<span class="lineNum">     137 </span>                :            :             case token_type::ISEQUAL:
+<span class="lineNum">     138 </span>[<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">         16 :                 PCSH_ASSERT((len == 2) &amp;&amp; (nm[0] == '=') &amp;&amp; (nm[1] == '='));</span>
+<span class="lineNum">         </span>        [<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 16 times"> + </span>]
+<span class="lineNum">     139 </span>                :<span class="lineCov">         16 :                 break;</span>
+<span class="lineNum">     140 </span>                :            :             default:
+<span class="lineNum">     141 </span>                :<span class="lineNoCov">          0 :                 PCSH_ASSERT_MSG(false, &quot;Invalid token type!&quot;);</span>
+<span class="lineNum">     142 </span>                :<span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">     143 </span>                :            :         }
+<span class="lineNum">     144 </span>                :<span class="lineCov">       1484 :         return token(t, nm, len);</span>
+<span class="lineNum">     145 </span>                :            :     }
+<span class="lineNum">     146 </span>                :            : 
+<span class="lineNum">     147 </span>                :            : #if 0
+<span class="lineNum">     148 </span>                :            :     std::string token::to_string() const
+<span class="lineNum">     149 </span>                :            :     {
+<span class="lineNum">     150 </span>                :            :         auto str = std::string();
+<span class="lineNum">     151 </span>                :            :         switch (type_) {
+<span class="lineNum">     152 </span>                :            :             case token_type::ASSIGN:
+<span class="lineNum">     153 </span>                :            :                 str += &quot;assign        | &quot;;
+<span class="lineNum">     154 </span>                :            :                 break;
+<span class="lineNum">     155 </span>                :            :             case token_type::ASTERISK:
+<span class="lineNum">     156 </span>                :            :                 str += &quot;asterisk      | &quot;;
+<span class="lineNum">     157 </span>                :            :                 break;
+<span class="lineNum">     158 </span>                :            :             case token_type::DOT:
+<span class="lineNum">     159 </span>                :            :                 str += &quot;dot           | &quot;;
+<span class="lineNum">     160 </span>                :            :                 break;
+<span class="lineNum">     161 </span>                :            :             case token_type::EOS:
+<span class="lineNum">     162 </span>                :            :                 str += &quot;end-of-stream | &quot;;
+<span class="lineNum">     163 </span>                :            :                 break;
+<span class="lineNum">     164 </span>                :            :             case token_type::FLOATING:
+<span class="lineNum">     165 </span>                :            :                 str += &quot;float         | &quot;;
+<span class="lineNum">     166 </span>                :            :                 break;
+<span class="lineNum">     167 </span>                :            :             case token_type::FSLASH:
+<span class="lineNum">     168 </span>                :            :                 str += &quot;fwd-slash     | &quot;;
+<span class="lineNum">     169 </span>                :            :                 break;
+<span class="lineNum">     170 </span>                :            :             case token_type::INTEGER:
+<span class="lineNum">     171 </span>                :            :                 str += &quot;integer       | &quot;;
+<span class="lineNum">     172 </span>                :            :                 break;
+<span class="lineNum">     173 </span>                :            :             case token_type::LBRACE:
+<span class="lineNum">     174 </span>                :            :                 str += &quot;lbrace        | &quot;;
+<span class="lineNum">     175 </span>                :            :                 break;
+<span class="lineNum">     176 </span>                :            :             case token_type::LPAREN:
+<span class="lineNum">     177 </span>                :            :                 str += &quot;lparen        | &quot;;
+<span class="lineNum">     178 </span>                :            :                 break;
+<span class="lineNum">     179 </span>                :            :             case token_type::MINUS:
+<span class="lineNum">     180 </span>                :            :                 str += &quot;minus         | &quot;;
+<span class="lineNum">     181 </span>                :            :                 break;
+<span class="lineNum">     182 </span>                :            :             case token_type::NONE:
+<span class="lineNum">     183 </span>                :            :                 str += &quot;none          | &quot;;
+<span class="lineNum">     184 </span>                :            :                 break;
+<span class="lineNum">     185 </span>                :            :             case token_type::PLUS:
+<span class="lineNum">     186 </span>                :            :                 str += &quot;plus          | &quot;;
+<span class="lineNum">     187 </span>                :            :                 break;
+<span class="lineNum">     188 </span>                :            :             case token_type::QUOTE:
+<span class="lineNum">     189 </span>                :            :                 str += &quot;quote         | &quot;;
+<span class="lineNum">     190 </span>                :            :                 break;
+<span class="lineNum">     191 </span>                :            :             case token_type::RBRACE:
+<span class="lineNum">     192 </span>                :            :                 str += &quot;rbrace        | &quot;;
+<span class="lineNum">     193 </span>                :            :                 break;
+<span class="lineNum">     194 </span>                :            :             case token_type::RPAREN:
+<span class="lineNum">     195 </span>                :            :                 str += &quot;rparen        | &quot;;
+<span class="lineNum">     196 </span>                :            :                 break;
+<span class="lineNum">     197 </span>                :            :             case token_type::SEMICOLON:
+<span class="lineNum">     198 </span>                :            :                 str += &quot;semicolon     | &quot;;
+<span class="lineNum">     199 </span>                :            :                 break;
+<span class="lineNum">     200 </span>                :            :             case token_type::SYMBOL:
+<span class="lineNum">     201 </span>                :            :                 str += &quot;symbol        | &quot;;
+<span class="lineNum">     202 </span>                :            :                 break;
+<span class="lineNum">     203 </span>                :            :             case token_type::FAIL:
+<span class="lineNum">     204 </span>                :            :                 str += &quot;fail          | &quot;;
+<span class="lineNum">     205 </span>                :            :                 break;
+<span class="lineNum">     206 </span>                :            :             case token_type::IF:
+<span class="lineNum">     207 </span>                :            :                 str += &quot;if            |&quot;;
+<span class="lineNum">     208 </span>                :            :                 break;
+<span class="lineNum">     209 </span>                :            :             case token_type::ISEQUAL:
+<span class="lineNum">     210 </span>                :            :                 str += &quot;isequal       |&quot;;
+<span class="lineNum">     211 </span>                :            :                 break;
+<span class="lineNum">     212 </span>                :            :         }
+<span class="lineNum">     213 </span>                :            :         return str.append(str_, str_ + len_);
+<span class="lineNum">     214 </span>                :            :     }
+<span class="lineNum">     215 </span>                :            : 
+<span class="lineNum">     216 </span>                :            : #endif // 0
+<span class="lineNum">     217 </span>                :            : 
+<span class="lineNum">     218 </span>                :            :     //////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     219 </span>                :            :     /// parser
+<span class="lineNum">     220 </span>                :            :     //////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     221 </span>                :            : 
+<span class="lineNum">     222 </span>                :            :     namespace tokenize {
+<span class="lineNum">     223 </span>                :            : 
+<span class="lineNum">     224 </span>                :            :         PCSH_INLINE bool is_sign(char c)
+<span class="lineNum">     225 </span>                :            :         {
+<span class="lineNum">     226 </span>                :            :             return (c == '+') || (c == '-');
+<span class="lineNum">     227 </span>                :            :         }
+<span class="lineNum">     228 </span>                :            : 
+<a name="229"><span class="lineNum">     229 </span>                :            :         PCSH_INLINE bool is_newline(char c)</a>
+<span class="lineNum">     230 </span>                :            :         {
+<span class="lineNum">     231 </span>[<span class="branchCov" title="Branch 0 was taken 10 times"> + </span><span class="branchCov" title="Branch 1 was taken 2 times"> + </span>][<span class="branchNoCov" title="Branch 2 was not taken"> - </span><span class="branchCov" title="Branch 3 was taken 10 times"> + </span>]:<span class="lineCov">       6668 :             return (c == '\n') || (c == '\r');</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 1744 times"> + </span><span class="branchCov" title="Branch 5 was taken 68 times"> + </span>][<span class="branchCov" title="Branch 6 was taken 4 times"> + </span><span class="branchCov" title="Branch 7 was taken 1740 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 8 was taken 2592 times"> + </span><span class="branchCov" title="Branch 9 was taken 144 times"> + </span>][<span class="branchCov" title="Branch 10 was taken 4 times"> + </span><span class="branchCov" title="Branch 11 was taken 2588 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 12 was taken 662 times"> + </span><span class="branchCov" title="Branch 13 was taken 116 times"> + </span>][<span class="branchCov" title="Branch 14 was taken 4 times"> + </span><span class="branchCov" title="Branch 15 was taken 658 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 16 was taken 1136 times"> + </span><span class="branchCov" title="Branch 17 was taken 194 times"> + </span>][<span class="branchCov" title="Branch 18 was taken 8 times"> + </span><span class="branchCov" title="Branch 19 was taken 1128 times"> + </span>]
+<span class="lineNum">     232 </span>                :            :         }
+<span class="lineNum">     233 </span>                :            : 
+<span class="lineNum">     234 </span>                :            :         PCSH_INLINE bool is_space(char c)
+<span class="lineNum">     235 </span>                :            :         {
+<span class="lineNum">     236 </span>[<span class="branchCov" title="Branch 0 was taken 658 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 360 times"> + </span><span class="branchCov" title="Branch 3 was taken 298 times"> + </span>]:<span class="lineCov">       1786 :             return (c == '\t') || (c == ' ');</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 1128 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>][<span class="branchCov" title="Branch 6 was taken 520 times"> + </span><span class="branchCov" title="Branch 7 was taken 608 times"> + </span>]
+<span class="lineNum">     237 </span>                :            :         }
+<span class="lineNum">     238 </span>                :            : 
+<span class="lineNum">     239 </span>                :            :         PCSH_INLINE bool is_whitespace(char c)
+<span class="lineNum">     240 </span>                :            :         {
+<span class="lineNum">     241 </span>[<span class="branchCov" title="Branch 0 was taken 658 times"> + </span><span class="branchCov" title="Branch 1 was taken 120 times"> + </span>][<span class="branchCov" title="Branch 2 was taken 360 times"> + </span><span class="branchCov" title="Branch 3 was taken 298 times"> + </span>]:<span class="lineCov">       3894 :             return is_newline(c) || is_space(c);</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 1128 times"> + </span><span class="branchCov" title="Branch 5 was taken 202 times"> + </span>][<span class="branchCov" title="Branch 6 was taken 520 times"> + </span><span class="branchCov" title="Branch 7 was taken 608 times"> + </span>]
+<span class="lineNum">     242 </span>                :            :         }
+<span class="lineNum">     243 </span>                :            : 
+<a name="244"><span class="lineNum">     244 </span>                :            :         PCSH_INLINE bool is_digit(char c)</a>
+<span class="lineNum">     245 </span>                :            :         {
+<span class="lineNum">     246 </span>[<span class="branchCov" title="Branch 0 was taken 366 times"> + </span><span class="branchCov" title="Branch 1 was taken 142 times"> + </span>][<span class="branchNoCov" title="Branch 2 was not taken"> - </span><span class="branchCov" title="Branch 3 was taken 366 times"> + </span>]:<span class="lineCov">       1320 :             return (c &gt;= '0') &amp;&amp; (c &lt;= '9');</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 210 times"> + </span><span class="branchCov" title="Branch 5 was taken 74 times"> + </span>][<span class="branchCov" title="Branch 6 was taken 176 times"> + </span><span class="branchCov" title="Branch 7 was taken 34 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 8 was taken 102 times"> + </span><span class="branchCov" title="Branch 9 was taken 56 times"> + </span>][<span class="branchCov" title="Branch 10 was taken 50 times"> + </span><span class="branchCov" title="Branch 11 was taken 52 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 12 was taken 34 times"> + </span><span class="branchCov" title="Branch 13 was taken 40 times"> + </span>][<span class="branchNoCov" title="Branch 14 was not taken"> - </span><span class="branchCov" title="Branch 15 was taken 34 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 16 was taken 18 times"> + </span><span class="branchCov" title="Branch 17 was taken 16 times"> + </span>][<span class="branchNoCov" title="Branch 18 was not taken"> - </span><span class="branchCov" title="Branch 19 was taken 18 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 20 was taken 262 times"> + </span><span class="branchNoCov" title="Branch 21 was not taken"> - </span>][<span class="branchCov" title="Branch 22 was taken 108 times"> + </span><span class="branchCov" title="Branch 23 was taken 154 times"> + </span>]
+<span class="lineNum">     247 </span>                :            :         }
+<span class="lineNum">     248 </span>                :            : 
+<span class="lineNum">     249 </span>                :            :         PCSH_INLINE bool is_lower_alpha(char c)
+<span class="lineNum">     250 </span>                :            :         {
+<span class="lineNum">     251 </span>[<span class="branchCov" title="Branch 0 was taken 354 times"> + </span><span class="branchCov" title="Branch 1 was taken 154 times"> + </span>][<span class="branchCov" title="Branch 2 was taken 354 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">        616 :             return (c &gt;= 'a') &amp;&amp; (c &lt;= 'z');</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 74 times"> + </span>][<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 8 was taken 4 times"> + </span><span class="branchCov" title="Branch 9 was taken 30 times"> + </span>][<span class="branchCov" title="Branch 10 was taken 4 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">     252 </span>                :            :         }
+<span class="lineNum">     253 </span>                :            : 
+<span class="lineNum">     254 </span>                :            :         PCSH_INLINE bool is_upper_alpha(char c)
+<span class="lineNum">     255 </span>                :            :         {
+<span class="lineNum">     256 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 154 times"> + </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineCov">        258 :             return (c &gt;= 'A') &amp;&amp; (c &lt;= 'Z');</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 74 times"> + </span>][<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 8 was not taken"> - </span><span class="branchCov" title="Branch 9 was taken 30 times"> + </span>][<span class="branchNoExec" title="Branch 10 was not executed"> # </span><span class="branchNoExec" title="Branch 11 was not executed"> # </span>]
+<span class="lineNum">     257 </span>                :            :         }
+<span class="lineNum">     258 </span>                :            : 
+<span class="lineNum">     259 </span>                :            :         PCSH_INLINE char to_lower(char c)
+<span class="lineNum">     260 </span>                :            :         {
+<span class="lineNum">     261 </span>                :            :             return (c - 'A' + 'a');
+<span class="lineNum">     262 </span>                :            :         }
+<span class="lineNum">     263 </span>                :            : 
+<span class="lineNum">     264 </span>                :            :         PCSH_INLINE char to_upper(char c)
+<span class="lineNum">     265 </span>                :            :         {
+<span class="lineNum">     266 </span>                :            :             return (c - 'a' + 'A');
+<span class="lineNum">     267 </span>                :            :         }
+<span class="lineNum">     268 </span>                :            : 
+<span class="lineNum">     269 </span>                :            :         PCSH_INLINE bool is_comment_char(char c)
+<span class="lineNum">     270 </span>                :            :         {
+<span class="lineNum">     271 </span>                :<span class="lineCov">        906 :             return (c == '#');</span>
+<span class="lineNum">     272 </span>                :            :         }
+<span class="lineNum">     273 </span>                :            : 
+<span class="lineNum">     274 </span>                :            :         PCSH_INLINE bool is_symbol_char(char c)
+<span class="lineNum">     275 </span>                :            :         {
+<span class="lineNum">     276 </span>[<span class="branchCov" title="Branch 0 was taken 508 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 154 times"> + </span><span class="branchCov" title="Branch 3 was taken 354 times"> + </span>]:<span class="lineCov">       1490 :             return is_digit(c) || is_lower_alpha(c) || is_upper_alpha(c) || (c == '_');</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 154 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>][<span class="branchNoCov" title="Branch 6 was not taken"> - </span><span class="branchCov" title="Branch 7 was taken 154 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 8 was taken 74 times"> + </span><span class="branchNoCov" title="Branch 9 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 74 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 12 was taken 74 times"> + </span><span class="branchNoCov" title="Branch 13 was not taken"> - </span>][<span class="branchNoCov" title="Branch 14 was not taken"> - </span><span class="branchCov" title="Branch 15 was taken 74 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 16 was taken 34 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>][<span class="branchCov" title="Branch 18 was taken 30 times"> + </span><span class="branchCov" title="Branch 19 was taken 4 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 20 was taken 30 times"> + </span><span class="branchNoCov" title="Branch 21 was not taken"> - </span>][<span class="branchNoCov" title="Branch 22 was not taken"> - </span><span class="branchCov" title="Branch 23 was taken 30 times"> + </span>]
+<span class="lineNum">     277 </span>                :            :         }
+<span class="lineNum">     278 </span>                :            : 
+<span class="lineNum">     279 </span>                :            :         PCSH_INLINE bool is_start_of_number(char c, char n, char o)
+<span class="lineNum">     280 </span>                :            :         {
+<span class="lineNum">     281 </span>                :            :             return is_digit(c) || ((is_sign(c) || (c == '.')) &amp;&amp; is_digit(n)) || (is_sign(c) &amp;&amp; (n == '.') &amp;&amp; is_digit(o));
+<span class="lineNum">     282 </span>                :            :         }
+<span class="lineNum">     283 </span>                :            : 
+<span class="lineNum">     284 </span>                :            :     }//namespace tokenize
+<span class="lineNum">     285 </span>                :            : 
+<span class="lineNum">     286 </span>                :            : #if defined(_MSC_VER)
+<span class="lineNum">     287 </span>                :            : #  pragma warning(disable:4351)
+<span class="lineNum">     288 </span>                :            : #endif // defined(_MSC_VER)
+<a name="289"><span class="lineNum">     289 </span>                :            : </a>
+<span class="lineNum">     290 </span>                :            :     template &lt;int N&gt;
+<span class="lineNum">     291 </span>                :<span class="lineCov">         96 :     class flex_buffer</span>
+<span class="lineNum">     292 </span>                :            :     {
+<span class="lineNum">     293 </span>                :            :       private:
+<span class="lineNum">     294 </span>                :            :         mutable char stackbuff[N + 1];
+<span class="lineNum">     295 </span>                :            :         size_t sz;
+<span class="lineNum">     296 </span>                :            :         mutable std::string heapbuff;
+<a name="297"><span class="lineNum">     297 </span>                :            :         bool useheap;</a>
+<span class="lineNum">     298 </span>                :            :       public:
+<span class="lineNum">     299 </span>        [<span class="branchCov" title="Branch 0 was taken 12336 times"> + </span><span class="branchCov" title="Branch 1 was taken 48 times"> + </span>]:<span class="lineCov">      12432 :         flex_buffer() : stackbuff(), sz(0), heapbuff(), useheap(false)</span>
+<span class="lineNum">     300 </span>                :            :         {
+<span class="lineNum">     301 </span>                :<span class="lineCov">         48 :             stackbuff[N] = '\0';</span>
+<a name="302"><span class="lineNum">     302 </span>                :<span class="lineCov">         48 :         }</span></a>
+<span class="lineNum">     303 </span>                :            : 
+<span class="lineNum">     304 </span>                :<span class="lineCov">       9220 :         inline char&amp; operator[](size_t i) const</span>
+<span class="lineNum">     305 </span>                :            :         {
+<span class="lineNum">     306 </span>        [<span class="branchCov" title="Branch 0 was taken 88 times"> + </span><span class="branchCov" title="Branch 1 was taken 9132 times"> + </span>]:<span class="lineCov">       9220 :             return useheap ? heapbuff[i] : stackbuff[i];</span>
+<a name="307"><span class="lineNum">     307 </span>                :            :         }</a>
+<span class="lineNum">     308 </span>                :            : 
+<span class="lineNum">     309 </span>                :<span class="lineCov">        140 :         inline size_t size() const</span>
+<span class="lineNum">     310 </span>                :            :         {
+<span class="lineNum">     311 </span>        [<span class="branchCov" title="Branch 0 was taken 48 times"> + </span><span class="branchCov" title="Branch 1 was taken 92 times"> + </span>]:<span class="lineCov">        140 :             return useheap ? heapbuff.size() : sz;</span>
+<a name="312"><span class="lineNum">     312 </span>                :            :         }</a>
+<span class="lineNum">     313 </span>                :            : 
+<span class="lineNum">     314 </span>                :<span class="lineCov">         88 :         inline void resize(size_t s)</span>
+<span class="lineNum">     315 </span>                :            :         {
+<span class="lineNum">     316 </span>[<span class="branchCov" title="Branch 0 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 48 times"> + </span><span class="branchCov" title="Branch 3 was taken 40 times"> + </span>]:<span class="lineCov">         88 :             if (!useheap &amp;&amp; (s &lt;= N)) {</span>
+<span class="lineNum">     317 </span>                :<span class="lineCov">         48 :                 sz = s;</span>
+<span class="lineNum">     318 </span>                :<span class="lineCov">         48 :                 return;</span>
+<span class="lineNum">     319 </span>                :            :             }
+<span class="lineNum">     320 </span>                :            : 
+<span class="lineNum">     321 </span>        [<span class="branchCov" title="Branch 0 was taken 40 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         40 :             if (!useheap) {</span>
+<span class="lineNum">     322 </span>                :<span class="lineCov">         40 :                 heapbuff.reserve(2 * s);</span>
+<span class="lineNum">     323 </span>                :            :             }
+<span class="lineNum">     324 </span>                :            : 
+<span class="lineNum">     325 </span>                :<span class="lineCov">         40 :             heapbuff.resize(s);</span>
+<span class="lineNum">     326 </span>        [<span class="branchCov" title="Branch 0 was taken 40 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         40 :             if (!useheap) {</span>
+<span class="lineNum">     327 </span>                :<span class="lineCov">         40 :                 std::copy(stackbuff, stackbuff + sz, &amp;heapbuff[0]);</span>
+<span class="lineNum">     328 </span>                :<span class="lineCov">         40 :                 useheap = true;</span>
+<span class="lineNum">     329 </span>                :            :             }
+<span class="lineNum">     330 </span>                :            :         }
+<span class="lineNum">     331 </span>                :            :     };
+<span class="lineNum">     332 </span>                :            : 
+<span class="lineNum">     333 </span>                :            : #if defined(_MSC_VER)
+<span class="lineNum">     334 </span>                :            : #  pragma warning(default:4996)
+<span class="lineNum">     335 </span>                :            : #endif // defined(_MSC_VER)
+<a name="336"><span class="lineNum">     336 </span>                :            : </a>
+<span class="lineNum">     337 </span>                :            :     /// buffered_stream
+<span class="lineNum">     338 </span>                :<span class="lineCov">         96 :     class parser::buffered_stream</span>
+<span class="lineNum">     339 </span>                :            :     {
+<span class="lineNum">     340 </span>                :            :       public:
+<a name="341"><span class="lineNum">     341 </span>                :            :         static const int EOS = -1;</a>
+<span class="lineNum">     342 </span>                :            :       public:
+<span class="lineNum">     343 </span>                :<span class="lineCov">         96 :         buffered_stream(std::istream&amp; is) : strm_(is), buffer_(), buffpos_(0), buffsz_(0), pos_(0)</span>
+<span class="lineNum">     344 </span>                :            :         {
+<span class="lineNum">     345 </span>                :<span class="lineCov">         48 :         }</span>
+<span class="lineNum">     346 </span>                :            : 
+<span class="lineNum">     347 </span>                :            :         PCSH_INLINE const char* buff() const
+<span class="lineNum">     348 </span>                :            :         {
+<span class="lineNum">     349 </span>        [<span class="branchCov" title="Branch 1 was taken 154 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">        258 :             return &amp;buffer_[buffpos_];</span>
+<span class="lineNum">     350 </span>                :            :         }
+<span class="lineNum">     351 </span>                :            : 
+<a name="352"><span class="lineNum">     352 </span>                :            :         PCSH_INLINE int peek_at(pos_t pos)</a>
+<span class="lineNum">     353 </span>                :            :         {
+<span class="lineNum">     354 </span>[<span class="branchCov" title="Branch 0 was taken 12 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 12 times"> + </span><span class="branchNoCov" title="Branch 4 was not taken"> - </span>]:<span class="lineCov">       8912 :             return has_chars(pos + 1) ? buffer_[buffpos_ + pos] : EOS;</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 5 was taken 508 times"> + </span><span class="branchNoCov" title="Branch 6 was not taken"> - </span>][<span class="branchCov" title="Branch 8 was taken 284 times"> + </span><span class="branchNoCov" title="Branch 9 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 11 was taken 108 times"> + </span><span class="branchNoCov" title="Branch 12 was not taken"> - </span>][<span class="branchCov" title="Branch 14 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 15 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 17 was taken 74 times"> + </span><span class="branchNoCov" title="Branch 18 was not taken"> - </span>][<span class="branchCov" title="Branch 20 was taken 34 times"> + </span><span class="branchNoCov" title="Branch 21 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 23 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 24 was not taken"> - </span>][<span class="branchCov" title="Branch 26 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 27 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 29 was taken 118 times"> + </span><span class="branchNoCov" title="Branch 30 was not taken"> - </span>][<span class="branchCov" title="Branch 32 was taken 1810 times"> + </span><span class="branchCov" title="Branch 33 was taken 2 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 35 was taken 2734 times"> + </span><span class="branchCov" title="Branch 36 was taken 2 times"> + </span>][<span class="branchCov" title="Branch 38 was taken 4 times"> + </span><span class="branchNoCov" title="Branch 39 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 41 was taken 768 times"> + </span><span class="branchCov" title="Branch 42 was taken 10 times"> + </span>][<span class="branchCov" title="Branch 44 was taken 1298 times"> + </span><span class="branchCov" title="Branch 45 was taken 32 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 47 was taken 736 times"> + </span><span class="branchCov" title="Branch 48 was taken 42 times"> + </span>][<span class="branchCov" title="Branch 50 was taken 126 times"> + </span><span class="branchNoCov" title="Branch 51 was not taken"> - </span>]
+<span class="lineNum">     355 </span>                :            :         }
+<span class="lineNum">     356 </span>                :            : 
+<a name="357"><span class="lineNum">     357 </span>                :            :         PCSH_INLINE pos_t pos() const</a>
+<span class="lineNum">     358 </span>                :            :         {
+<span class="lineNum">     359 </span>                :<span class="lineCov">        152 :             return pos_ + buffpos_;</span>
+<a name="360"><span class="lineNum">     360 </span>                :            :         }</a>
+<span class="lineNum">     361 </span>                :            : 
+<span class="lineNum">     362 </span>                :<span class="lineCov">        700 :         void advance(pos_t n = 1)</span>
+<span class="lineNum">     363 </span>                :            :         {
+<span class="lineNum">     364 </span>                :<span class="lineCov">        700 :             size_t nleft = buffsz_ - buffpos_;</span>
+<span class="lineNum">     365 </span>        [<span class="branchCov" title="Branch 0 was taken 698 times"> + </span><span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">        700 :             if (nleft &gt;= n) {</span>
+<span class="lineNum">     366 </span>                :<span class="lineCov">        698 :                 buffpos_ += n;</span>
+<span class="lineNum">     367 </span>                :<span class="lineCov">        698 :                 return;</span>
+<span class="lineNum">     368 </span>                :            :             }
+<span class="lineNum">     369 </span>                :<span class="lineCov">          2 :             pos_ += buffsz_;</span>
+<span class="lineNum">     370 </span>                :<span class="lineCov">          2 :             buffpos_ = 0;</span>
+<span class="lineNum">     371 </span>                :<span class="lineCov">          2 :             buffsz_ = 0;</span>
+<span class="lineNum">     372 </span>                :<span class="lineCov">          2 :             n -= nleft;</span>
+<span class="lineNum">     373 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">          2 :             while (n &gt; 0) {</span>
+<span class="lineNum">     374 </span>                :<span class="lineCov">          2 :                 fill_buffer(buffer_.size());</span>
+<span class="lineNum">     375 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">          2 :                 if (buffsz_ == 0) {</span>
+<span class="lineNum">     376 </span>                :<span class="lineCov">          2 :                     break;</span>
+<span class="lineNum">     377 </span>                :            :                 }
+<span class="lineNum">     378 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if (n &lt; buffsz_) {</span>
+<span class="lineNum">     379 </span>                :<span class="lineNoCov">          0 :                     buffpos_ += n;</span>
+<span class="lineNum">     380 </span>                :<span class="lineNoCov">          0 :                     break;</span>
+<span class="lineNum">     381 </span>                :            :                 }
+<span class="lineNum">     382 </span>                :<span class="lineNoCov">          0 :                 pos_ += buffsz_;</span>
+<span class="lineNum">     383 </span>                :<span class="lineNoCov">          0 :                 n -= buffsz_;</span>
+<span class="lineNum">     384 </span>                :            :             }
+<a name="385"><span class="lineNum">     385 </span>                :            :         }</a>
+<span class="lineNum">     386 </span>                :            : 
+<span class="lineNum">     387 </span>                :<span class="lineCov">         48 :         void sync_stream()</span>
+<span class="lineNum">     388 </span>                :            :         {
+<span class="lineNum">     389 </span>                :<span class="lineCov">         48 :             strm_.seekg(pos_ + buffpos_, strm_.beg);</span>
+<span class="lineNum">     390 </span>        [<span class="branchNoCov" title="Branch 1 was not taken"> - </span><span class="branchCov" title="Branch 2 was taken 48 times"> + </span>]:<span class="lineCov">         48 :             if (!strm_.good()) {</span>
+<span class="lineNum">     391 </span>                :<span class="lineNoCov">          0 :                 strm_.clear();</span>
+<span class="lineNum">     392 </span>                :            :             }
+<span class="lineNum">     393 </span>                :<span class="lineCov">         48 :             pos_ += buffpos_;</span>
+<span class="lineNum">     394 </span>                :<span class="lineCov">         48 :             buffpos_ = 0;</span>
+<span class="lineNum">     395 </span>                :<span class="lineCov">         48 :             buffsz_ = 0;</span>
+<span class="lineNum">     396 </span>                :<span class="lineCov">         48 :         }</span>
+<span class="lineNum">     397 </span>                :            :       private:
+<span class="lineNum">     398 </span>                :            :         static const int INIT_SIZE = 256;
+<span class="lineNum">     399 </span>                :            : 
+<span class="lineNum">     400 </span>                :            :         std::istream&amp;          strm_;
+<span class="lineNum">     401 </span>                :            :         flex_buffer&lt;INIT_SIZE&gt; buffer_;
+<span class="lineNum">     402 </span>                :            :         pos_t                  buffpos_;
+<span class="lineNum">     403 </span>                :            :         pos_t                  buffsz_;
+<span class="lineNum">     404 </span>                :            :         pos_t                  pos_;
+<span class="lineNum">     405 </span>                :            : 
+<span class="lineNum">     406 </span>                :            :         PCSH_INLINE bool has_chars(pos_t n)
+<span class="lineNum">     407 </span>                :            :         {
+<span class="lineNum">     408 </span>[<span class="branchCov" title="Branch 0 was taken 12 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 508 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">       8912 :             if (buffsz_ &gt;= (buffpos_ + n)) {</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 284 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>][<span class="branchCov" title="Branch 6 was taken 108 times"> + </span><span class="branchNoCov" title="Branch 7 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 8 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 9 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 74 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>  [<span class="branchCov" title="Branch 12 was taken 34 times"> + </span><span class="branchNoCov" title="Branch 13 was not taken"> - </span><span class="branchCov" title="Branch 14 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 15 was not taken"> - </span>]
+<span class="lineNum">         </span>  [<span class="branchCov" title="Branch 16 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span><span class="branchCov" title="Branch 18 was taken 118 times"> + </span><span class="branchNoCov" title="Branch 19 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 20 was taken 1810 times"> + </span><span class="branchCov" title="Branch 21 was taken 2 times"> + </span>][<span class="branchCov" title="Branch 22 was taken 2734 times"> + </span><span class="branchCov" title="Branch 23 was taken 2 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 24 was taken 4 times"> + </span><span class="branchNoCov" title="Branch 25 was not taken"> - </span>][<span class="branchCov" title="Branch 26 was taken 720 times"> + </span><span class="branchCov" title="Branch 27 was taken 58 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 28 was taken 1298 times"> + </span><span class="branchCov" title="Branch 29 was taken 32 times"> + </span>][<span class="branchCov" title="Branch 30 was taken 736 times"> + </span><span class="branchCov" title="Branch 31 was taken 42 times"> + </span>]
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 32 was taken 126 times"> + </span><span class="branchNoCov" title="Branch 33 was not taken"> - </span>]
+<span class="lineNum">     409 </span>                :<span class="lineCov">       8776 :                 return true;</span>
+<span class="lineNum">     410 </span>                :            :             }
+<span class="lineNum">     411 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineCov">        136 :             fill_buffer(n);</span>
+<span class="lineNum">     412 </span>                :<span class="lineCov">        136 :             return buffsz_ &gt;= (buffpos_ + n);</span>
+<a name="413"><span class="lineNum">     413 </span>                :            :         }</a>
+<span class="lineNum">     414 </span>                :            : 
+<span class="lineNum">     415 </span>                :<span class="lineCov">        138 :         void fill_buffer(pos_t n)</span>
+<span class="lineNum">     416 </span>                :            :         {
+<span class="lineNum">     417 </span>        [<span class="branchCov" title="Branch 1 was taken 138 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">        138 :             n = std::max(n, pos_t(INIT_SIZE));</span>
+<span class="lineNum">     418 </span>                :            : 
+<span class="lineNum">     419 </span>        [<span class="branchCov" title="Branch 1 was taken 88 times"> + </span><span class="branchCov" title="Branch 2 was taken 50 times"> + </span>]:<span class="lineCov">        138 :             if ((buffpos_ + n) &gt; buffer_.size()) {</span>
+<span class="lineNum">     420 </span>                :<span class="lineCov">         88 :                 buffer_.resize(buffpos_ + n);</span>
+<span class="lineNum">     421 </span>                :            :             }
+<span class="lineNum">     422 </span>                :            : 
+<span class="lineNum">     423 </span>                :<span class="lineCov">        138 :             strm_.read(&amp;buffer_[buffsz_], n - (buffsz_ - buffpos_));</span>
+<span class="lineNum">     424 </span>                :<span class="lineCov">        138 :             buffsz_ += (pos_t)strm_.gcount();</span>
+<span class="lineNum">     425 </span>                :            : 
+<span class="lineNum">     426 </span>        [<span class="branchCov" title="Branch 1 was taken 138 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">        138 :             if (!strm_.good()) {</span>
+<span class="lineNum">     427 </span>                :<span class="lineCov">        138 :                 strm_.clear();</span>
+<span class="lineNum">     428 </span>                :            :             }
+<span class="lineNum">     429 </span>                :<span class="lineCov">        138 :         }</span>
+<span class="lineNum">     430 </span>                :            :     };
+<span class="lineNum">     431 </span>                :            : 
+<span class="lineNum">     432 </span>                :<span class="lineCov">        778 :     token parser::peek(pos_t pstrt, pos_t* pactstrt)</span>
+<span class="lineNum">     433 </span>                :            :     {
+<span class="lineNum">     434 </span>                :            :         using namespace tokenize;
+<span class="lineNum">     435 </span>                :            :         // skip whitespace
+<span class="lineNum">     436 </span>                :<span class="lineCov">        778 :         auto p = find_first_non_whitespace(pstrt);</span>
+<span class="lineNum">     437 </span>        [<span class="branchCov" title="Branch 0 was taken 778 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">        778 :         if (pactstrt) {</span>
+<span class="lineNum">     438 </span>                :<span class="lineCov">        778 :             *pactstrt = p;</span>
+<span class="lineNum">     439 </span>                :            :         }
+<span class="lineNum">     440 </span>                :            : 
+<span class="lineNum">     441 </span>                :<span class="lineCov">       1556 :         int c = strm_-&gt;peek_at(p);</span>
+<span class="lineNum">     442 </span>                :            : 
+<span class="lineNum">     443 </span>  [<span class="branchCov" title="Branch 0 was taken 42 times"> + </span><span class="branchCov" title="Branch 1 was taken 46 times"> + </span><span class="branchCov" title="Branch 2 was taken 46 times"> + </span><span class="branchCov" title="Branch 3 was taken 26 times"> + </span> :<span class="lineCov">        778 :         switch (c) {</span>
+<span class="lineNum">         </span><span class="branchCov" title="Branch 4 was taken 24 times"> + </span><span class="branchCov" title="Branch 5 was taken 100 times"> + </span><span class="branchCov" title="Branch 6 was taken 126 times"> + </span><span class="branchCov" title="Branch 7 was taken 30 times"> + </span><span class="branchCov" title="Branch 8 was taken 22 times"> + </span> 
+<span class="lineNum">         </span>   <span class="branchCov" title="Branch 9 was taken 10 times"> + </span><span class="branchCov" title="Branch 10 was taken 4 times"> + </span><span class="branchCov" title="Branch 11 was taken 36 times"> + </span><span class="branchCov" title="Branch 12 was taken 4 times"> + </span> 
+<span class="lineNum">         </span>            <span class="branchCov" title="Branch 13 was taken 262 times"> + </span>]
+<span class="lineNum">     444 </span>                :            :             case buffered_stream::EOS:
+<span class="lineNum">     445 </span>                :<span class="lineCov">         42 :                 return token::get(token_type::EOS, &quot;\xFF&quot;, 1);</span>
+<span class="lineNum">     446 </span>                :            :             case '(':
+<span class="lineNum">     447 </span>                :<span class="lineCov">         46 :                 return token::get(token_type::LPAREN, &quot;(&quot;, 1);</span>
+<span class="lineNum">     448 </span>                :            :             case ')':
+<span class="lineNum">     449 </span>                :<span class="lineCov">         46 :                 return token::get(token_type::RPAREN, &quot;)&quot;, 1);</span>
+<span class="lineNum">     450 </span>                :            :             case '{':
+<span class="lineNum">     451 </span>                :<span class="lineCov">         26 :                 return token::get(token_type::LBRACE, &quot;{&quot;, 1);</span>
+<span class="lineNum">     452 </span>                :            :             case '}':
+<span class="lineNum">     453 </span>                :<span class="lineCov">         24 :                 return token::get(token_type::RBRACE, &quot;}&quot;, 1);</span>
+<span class="lineNum">     454 </span>                :            :             case ';':
+<span class="lineNum">     455 </span>                :<span class="lineCov">        100 :                 return token::get(token_type::SEMICOLON, &quot;;&quot;, 1);</span>
+<span class="lineNum">     456 </span>                :            :             case '=':
+<span class="lineNum">     457 </span>                :<span class="lineCov">        252 :                 return (strm_-&gt;peek_at(p + 1) == '=') ? token::get(token_type::ISEQUAL, &quot;==&quot;, 2)</span>
+<span class="lineNum">     458 </span>        [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchCov" title="Branch 1 was taken 110 times"> + </span>]:<span class="lineCov">        126 :                                                       : token::get(token_type::ASSIGN, &quot;=&quot;, 1);</span>
+<span class="lineNum">     459 </span>                :            :             case '+':
+<span class="lineNum">     460 </span>                :<span class="lineCov">         30 :                 return token::get(token_type::PLUS, &quot;+&quot;, 1);</span>
+<span class="lineNum">     461 </span>                :            :             case '-':
+<span class="lineNum">     462 </span>                :<span class="lineCov">         22 :                 return token::get(token_type::MINUS, &quot;-&quot;, 1);</span>
+<span class="lineNum">     463 </span>                :            :             case '*':
+<span class="lineNum">     464 </span>                :<span class="lineCov">         10 :                 return token::get(token_type::ASTERISK, &quot;*&quot;, 1);</span>
+<span class="lineNum">     465 </span>                :            :             case '.':
+<span class="lineNum">     466 </span>                :<span class="lineCov">          4 :                 return token::get(token_type::DOT, &quot;.&quot;, 1);</span>
+<span class="lineNum">     467 </span>                :            :             case '&quot;':
+<span class="lineNum">     468 </span>                :<span class="lineCov">         36 :                 return read_string(p);</span>
+<span class="lineNum">     469 </span>                :            :             case '/':
+<span class="lineNum">     470 </span>                :<span class="lineCov">          4 :                 return token::get(token_type::FSLASH, &quot;/&quot;, 1);</span>
+<span class="lineNum">     471 </span>                :            :             default:
+<span class="lineNum">     472 </span>        [<span class="branchCov" title="Branch 0 was taken 108 times"> + </span><span class="branchCov" title="Branch 1 was taken 154 times"> + </span>]:<span class="lineCov">        262 :                 return (is_digit(c) ? read_number(p) : read_name(p));</span>
+<span class="lineNum">     473 </span>                :            :         }
+<span class="lineNum">     474 </span>                :            :     }
+<span class="lineNum">     475 </span>                :            : 
+<span class="lineNum">     476 </span>                :<span class="lineCov">        700 :     void parser::advance(pos_t len, bool countnl)</span>
+<span class="lineNum">     477 </span>                :            :     {
+<span class="lineNum">     478 </span>                :<span class="lineCov">        700 :         pos_t p = 0;</span>
+<span class="lineNum">     479 </span>        [<span class="branchCov" title="Branch 0 was taken 664 times"> + </span><span class="branchCov" title="Branch 1 was taken 36 times"> + </span>]:<span class="lineCov">        700 :         if (PCSH_LIKELY(countnl)) {</span>
+<span class="lineNum">     480 </span>        [<span class="branchCov" title="Branch 0 was taken 2736 times"> + </span><span class="branchCov" title="Branch 1 was taken 664 times"> + </span>]:<span class="lineCov">       3400 :             while (p &lt; len) {</span>
+<span class="lineNum">     481 </span>                :<span class="lineCov">       5472 :                 int c = strm_-&gt;peek_at(p);</span>
+<span class="lineNum">     482 </span>        [<span class="branchCov" title="Branch 0 was taken 148 times"> + </span><span class="branchCov" title="Branch 1 was taken 2588 times"> + </span>]:<span class="lineCov">       2736 :                 if (PCSH_UNLIKELY(tokenize::is_newline(c))) {</span>
+<span class="lineNum">     483 </span>[<span class="branchCov" title="Branch 0 was taken 4 times"> + </span><span class="branchCov" title="Branch 1 was taken 144 times"> + </span>][<span class="branchCov" title="Branch 2 was taken 4 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">        152 :                     if (c == '\r' &amp;&amp; strm_-&gt;peek_at(p + 1) == '\n') {</span>
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 4 was taken 4 times"> + </span><span class="branchCov" title="Branch 5 was taken 144 times"> + </span>]
+<span class="lineNum">     484 </span>                :<span class="lineCov">          4 :                         ++p;</span>
+<span class="lineNum">     485 </span>                :            :                     }
+<span class="lineNum">     486 </span>                :<span class="lineCov">        148 :                     ++line_;</span>
+<span class="lineNum">     487 </span>                :<span class="lineCov">        148 :                     line_start_ = strm_-&gt;pos() + p;</span>
+<span class="lineNum">     488 </span>                :            :                 }
+<span class="lineNum">     489 </span>                :<span class="lineCov">       2736 :                 ++p;</span>
+<span class="lineNum">     490 </span>                :            :             }
+<span class="lineNum">     491 </span>                :            :         }
+<span class="lineNum">     492 </span>                :<span class="lineCov">        700 :         strm_-&gt;advance(len);</span>
+<a name="493"><span class="lineNum">     493 </span>                :<span class="lineCov">        700 :     }</span></a>
+<span class="lineNum">     494 </span>                :            : 
+<span class="lineNum">     495 </span>                :<span class="lineCov">         48 :     parser::parser(std::istream&amp; is, const std::string&amp; filename)</span>
+<span class="lineNum">     496 </span>        [<span class="branchCov" title="Branch 1 was taken 48 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         48 :       : strm_(new buffered_stream(is))</span>
+<span class="lineNum">     497 </span>                :            :       , line_(1)
+<span class="lineNum">     498 </span>                :            :       , line_start_(0)
+<span class="lineNum">     499 </span>                :<span class="lineCov">         96 :       , filename_(filename)</span>
+<span class="lineNum">     500 </span>                :            :     {
+<a name="501"><span class="lineNum">     501 </span>                :<span class="lineCov">         48 :     }</span></a>
+<span class="lineNum">     502 </span>                :            : 
+<span class="lineNum">     503 </span>                :<span class="lineCov">         96 :     parser::~parser()</span>
+<span class="lineNum">     504 </span>                :            :     {
+<span class="lineNum">     505 </span>                :<span class="lineCov">         48 :         sync_stream();</span>
+<span class="lineNum">     506 </span>        [<span class="branchCov" title="Branch 0 was taken 48 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         48 :         delete strm_;</span>
+<a name="507"><span class="lineNum">     507 </span>                :<span class="lineCov">         48 :     }</span></a>
+<span class="lineNum">     508 </span>                :            : 
+<span class="lineNum">     509 </span>                :<span class="lineCov">         48 :     void parser::sync_stream()</span>
+<span class="lineNum">     510 </span>                :            :     {
+<span class="lineNum">     511 </span>                :<span class="lineCov">         48 :         strm_-&gt;sync_stream();</span>
+<span class="lineNum">     512 </span>                :<span class="lineCov">         48 :     }</span>
+<span class="lineNum">     513 </span>                :            : 
+<span class="lineNum">     514 </span>                :            :     PCSH_INLINE pos_t parser::find_first_non_whitespace(pos_t p)
+<span class="lineNum">     515 </span>                :            :     {
+<span class="lineNum">     516 </span>                :            :         using namespace tokenize;
+<span class="lineNum">     517 </span>                :<span class="lineCov">       1556 :         int c = strm_-&gt;peek_at(p);</span>
+<span class="lineNum">     518 </span>[<span class="branchCov" title="Branch 0 was taken 298 times"> + </span><span class="branchCov" title="Branch 1 was taken 480 times"> + </span>][<span class="branchCov" title="Branch 2 was taken 244 times"> + </span><span class="branchCov" title="Branch 3 was taken 54 times"> + </span>]:<span class="lineCov">       1076 :         if (PCSH_LIKELY(!is_whitespace(c) &amp;&amp; !is_comment_char(c))) {</span>
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 4 was taken 244 times"> + </span><span class="branchCov" title="Branch 5 was taken 534 times"> + </span>]
+<span class="lineNum">     519 </span>                :<span class="lineCov">        244 :             return p;</span>
+<span class="lineNum">     520 </span>                :            :         }
+<span class="lineNum">     521 </span>                :            :         while (true) {
+<span class="lineNum">     522 </span>                :<span class="lineCov">       2660 :             c = strm_-&gt;peek_at(p);</span>
+<span class="lineNum">     523 </span>        [<span class="branchCov" title="Branch 0 was taken 722 times"> + </span><span class="branchCov" title="Branch 1 was taken 608 times"> + </span>]:<span class="lineCov">       1330 :             if (is_whitespace(c)) {</span>
+<span class="lineNum">     524 </span>                :<span class="lineCov">        722 :                 ++p;</span>
+<span class="lineNum">     525 </span>        [<span class="branchCov" title="Branch 0 was taken 74 times"> + </span><span class="branchCov" title="Branch 1 was taken 534 times"> + </span>]:<span class="lineCov">        608 :             } else if (is_comment_char(c)) {</span>
+<span class="lineNum">     526 </span>                :<span class="lineCov">         74 :                 ++p;</span>
+<span class="lineNum">     527 </span>                :<span class="lineCov">         74 :                 p = skip_till_line_end(p);</span>
+<span class="lineNum">     528 </span>                :            :             } else {
+<span class="lineNum">     529 </span>                :<span class="lineCov">       1330 :                 return p;</span>
+<span class="lineNum">     530 </span>                :            :             }
+<span class="lineNum">     531 </span>                :            :         }
+<span class="lineNum">     532 </span>                :            :     }
+<span class="lineNum">     533 </span>                :            : 
+<span class="lineNum">     534 </span>                :<span class="lineCov">         74 :     pos_t parser::skip_till_line_end(pos_t p)</span>
+<span class="lineNum">     535 </span>                :            :     {
+<span class="lineNum">     536 </span>                :            :         using namespace tokenize;
+<span class="lineNum">     537 </span>                :            :         while (true) {
+<span class="lineNum">     538 </span>                :<span class="lineCov">       3624 :             int c = strm_-&gt;peek_at(p);</span>
+<span class="lineNum">     539 </span>        [<span class="branchCov" title="Branch 0 was taken 72 times"> + </span><span class="branchCov" title="Branch 1 was taken 1740 times"> + </span>]:<span class="lineCov">       1812 :             if (PCSH_UNLIKELY(is_newline(c))) {</span>
+<span class="lineNum">     540 </span>                :<span class="lineCov">         72 :                 return p;</span>
+<span class="lineNum">     541 </span>        [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchCov" title="Branch 1 was taken 1738 times"> + </span>]:<span class="lineCov">       1740 :             } else if (PCSH_UNLIKELY(c == strm_-&gt;EOS)) {</span>
+<span class="lineNum">     542 </span>                :<span class="lineCov">          2 :                 return p;</span>
+<span class="lineNum">     543 </span>                :            :             }
+<span class="lineNum">     544 </span>                :<span class="lineCov">       1738 :             ++p;</span>
+<span class="lineNum">     545 </span>                :<span class="lineCov">       1738 :         }</span>
+<span class="lineNum">     546 </span>                :            :     }
+<span class="lineNum">     547 </span>                :            : 
+<span class="lineNum">     548 </span>                :<span class="lineCov">         36 :     token parser::read_string(pos_t p)</span>
+<span class="lineNum">     549 </span>                :            :     {
+<span class="lineNum">     550 </span>                :            :         //return token::get(token_type::QUOTE, &quot;\&quot;&quot;, 1);
+<span class="lineNum">     551 </span>[<span class="branchCov" title="Branch 0 was taken 1 time"> + </span><span class="branchCov" title="Branch 1 was taken 35 times"> + </span>][<span class="branchCov" title="Branch 3 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 4 was not taken"> - </span>]:<span class="lineCov">         36 :         static std::string buffer;</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 6 was taken 1 time"> + </span><span class="branchNoCov" title="Branch 7 was not taken"> - </span>][<span class="branchNoExec" title="Branch 10 was not executed"> # </span><span class="branchNoExec" title="Branch 11 was not executed"> # </span>]
+<span class="lineNum">     552 </span>                :<span class="lineCov">         36 :         buffer.reserve(1024);</span>
+<span class="lineNum">     553 </span>                :<span class="lineCov">         36 :         buffer.resize(0);</span>
+<span class="lineNum">     554 </span>                :<span class="lineCov">         36 :         pos_t startp = ++p; // skip past start quote</span>
+<span class="lineNum">     555 </span>                :<span class="lineCov">         36 :         int c = strm_-&gt;peek_at(p);</span>
+<span class="lineNum">     556 </span>                :            :         while (true) {
+<span class="lineNum">     557 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 154 times"> + </span>]:<span class="lineCov">        154 :             if (c == strm_-&gt;EOS) {</span>
+<span class="lineNum">     558 </span>                :<span class="lineNoCov">          0 :                 return token::get(token_type::FAIL, &quot;End-of-stream while reading string literal.&quot;);</span>
+<span class="lineNum">     559 </span>                :            :             }
+<span class="lineNum">     560 </span>        [<span class="branchCov" title="Branch 0 was taken 36 times"> + </span><span class="branchCov" title="Branch 1 was taken 118 times"> + </span>]:<span class="lineCov">        154 :             if (c == '&quot;') {</span>
+<span class="lineNum">     561 </span>                :<span class="lineCov">         36 :                 break;</span>
+<span class="lineNum">     562 </span>                :            :             }
+<span class="lineNum">     563 </span>        [<span class="branchCov" title="Branch 0 was taken 16 times"> + </span><span class="branchCov" title="Branch 1 was taken 102 times"> + </span>]:<span class="lineCov">        118 :             if (c == '\\') {</span>
+<span class="lineNum">     564 </span>                :<span class="lineCov">         32 :                 int n = strm_-&gt;peek_at(++p);</span>
+<span class="lineNum">     565 </span>  [<span class="branchCov" title="Branch 0 was taken 2 times"> + </span><span class="branchCov" title="Branch 1 was taken 2 times"> + </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span><span class="branchCov" title="Branch 3 was taken 2 times"> + </span> :<span class="lineCov">         16 :                 switch (n) {</span>
+<span class="lineNum">         </span>   <span class="branchCov" title="Branch 4 was taken 2 times"> + </span><span class="branchCov" title="Branch 5 was taken 2 times"> + </span><span class="branchCov" title="Branch 6 was taken 2 times"> + </span><span class="branchCov" title="Branch 7 was taken 2 times"> + </span>]
+<span class="lineNum">     566 </span>                :            :                     case 't':
+<span class="lineNum">     567 </span>                :<span class="lineCov">          2 :                         c = '\t';</span>
+<span class="lineNum">     568 </span>                :<span class="lineCov">          2 :                         break;</span>
+<span class="lineNum">     569 </span>                :            :                     case 'n':
+<span class="lineNum">     570 </span>                :<span class="lineCov">          2 :                         c = '\n';</span>
+<span class="lineNum">     571 </span>                :<span class="lineCov">          2 :                         break;</span>
+<span class="lineNum">     572 </span>                :            :                     case 'v':
+<span class="lineNum">     573 </span>                :<span class="lineCov">          2 :                         c = '\v';</span>
+<span class="lineNum">     574 </span>                :<span class="lineCov">          2 :                         break;</span>
+<span class="lineNum">     575 </span>                :            :                     case '\\':
+<span class="lineNum">     576 </span>                :<span class="lineCov">          2 :                         c = '\\';</span>
+<span class="lineNum">     577 </span>                :<span class="lineCov">          2 :                         break;</span>
+<span class="lineNum">     578 </span>                :            :                     case 'a':
+<span class="lineNum">     579 </span>                :<span class="lineCov">          2 :                         c = '\a';</span>
+<span class="lineNum">     580 </span>                :<span class="lineCov">          2 :                         break;</span>
+<span class="lineNum">     581 </span>                :            :                     case 'r':
+<span class="lineNum">     582 </span>                :<span class="lineCov">          2 :                         c = '\r';</span>
+<span class="lineNum">     583 </span>                :<span class="lineCov">          2 :                         break;</span>
+<span class="lineNum">     584 </span>                :            :                     case 'b':
+<span class="lineNum">     585 </span>                :<span class="lineCov">          2 :                         c = '\b';</span>
+<span class="lineNum">     586 </span>                :<span class="lineCov">          2 :                         break;</span>
+<span class="lineNum">     587 </span>                :            :                     default:
+<span class="lineNum">     588 </span>                :<span class="lineCov">          2 :                         c = n;</span>
+<span class="lineNum">     589 </span>                :<span class="lineCov">         16 :                         break;</span>
+<span class="lineNum">     590 </span>                :            :                 }
+<span class="lineNum">     591 </span>                :            :             }
+<span class="lineNum">     592 </span>                :<span class="lineCov">        118 :             buffer.push_back(c);</span>
+<span class="lineNum">     593 </span>                :<span class="lineCov">        236 :             c = strm_-&gt;peek_at(++p);</span>
+<span class="lineNum">     594 </span>                :            :         }
+<span class="lineNum">     595 </span>                :            : 
+<span class="lineNum">     596 </span>                :<span class="lineCov">        154 :         return token::get(token_type::QUOTE, buffer.c_str(), p - startp/* acct for close quote */);</span>
+<span class="lineNum">     597 </span>                :            :     }
+<span class="lineNum">     598 </span>                :            : 
+<span class="lineNum">     599 </span>                :<span class="lineCov">        108 :     token parser::read_number(pos_t p)</span>
+<span class="lineNum">     600 </span>                :            :     {
+<span class="lineNum">     601 </span>                :            :         using namespace tokenize;
+<span class="lineNum">     602 </span>                :<span class="lineCov">        108 :         auto pstart = p;</span>
+<span class="lineNum">     603 </span>                :            : 
+<span class="lineNum">     604 </span>                :            :         // find digits end
+<span class="lineNum">     605 </span>                :<span class="lineCov">        108 :         auto digend = p;</span>
+<span class="lineNum">     606 </span>        [<span class="branchCov" title="Branch 0 was taken 176 times"> + </span><span class="branchCov" title="Branch 1 was taken 108 times"> + </span>]:<span class="lineCov">        392 :         while (is_digit(strm_-&gt;peek_at(digend))) {</span>
+<span class="lineNum">     607 </span>                :<span class="lineCov">        176 :             ++digend;</span>
+<span class="lineNum">     608 </span>                :            :         }
+<span class="lineNum">     609 </span>                :            : 
+<span class="lineNum">     610 </span>                :            :         // has decimal
+<span class="lineNum">     611 </span>                :<span class="lineCov">        216 :         auto hasdec = strm_-&gt;peek_at(digend) == '.';</span>
+<span class="lineNum">     612 </span>                :            : 
+<span class="lineNum">     613 </span>                :            :         // has fraction
+<span class="lineNum">     614 </span>                :<span class="lineCov">        108 :         auto fracend = digend + hasdec;</span>
+<span class="lineNum">     615 </span>        [<span class="branchCov" title="Branch 0 was taken 50 times"> + </span><span class="branchCov" title="Branch 1 was taken 108 times"> + </span>]:<span class="lineCov">        266 :         while (is_digit(strm_-&gt;peek_at(fracend))) {</span>
+<span class="lineNum">     616 </span>                :<span class="lineCov">         50 :             ++fracend;</span>
+<span class="lineNum">     617 </span>                :            :         }
+<span class="lineNum">     618 </span>                :            : 
+<span class="lineNum">     619 </span>                :<span class="lineCov">        108 :         bool hasbegdig = p != digend;</span>
+<span class="lineNum">     620 </span>[<span class="branchCov" title="Branch 0 was taken 34 times"> + </span><span class="branchCov" title="Branch 1 was taken 74 times"> + </span>][<span class="branchCov" title="Branch 2 was taken 34 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">        108 :         bool hasfracpart = hasdec &amp;&amp; ((digend + hasdec) != fracend);</span>
+<span class="lineNum">     621 </span>                :            : 
+<span class="lineNum">     622 </span>[<span class="branchCov" title="Branch 0 was taken 108 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 74 times"> + </span><span class="branchCov" title="Branch 3 was taken 34 times"> + </span>]:<span class="lineCov">        182 :         if (hasbegdig &amp;&amp; !hasfracpart &amp;&amp; !is_symbol_char(strm_-&gt;peek_at(digend))) {</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 4 was taken 74 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>][<span class="branchCov" title="Branch 6 was taken 74 times"> + </span><span class="branchCov" title="Branch 7 was taken 34 times"> + </span>]
+<span class="lineNum">     623 </span>                :<span class="lineCov">         74 :             return token::get(token_type::INTEGER, strm_-&gt;buff() + pstart, digend - pstart);</span>
+<span class="lineNum">     624 </span>[<span class="branchCov" title="Branch 0 was taken 34 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 30 times"> + </span><span class="branchCov" title="Branch 3 was taken 4 times"> + </span>]:<span class="lineCov">         68 :         } else if (hasfracpart &amp;&amp; !is_symbol_char(strm_-&gt;peek_at(fracend))) {</span>
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 4 was taken 30 times"> + </span><span class="branchCov" title="Branch 5 was taken 4 times"> + </span>]
+<span class="lineNum">     625 </span>                :<span class="lineCov">         30 :             return token::get(token_type::FLOATING, strm_-&gt;buff() + pstart, fracend - pstart);</span>
+<span class="lineNum">     626 </span>                :            :         } else {
+<span class="lineNum">     627 </span>                :<span class="lineCov">          4 :             return token::get(token_type::FAIL, &quot;Error reading number&quot;);</span>
+<span class="lineNum">     628 </span>                :            :         }
+<span class="lineNum">     629 </span>                :            :     }
+<span class="lineNum">     630 </span>                :            : 
+<span class="lineNum">     631 </span>                :<span class="lineCov">        154 :     token parser::read_name(pos_t p)</span>
+<span class="lineNum">     632 </span>                :            :     {
+<span class="lineNum">     633 </span>                :            :         using namespace tokenize;
+<span class="lineNum">     634 </span>                :<span class="lineCov">        154 :         auto pstart = p;</span>
+<span class="lineNum">     635 </span>        [<span class="branchCov" title="Branch 0 was taken 354 times"> + </span><span class="branchCov" title="Branch 1 was taken 154 times"> + </span>]:<span class="lineCov">        662 :         while (is_symbol_char(strm_-&gt;peek_at(p))) {</span>
+<span class="lineNum">     636 </span>                :<span class="lineCov">        354 :             ++p;</span>
+<span class="lineNum">     637 </span>                :            :         }
+<span class="lineNum">     638 </span>        [<span class="branchCov" title="Branch 0 was taken 154 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">        154 :         if (p != pstart) {</span>
+<span class="lineNum">     639 </span>                :<span class="lineCov">        308 :             buff_string bs { strm_-&gt;buff() + pstart, p - pstart };</span>
+<span class="lineNum">     640 </span>        [<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchCov" title="Branch 2 was taken 146 times"> + </span>]:<span class="lineCov">        154 :             if (bs.equals(&quot;if&quot;)) {</span>
+<span class="lineNum">     641 </span>        [<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">          8 :                 return token::get(token_type::IF, bs.ptr, bs.len);</span>
+<span class="lineNum">     642 </span>                :            :             } else {
+<span class="lineNum">     643 </span>        [<span class="branchCov" title="Branch 1 was taken 146 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">        154 :                 return token::get(token_type::SYMBOL, bs.ptr, bs.len);</span>
+<span class="lineNum">     644 </span>                :            :             }
+<span class="lineNum">     645 </span>                :            :         } else {
+<span class="lineNum">     646 </span>                :<span class="lineCov">        154 :             return token::get(token_type::FAIL, &quot;Error reading symbol&quot;);</span>
+<span class="lineNum">     647 </span>                :            :         }
+<span class="lineNum">     648 </span>                :            :         return (p != pstart) ? token::get(token_type::SYMBOL, strm_-&gt;buff() + pstart, p - pstart)
+<span class="lineNum">     649 </span>                :            :                              : token::get(token_type::FAIL, &quot;Error reading symbol&quot;);
+<span class="lineNum">     650 </span>                :            :     }
+<span class="lineNum">     651 </span>                :            : 
+<span class="lineNum">     652 </span>                :<span class="lineCov">          4 :     pos_t parser::curr_pos() const</span>
+<span class="lineNum">     653 </span>                :            :     {
+<span class="lineNum">     654 </span>                :<span class="lineCov">          4 :         return strm_-&gt;pos();</span>
+<a name="655"><span class="lineNum">     655 </span>                :            :     }</a>
+<span class="lineNum">     656 </span>                :            : 
+<span class="lineNum">     657 </span>                :<span class="lineCov">         44 :     ir::tree::ptr parser::parse_to_tree()</span>
+<span class="lineNum">     658 </span>                :            :     {
+<span class="lineNum">     659 </span>        [<span class="branchCov" title="Branch 1 was taken 44 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         44 :         auto treeptr = ir::tree::create();</span>
+<span class="lineNum">     660 </span>[<span class="branchCov" title="Branch 2 was taken 44 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>][<span class="branchNoCov" title="Branch 7 was not taken"> - </span><span class="branchCov" title="Branch 8 was taken 4 times"> + </span>]:<span class="lineCov">         92 :         source_map sm;</span>
+<span class="lineNum">     661 </span>        [<span class="branchCov" title="Branch 1 was taken 44 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         44 :         sm.reserve(20);</span>
+<span class="lineNum">     662 </span>[<span class="branchCov" title="Branch 2 was taken 44 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>][<span class="branchCov" title="Branch 5 was taken 44 times"> + </span><span class="branchNoCov" title="Branch 6 was not taken"> - </span>]:<span class="lineCov">         88 :         parser_engine eng(*this, treeptr-&gt;get_arena());</span>
+<span class="lineNum">     663 </span>[<span class="branchCov" title="Branch 1 was taken 42 times"> + </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span>][<span class="branchCov" title="Branch 5 was taken 42 times"> + </span><span class="branchNoCov" title="Branch 6 was not taken"> - </span>]:<span class="lineCov">         44 :         treeptr-&gt;set_root(eng.parse(sm));</span>
+<span class="lineNum">     664 </span>                :            :         try {
+<span class="lineNum">     665 </span>        [<span class="branchCov" title="Branch 1 was taken 38 times"> + </span><span class="branchCov" title="Branch 2 was taken 4 times"> + </span>]:<span class="lineCov">         42 :             validate_tree(treeptr);</span>
+<span class="lineNum">     666 </span>        [<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineCov">          8 :         } catch(const ir::type_checker_error&amp; ex) {</span>
+<span class="lineNum">     667 </span>        [<span class="branchCov" title="Branch 1 was taken 4 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">          4 :             const source_info&amp; info = sm[ex.left];</span>
+<span class="lineNum">     668 </span>        [<span class="branchNoCov" title="Branch 1 was not taken"> - </span><span class="branchCov" title="Branch 2 was taken 4 times"> + </span>]:<span class="lineCov">          4 :             throw_parser_exception(ex.msg, info.filename, info.fcn, info.line);</span>
+<span class="lineNum">     669 </span>                :            :         }
+<span class="lineNum">     670 </span>                :<span class="lineCov">         76 :         return treeptr;</span>
+<span class="lineNum">     671 </span>                :            :     }
+<span class="lineNum">     672 </span>                :            : 
+<span class="lineNum">     673 </span>                :<span class="lineCov">          2 :     std::string parser::copy_line(pos_t p)</span>
+<span class="lineNum">     674 </span>                :            :     {
+<span class="lineNum">     675 </span>                :<span class="lineCov">          2 :         std::string str;</span>
+<span class="lineNum">     676 </span>                :            :         int c;
+<span class="lineNum">     677 </span>[<span class="branchCov" title="Branch 0 was taken 12 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 10 times"> + </span><span class="branchCov" title="Branch 3 was taken 2 times"> + </span>]:<span class="lineCov">         26 :         while (((c = strm_-&gt;peek_at(p++)) != strm_-&gt;EOS) &amp;&amp; !tokenize::is_newline(c)) {</span>
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 4 was taken 10 times"> + </span><span class="branchCov" title="Branch 5 was taken 2 times"> + </span>]
+<span class="lineNum">     678 </span>        [<span class="branchCov" title="Branch 1 was taken 10 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         10 :             str.push_back(c);</span>
+<span class="lineNum">     679 </span>                :            :         }
+<span class="lineNum">     680 </span>                :<span class="lineCov">          2 :         return str;</span>
+<a name="681"><span class="lineNum">     681 </span>                :            :     }</a>
+<span class="lineNum">     682 </span>                :            : 
+<span class="lineNum">     683 </span>                :<span class="lineCov">          6 :     void throw_parser_exception(const std::string&amp; msg, const std::string&amp; fname, const std::string&amp; func, const std::string&amp; line)</span>
+<span class="lineNum">     684 </span>                :            :     {
+<span class="lineNum">     685 </span>        [<span class="branchCov" title="Branch 2 was taken 6 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">          6 :         throw exception(msg, fname, func, line);</span>
+<span class="lineNum">     686 </span>                :            :     }
+<a name="687"><span class="lineNum">     687 </span>                :            : </a>
+<span class="lineNum">     688 </span>                :            : }// namespace parser
+<span class="lineNum">     689 </span>[<span class="branchCov" title="Branch 1 was taken 3 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 3 times"> + </span><span class="branchNoCov" title="Branch 4 was not taken"> - </span>]:<span class="lineCov">         12 : }// namespace pcsh</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

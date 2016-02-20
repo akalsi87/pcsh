@@ -13,10 +13,11 @@ cd build
 export VERBOSE=1
 cmake --build . --target code_cov
 
-mkdir -p ../coverage
-cp -rf coverage/* ../coverage
+covdir=coverage/`date +%Y_%m_%d_%H_%M_%S`
+mkdir -p ../${covdir}
+cp -rf coverage/* ../${covdir}
 
 echo "--------------------------------------------"
-echo "| See results in `dirname pwd`/coverage/index.html"
+echo "| See results in `dirname pwd`/${covdir}/index.html"
 echo "--------------------------------------------"
 

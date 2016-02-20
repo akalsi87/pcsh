@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info.cleaned - include/pcsh/result_type.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">include/pcsh</a> - result_type.hpp<span style="font-size: 80%;"> (source / <a href="result_type.hpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info.cleaned</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">55.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2016-02-20</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">42.9 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /**</a>
+<span class="lineNum">       2 </span>                :            :  * \file result_type.hpp
+<span class="lineNum">       3 </span>                :            :  * \date Jan 31, 2016
+<span class="lineNum">       4 </span>                :            :  */
+<span class="lineNum">       5 </span>                :            : 
+<span class="lineNum">       6 </span>                :            : #ifndef PCSH_RESULT_TYPE_HPP
+<span class="lineNum">       7 </span>                :            : #define PCSH_RESULT_TYPE_HPP
+<span class="lineNum">       8 </span>                :            : 
+<span class="lineNum">       9 </span>                :            : #include &quot;pcsh/types.hpp&quot;
+<span class="lineNum">      10 </span>                :            : 
+<span class="lineNum">      11 </span>                :            : namespace pcsh {
+<span class="lineNum">      12 </span>                :            : 
+<span class="lineNum">      13 </span>                :            :     enum class result_type : byte
+<span class="lineNum">      14 </span>                :            :     {
+<span class="lineNum">      15 </span>                :            :         BOOLEAN = 0,
+<span class="lineNum">      16 </span>                :            :         INTEGER,
+<span class="lineNum">      17 </span>                :            :         FLOATING,
+<span class="lineNum">      18 </span>                :            :         STRING,
+<span class="lineNum">      19 </span>                :            :         UNDETERMINED,
+<span class="lineNum">      20 </span>                :            :         FAILED
+<span class="lineNum">      21 </span>                :            :     };
+<span class="lineNum">      22 </span>                :            : 
+<span class="lineNum">      23 </span>                :            :     template &lt;class T&gt; struct result_type_of;
+<span class="lineNum">      24 </span>                :            :     template &lt;&gt; struct result_type_of&lt;int&gt; { static const auto value = result_type::INTEGER; };
+<span class="lineNum">      25 </span>                :            :     template &lt;&gt; struct result_type_of&lt;double&gt; { static const auto value = result_type::FLOATING; };
+<a name="26"><span class="lineNum">      26 </span>                :            :     template &lt;&gt; struct result_type_of&lt;cstring&gt; { static const auto value = result_type::STRING; };</a>
+<span class="lineNum">      27 </span>                :            : 
+<span class="lineNum">      28 </span>                :<span class="lineCov">         80 :     inline cstring to_string(result_type t)</span>
+<span class="lineNum">      29 </span>                :            :     {
+<span class="lineNum">      30 </span>  [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 40 times"> + </span><span class="branchCov" title="Branch 2 was taken 20 times"> + </span><span class="branchCov" title="Branch 3 was taken 20 times"> + </span> :<span class="lineCov">         80 :         switch (t) {</span>
+<span class="lineNum">         </span>      <span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span><span class="branchNoCov" title="Branch 6 was not taken"> - </span>]
+<span class="lineNum">      31 </span>                :            :             case pcsh::result_type::BOOLEAN:
+<span class="lineNum">      32 </span>                :<span class="lineNoCov">          0 :                 return &quot;boolean&quot;;</span>
+<span class="lineNum">      33 </span>                :            :             case pcsh::result_type::INTEGER:
+<span class="lineNum">      34 </span>                :<span class="lineCov">         40 :                 return &quot;int&quot;;</span>
+<span class="lineNum">      35 </span>                :            :             case pcsh::result_type::FLOATING:
+<span class="lineNum">      36 </span>                :<span class="lineCov">         20 :                 return &quot;double&quot;;</span>
+<span class="lineNum">      37 </span>                :            :             case pcsh::result_type::STRING:
+<span class="lineNum">      38 </span>                :<span class="lineCov">         20 :                 return &quot;string&quot;;</span>
+<span class="lineNum">      39 </span>                :            :             case pcsh::result_type::UNDETERMINED:
+<span class="lineNum">      40 </span>                :<span class="lineNoCov">          0 :                 return &quot;unknown&quot;;</span>
+<span class="lineNum">      41 </span>                :            :             case pcsh::result_type::FAILED:
+<span class="lineNum">      42 </span>                :<span class="lineNoCov">          0 :                 return &quot;FAILED&quot;;</span>
+<span class="lineNum">      43 </span>                :            :             default:
+<span class="lineNum">      44 </span>                :<span class="lineNoCov">          0 :                 return &quot;(unknown result_type)&quot;;</span>
+<span class="lineNum">      45 </span>                :            :         }
+<span class="lineNum">      46 </span>                :            :     }
+<span class="lineNum">      47 </span>                :            : 
+<span class="lineNum">      48 </span>                :            : }//namespace pcsh
+<span class="lineNum">      49 </span>                :            : 
+<span class="lineNum">      50 </span>                :            : #endif/*PCSH_RESULT_TYPE_HPP*/
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

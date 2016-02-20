@@ -1,0 +1,509 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.info.cleaned - src/pcsh/parser/parser_engine.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">src/pcsh/parser</a> - parser_engine.cpp<span style="font-size: 80%;"> (source / <a href="parser_engine.cpp.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.info.cleaned</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">158</td>
+            <td class="headerCovTableEntry">168</td>
+            <td class="headerCovTableEntryHi">94.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2016-02-20</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">276</td>
+            <td class="headerCovTableEntry">587</td>
+            <td class="headerCovTableEntryLo">47.0 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /**</a>
+<span class="lineNum">       2 </span>                :            :  * \file parser_engine.cpp
+<span class="lineNum">       3 </span>                :            :  * \date Feb 15, 2016
+<span class="lineNum">       4 </span>                :            :  */
+<span class="lineNum">       5 </span>                :            : 
+<span class="lineNum">       6 </span>                :            : #include &quot;ir/nodes.hpp&quot;
+<span class="lineNum">       7 </span>                :            : #include &quot;parser/parser_engine.hpp&quot;
+<span class="lineNum">       8 </span>                :            : 
+<span class="lineNum">       9 </span>                :            : #include &lt;vector&gt;
+<span class="lineNum">      10 </span>                :            : 
+<span class="lineNum">      11 </span>                :            : #define ENSURE(x, msg)                    \
+<span class="lineNum">      12 </span>                :            :     do {                                  \
+<span class="lineNum">      13 </span>                :            :         !!(x) ? 0 : throw_error((msg));   \
+<span class="lineNum">      14 </span>                :            :     } while (0)
+<span class="lineNum">      15 </span>                :            : 
+<span class="lineNum">      16 </span>                :            : namespace pcsh {
+<a name="17"><span class="lineNum">      17 </span>                :            : namespace parser {</a>
+<span class="lineNum">      18 </span>                :            : 
+<span class="lineNum">      19 </span>                :<span class="lineCov">          2 :     int parser::parser_engine::throw_error(cstring msg)</span>
+<span class="lineNum">      20 </span>                :            :     {
+<span class="lineNum">      21 </span>                :<span class="lineCov">          2 :         pos_t ws = 0;</span>
+<span class="lineNum">      22 </span>        [<span class="branchCov" title="Branch 1 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">          2 :         parser_.peek(ws, &amp;ws);</span>
+<span class="lineNum">      23 </span>        [<span class="branchCov" title="Branch 1 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">          2 :         parser_.advance(ws);</span>
+<span class="lineNum">      24 </span>[<span class="branchCov" title="Branch 1 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">          2 :         const auto&amp; linestr = &quot;line &quot; + std::to_string(parser_.line()) + &quot;, char &quot; + std::to_string(parser_.curr_pos() - parser_.line_start());</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 13 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 14 was not taken"> - </span>][<span class="branchCov" title="Branch 16 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 19 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 20 was not taken"> - </span>][<span class="branchCov" title="Branch 22 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 23 was not taken"> - </span>]
+<span class="lineNum">      25 </span>        [<span class="branchCov" title="Branch 2 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">          4 :         std::string message(msg);</span>
+<span class="lineNum">      26 </span>[<span class="branchCov" title="Branch 1 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">          2 :         message += &quot;\n\tnear: \&quot;&quot; + parser_.copy_line(0) + &quot;\&quot;&quot;;</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">      27 </span>        [<span class="branchNoCov" title="Branch 1 was not taken"> - </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span>]:<span class="lineCov">          2 :         throw_parser_exception(message, parser_.filename_, func_, linestr);</span>
+<span class="lineNum">      28 </span>                :<span class="lineCov">          2 :         return 0;</span>
+<span class="lineNum">      29 </span>                :            :     }
+<span class="lineNum">      30 </span>                :            : 
+<a name="31"><span class="lineNum">      31 </span>                :            :     PCSH_INLINE token parser::parser_engine::peek()</a>
+<span class="lineNum">      32 </span>                :            :     {
+<span class="lineNum">      33 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 254 times"> + </span>][<span class="branchCov" title="Branch 2 was taken 204 times"> + </span><span class="branchCov" title="Branch 3 was taken 90 times"> + </span>]:<span class="lineCov">       1986 :         if (!parsed_) {</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 8 times"> + </span>][<span class="branchCov" title="Branch 6 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 7 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 8 was not taken"> - </span><span class="branchCov" title="Branch 9 was taken 8 times"> + </span>][<span class="branchCov" title="Branch 10 was taken 20 times"> + </span><span class="branchCov" title="Branch 11 was taken 274 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 12 was not taken"> - </span><span class="branchCov" title="Branch 13 was taken 38 times"> + </span>][<span class="branchCov" title="Branch 14 was taken 242 times"> + </span><span class="branchNoCov" title="Branch 15 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 16 was taken 48 times"> + </span><span class="branchCov" title="Branch 17 was taken 186 times"> + </span>][<span class="branchCov" title="Branch 18 was taken 2 times"> + </span><span class="branchCov" title="Branch 19 was taken 4 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 20 was taken 30 times"> + </span><span class="branchCov" title="Branch 21 was taken 84 times"> + </span>][<span class="branchNoCov" title="Branch 22 was not taken"> - </span><span class="branchCov" title="Branch 23 was taken 88 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 24 was not taken"> - </span><span class="branchCov" title="Branch 25 was taken 234 times"> + </span>][<span class="branchNoExec" title="Branch 26 was not executed"> # </span><span class="branchNoExec" title="Branch 27 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 28 was taken 44 times"> + </span><span class="branchCov" title="Branch 29 was taken 16 times"> + </span>][<span class="branchCov" title="Branch 30 was taken 104 times"> + </span><span class="branchNoCov" title="Branch 31 was not taken"> - </span>]
+<span class="lineNum">      34 </span>[<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>][<span class="branchCov" title="Branch 4 was taken 204 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        702 :             do_peek();</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 7 was not executed"> # </span><span class="branchNoExec" title="Branch 8 was not executed"> # </span>][<span class="branchCov" title="Branch 10 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 13 was not executed"> # </span><span class="branchNoExec" title="Branch 14 was not executed"> # </span>][<span class="branchCov" title="Branch 16 was taken 18 times"> + </span><span class="branchCov" title="Branch 17 was taken 2 times"> + </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 19 was not executed"> # </span><span class="branchNoExec" title="Branch 20 was not executed"> # </span>][<span class="branchCov" title="Branch 22 was taken 242 times"> + </span><span class="branchNoCov" title="Branch 23 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 25 was taken 48 times"> + </span><span class="branchNoCov" title="Branch 26 was not taken"> - </span>][<span class="branchCov" title="Branch 28 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 29 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 31 was taken 30 times"> + </span><span class="branchNoCov" title="Branch 32 was not taken"> - </span>][<span class="branchNoExec" title="Branch 34 was not executed"> # </span><span class="branchNoExec" title="Branch 35 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 37 was not executed"> # </span><span class="branchNoExec" title="Branch 38 was not executed"> # </span>][<span class="branchNoExec" title="Branch 40 was not executed"> # </span><span class="branchNoExec" title="Branch 41 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 43 was taken 44 times"> + </span><span class="branchNoCov" title="Branch 44 was not taken"> - </span>][<span class="branchCov" title="Branch 46 was taken 104 times"> + </span><span class="branchNoCov" title="Branch 47 was not taken"> - </span>]
+<span class="lineNum">      35 </span>                :            :         }
+<span class="lineNum">      36 </span>[<span class="branchCov" title="Branch 1 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 294 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">       1984 :         return curr_;</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 13 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 14 was not taken"> - </span>][<span class="branchCov" title="Branch 16 was taken 292 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 19 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 20 was not taken"> - </span>][<span class="branchCov" title="Branch 22 was taken 242 times"> + </span><span class="branchNoCov" title="Branch 23 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 25 was taken 234 times"> + </span><span class="branchNoCov" title="Branch 26 was not taken"> - </span>][<span class="branchCov" title="Branch 28 was taken 6 times"> + </span><span class="branchNoCov" title="Branch 29 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 31 was taken 114 times"> + </span><span class="branchNoCov" title="Branch 32 was not taken"> - </span>][<span class="branchCov" title="Branch 34 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 35 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 37 was taken 234 times"> + </span><span class="branchNoCov" title="Branch 38 was not taken"> - </span>][<span class="branchNoExec" title="Branch 40 was not executed"> # </span><span class="branchNoExec" title="Branch 41 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 43 was taken 60 times"> + </span><span class="branchNoCov" title="Branch 44 was not taken"> - </span>][<span class="branchCov" title="Branch 46 was taken 104 times"> + </span><span class="branchNoCov" title="Branch 47 was not taken"> - </span>]
+<a name="37"><span class="lineNum">      37 </span>                :            :     }</a>
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :<span class="lineCov">        702 :     void parser::parser_engine::do_peek()</span>
+<span class="lineNum">      40 </span>                :            :     {
+<span class="lineNum">      41 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 702 times"> + </span>][<span class="branchNoExec" title="Branch 3 was not executed"> # </span><span class="branchNoExec" title="Branch 4 was not executed"> # </span>]:<span class="lineCov">        702 :         PCSH_ASSERT(ws_ == 0);</span>
+<span class="lineNum">      42 </span>        [<span class="branchCov" title="Branch 1 was taken 702 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">        702 :         auto t = parser_.peek(0, &amp;ws_);</span>
+<span class="lineNum">      43 </span>[<span class="branchCov" title="Branch 1 was taken 702 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 2 times"> + </span><span class="branchCov" title="Branch 4 was taken 700 times"> + </span>]:<span class="lineCov">        702 :         if (PCSH_UNLIKELY(t.is_a(token_type::FAIL))) {</span>
+<span class="lineNum">      44 </span>[<span class="branchCov" title="Branch 1 was taken 2 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchNoCov" title="Branch 4 was not taken"> - </span><span class="branchCov" title="Branch 5 was taken 2 times"> + </span>]:<span class="lineCov">          2 :             throw_error(t.str().ptr);</span>
+<span class="lineNum">      45 </span>                :            :         }
+<span class="lineNum">      46 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 700 times"> + </span>][<span class="branchNoExec" title="Branch 3 was not executed"> # </span><span class="branchNoExec" title="Branch 4 was not executed"> # </span>]:<span class="lineCov">        700 :         PCSH_ASSERT(!parsed_);</span>
+<span class="lineNum">      47 </span>                :<span class="lineCov">        700 :         parsed_ = true;</span>
+<span class="lineNum">      48 </span>                :<span class="lineCov">        700 :         curr_ = t;</span>
+<span class="lineNum">      49 </span>                :<span class="lineCov">        700 :     }</span>
+<span class="lineNum">      50 </span>                :            : 
+<a name="51"><span class="lineNum">      51 </span>                :            :     PCSH_INLINE void parser::parser_engine::advance()</a>
+<span class="lineNum">      52 </span>                :            :     {
+<span class="lineNum">      53 </span>[<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 254 times"> + </span>][<span class="branchNoExec" title="Branch 3 was not executed"> # </span><span class="branchNoExec" title="Branch 4 was not executed"> # </span>]:<span class="lineCov">        662 :         PCSH_ASSERT(parsed_);</span>
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 5 was not taken"> - </span><span class="branchCov" title="Branch 6 was taken 8 times"> + </span>][<span class="branchNoExec" title="Branch 8 was not executed"> # </span><span class="branchNoExec" title="Branch 9 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 10 was not taken"> - </span><span class="branchCov" title="Branch 11 was taken 8 times"> + </span>][<span class="branchNoExec" title="Branch 13 was not executed"> # </span><span class="branchNoExec" title="Branch 14 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 15 was not taken"> - </span><span class="branchCov" title="Branch 16 was taken 8 times"> + </span>][<span class="branchNoExec" title="Branch 18 was not executed"> # </span><span class="branchNoExec" title="Branch 19 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 20 was not taken"> - </span><span class="branchCov" title="Branch 21 was taken 38 times"> + </span>][<span class="branchNoExec" title="Branch 23 was not executed"> # </span><span class="branchNoExec" title="Branch 24 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 25 was not taken"> - </span><span class="branchCov" title="Branch 26 was taken 38 times"> + </span>][<span class="branchNoExec" title="Branch 28 was not executed"> # </span><span class="branchNoExec" title="Branch 29 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 30 was not taken"> - </span><span class="branchCov" title="Branch 31 was taken 88 times"> + </span>][<span class="branchNoExec" title="Branch 33 was not executed"> # </span><span class="branchNoExec" title="Branch 34 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoCov" title="Branch 35 was not taken"> - </span><span class="branchCov" title="Branch 36 was taken 22 times"> + </span>][<span class="branchNoExec" title="Branch 38 was not executed"> # </span><span class="branchNoExec" title="Branch 39 was not executed"> # </span>]
+<span class="lineNum">         </span>        [<span class="branchNoCov" title="Branch 40 was not taken"> - </span><span class="branchCov" title="Branch 41 was taken 20 times"> + </span>]
+<span class="lineNum">         </span>  [<span class="branchNoExec" title="Branch 43 was not executed"> # </span><span class="branchNoExec" title="Branch 44 was not executed"> # </span><span class="branchNoCov" title="Branch 45 was not taken"> - </span><span class="branchCov" title="Branch 46 was taken 20 times"> + </span>]
+<span class="lineNum">         </span>  [<span class="branchNoExec" title="Branch 48 was not executed"> # </span><span class="branchNoExec" title="Branch 49 was not executed"> # </span><span class="branchNoCov" title="Branch 50 was not taken"> - </span><span class="branchCov" title="Branch 51 was taken 158 times"> + </span>]
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Branch 53 was not executed"> # </span><span class="branchNoExec" title="Branch 54 was not executed"> # </span>]
+<span class="lineNum">      54 </span>[<span class="branchCov" title="Branch 1 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        662 :         token t = curr_;</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 13 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 14 was not taken"> - </span>][<span class="branchCov" title="Branch 16 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 19 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 20 was not taken"> - </span>][<span class="branchCov" title="Branch 22 was taken 22 times"> + </span><span class="branchNoCov" title="Branch 23 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 25 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 26 was not taken"> - </span>][<span class="branchCov" title="Branch 28 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 29 was not taken"> - </span>]
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 31 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 32 was not taken"> - </span>]
+<span class="lineNum">      55 </span>[<span class="branchCov" title="Branch 1 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 218 times"> + </span><span class="branchCov" title="Branch 4 was taken 36 times"> + </span>]:<span class="lineCov">        662 :         if (!t.is_a(token_type::QUOTE)) {</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 6 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 7 was not taken"> - </span>][<span class="branchCov" title="Branch 8 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 9 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 11 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 12 was not taken"> - </span>][<span class="branchCov" title="Branch 13 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 14 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 16 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>][<span class="branchCov" title="Branch 18 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 19 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 21 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 22 was not taken"> - </span>][<span class="branchCov" title="Branch 23 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 24 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 26 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 27 was not taken"> - </span>][<span class="branchCov" title="Branch 28 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 29 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 31 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 32 was not taken"> - </span>][<span class="branchCov" title="Branch 33 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 34 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 36 was taken 22 times"> + </span><span class="branchNoCov" title="Branch 37 was not taken"> - </span>][<span class="branchCov" title="Branch 38 was taken 22 times"> + </span><span class="branchNoCov" title="Branch 39 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 41 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 42 was not taken"> - </span>][<span class="branchCov" title="Branch 43 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 44 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 46 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 47 was not taken"> - </span>][<span class="branchCov" title="Branch 48 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 49 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 51 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 52 was not taken"> - </span>][<span class="branchCov" title="Branch 53 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 54 was not taken"> - </span>]
+<span class="lineNum">      56 </span>[<span class="branchCov" title="Branch 1 was taken 218 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 218 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        626 :             parser_.advance(ws_ + t.length());</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 13 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 14 was not taken"> - </span>][<span class="branchCov" title="Branch 16 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 19 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 20 was not taken"> - </span>][<span class="branchCov" title="Branch 22 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 23 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 25 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 26 was not taken"> - </span>][<span class="branchCov" title="Branch 28 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 29 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 31 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 32 was not taken"> - </span>][<span class="branchCov" title="Branch 34 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 35 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 37 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 38 was not taken"> - </span>][<span class="branchCov" title="Branch 40 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 41 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 43 was taken 22 times"> + </span><span class="branchNoCov" title="Branch 44 was not taken"> - </span>][<span class="branchCov" title="Branch 46 was taken 22 times"> + </span><span class="branchNoCov" title="Branch 47 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 49 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 50 was not taken"> - </span>][<span class="branchCov" title="Branch 52 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 53 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 55 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 56 was not taken"> - </span>][<span class="branchCov" title="Branch 58 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 59 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 61 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 62 was not taken"> - </span>][<span class="branchCov" title="Branch 64 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 65 was not taken"> - </span>]
+<span class="lineNum">      57 </span>                :            :         } else {
+<span class="lineNum">      58 </span>[<span class="branchCov" title="Branch 1 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">         36 :             parser_.advance(ws_ + t.length() + 2, false);</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 7 was not executed"> # </span><span class="branchNoExec" title="Branch 8 was not executed"> # </span>][<span class="branchNoExec" title="Branch 10 was not executed"> # </span><span class="branchNoExec" title="Branch 11 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 13 was not executed"> # </span><span class="branchNoExec" title="Branch 14 was not executed"> # </span>][<span class="branchNoExec" title="Branch 16 was not executed"> # </span><span class="branchNoExec" title="Branch 17 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 19 was not executed"> # </span><span class="branchNoExec" title="Branch 20 was not executed"> # </span>][<span class="branchNoExec" title="Branch 22 was not executed"> # </span><span class="branchNoExec" title="Branch 23 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 25 was not executed"> # </span><span class="branchNoExec" title="Branch 26 was not executed"> # </span>][<span class="branchNoExec" title="Branch 28 was not executed"> # </span><span class="branchNoExec" title="Branch 29 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 31 was not executed"> # </span><span class="branchNoExec" title="Branch 32 was not executed"> # </span>][<span class="branchNoExec" title="Branch 34 was not executed"> # </span><span class="branchNoExec" title="Branch 35 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 37 was not executed"> # </span><span class="branchNoExec" title="Branch 38 was not executed"> # </span>][<span class="branchNoExec" title="Branch 40 was not executed"> # </span><span class="branchNoExec" title="Branch 41 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 43 was not executed"> # </span><span class="branchNoExec" title="Branch 44 was not executed"> # </span>][<span class="branchNoExec" title="Branch 46 was not executed"> # </span><span class="branchNoExec" title="Branch 47 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 49 was not executed"> # </span><span class="branchNoExec" title="Branch 50 was not executed"> # </span>][<span class="branchNoExec" title="Branch 52 was not executed"> # </span><span class="branchNoExec" title="Branch 53 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 55 was not executed"> # </span><span class="branchNoExec" title="Branch 56 was not executed"> # </span>][<span class="branchNoExec" title="Branch 58 was not executed"> # </span><span class="branchNoExec" title="Branch 59 was not executed"> # </span>]
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 61 was not executed"> # </span><span class="branchNoExec" title="Branch 62 was not executed"> # </span>][<span class="branchNoExec" title="Branch 64 was not executed"> # </span><span class="branchNoExec" title="Branch 65 was not executed"> # </span>]
+<span class="lineNum">      59 </span>                :            :         }
+<span class="lineNum">      60 </span>                :<span class="lineCov">        662 :         parsed_ = false;</span>
+<span class="lineNum">      61 </span>                :<span class="lineCov">        662 :         ws_ = 0;</span>
+<span class="lineNum">      62 </span>                :            : #if !defined(NDEBUG)
+<span class="lineNum">      63 </span>[<span class="branchCov" title="Branch 1 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        662 :         t = token::get(token_type::EOS, &quot;\xFF&quot;, 1);</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 13 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 14 was not taken"> - </span>][<span class="branchCov" title="Branch 16 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 19 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 20 was not taken"> - </span>][<span class="branchCov" title="Branch 22 was taken 22 times"> + </span><span class="branchNoCov" title="Branch 23 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 25 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 26 was not taken"> - </span>][<span class="branchCov" title="Branch 28 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 29 was not taken"> - </span>]
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 31 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 32 was not taken"> - </span>]
+<span class="lineNum">      64 </span>                :            : #endif // !defined(NDEBUG)
+<a name="65"><span class="lineNum">      65 </span>                :            :     }</a>
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :<span class="lineCov">        294 :     bool parser::parser_engine::is_unary_op(const token&amp; t)</span>
+<span class="lineNum">      68 </span>                :            :     {
+<span class="lineNum">      69 </span>[<span class="branchCov" title="Branch 1 was taken 278 times"> + </span><span class="branchCov" title="Branch 2 was taken 16 times"> + </span>][<span class="branchCov" title="Branch 4 was taken 4 times"> + </span><span class="branchCov" title="Branch 5 was taken 274 times"> + </span>]:<span class="lineCov">        294 :         return t.is_a(token_type::MINUS) || t.is_a(token_type::PLUS);</span>
+<a name="70"><span class="lineNum">      70 </span>                :            :     }</a>
+<span class="lineNum">      71 </span>                :            : 
+<span class="lineNum">      72 </span>                :<span class="lineCov">        482 :     bool parser::parser_engine::is_binary_op(const token&amp; nxt)</span>
+<span class="lineNum">      73 </span>                :            :     {
+<span class="lineNum">      74 </span>        [<span class="branchCov" title="Branch 1 was taken 158 times"> + </span><span class="branchCov" title="Branch 2 was taken 324 times"> + </span>]:<span class="lineCov">        482 :         switch (nxt.type()) {</span>
+<span class="lineNum">      75 </span>                :            :             case token_type::PLUS:
+<span class="lineNum">      76 </span>                :            :             case token_type::MINUS:
+<span class="lineNum">      77 </span>                :            :             case token_type::ASTERISK:
+<span class="lineNum">      78 </span>                :            :             case token_type::FSLASH:
+<span class="lineNum">      79 </span>                :            :             case token_type::ASSIGN:
+<span class="lineNum">      80 </span>                :            :             case token_type::ISEQUAL:
+<span class="lineNum">      81 </span>                :<span class="lineCov">        158 :                 return true;</span>
+<span class="lineNum">      82 </span>                :            :             default:
+<span class="lineNum">      83 </span>                :<span class="lineCov">        324 :                 return false;</span>
+<span class="lineNum">      84 </span>                :            :         }
+<span class="lineNum">      85 </span>                :            :     }
+<span class="lineNum">      86 </span>                :            : 
+<span class="lineNum">      87 </span>                :            :     PCSH_INLINE ir::node* parser::parser_engine::call_mem_fn(parser_engine* p, nexttermfcn pfn, source_map&amp; m)
+<span class="lineNum">      88 </span>                :            :     {
+<span class="lineNum">      89 </span>        [<span class="branchCov" title="Branch 0 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">        158 :         return ((*p).*(pfn))(m);</span>
+<span class="lineNum">      90 </span>                :            :     }
+<span class="lineNum">      91 </span>                :            : 
+<span class="lineNum">      92 </span>                :<span class="lineCov">        158 :     ir::untyped_binary_op_base* parser::parser_engine::create_binary_op(const token&amp; currtok, ir::node* a, source_map&amp; m, nexttermfcn rghtgen)</span>
+<span class="lineNum">      93 </span>                :            :     {
+<span class="lineNum">      94 </span>                :<span class="lineCov">        158 :         ir::untyped_binary_op_base* op = nullptr;</span>
+<span class="lineNum">      95 </span>  [<span class="branchCov" title="Branch 1 was taken 22 times"> + </span><span class="branchCov" title="Branch 2 was taken 4 times"> + </span><span class="branchCov" title="Branch 3 was taken 10 times"> + </span><span class="branchCov" title="Branch 4 was taken 4 times"> + </span> :<span class="lineCov">        158 :         switch (currtok.type()) {</span>
+<span class="lineNum">         </span>      <span class="branchCov" title="Branch 5 was taken 16 times"> + </span><span class="branchCov" title="Branch 6 was taken 102 times"> + </span><span class="branchNoCov" title="Branch 7 was not taken"> - </span>]
+<span class="lineNum">      96 </span>                :            :             case token_type::PLUS:
+<span class="lineNum">      97 </span>                :<span class="lineCov">         22 :                 op = arena_.create&lt;ir::binary_plus&gt;();</span>
+<span class="lineNum">      98 </span>                :<span class="lineCov">         22 :                 break;</span>
+<span class="lineNum">      99 </span>                :            :             case token_type::MINUS:
+<span class="lineNum">     100 </span>                :<span class="lineCov">          4 :                 op = arena_.create&lt;ir::binary_minus&gt;();</span>
+<span class="lineNum">     101 </span>                :<span class="lineCov">          4 :                 break;</span>
+<span class="lineNum">     102 </span>                :            :             case token_type::ASTERISK:
+<span class="lineNum">     103 </span>                :<span class="lineCov">         10 :                 op = arena_.create&lt;ir::binary_mult&gt;();</span>
+<span class="lineNum">     104 </span>                :<span class="lineCov">         10 :                 break;</span>
+<span class="lineNum">     105 </span>                :            :             case token_type::FSLASH:
+<span class="lineNum">     106 </span>                :<span class="lineCov">          4 :                 op = arena_.create&lt;ir::binary_div&gt;();</span>
+<span class="lineNum">     107 </span>                :<span class="lineCov">          4 :                 break;</span>
+<span class="lineNum">     108 </span>                :            :             case token_type::ISEQUAL:
+<span class="lineNum">     109 </span>                :<span class="lineCov">         16 :                 op = arena_.create&lt;ir::comp_equals&gt;();</span>
+<span class="lineNum">     110 </span>                :<span class="lineCov">         16 :                 break;</span>
+<span class="lineNum">     111 </span>                :            :             case token_type::ASSIGN:
+<span class="lineNum">     112 </span>                :<span class="lineCov">        102 :                 op = arena_.create&lt;ir::assign&gt;();</span>
+<span class="lineNum">     113 </span>[<span class="branchCov" title="Branch 0 was taken 102 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchNoCov" title="Branch 3 was not taken"> - </span><span class="branchCov" title="Branch 4 was taken 102 times"> + </span>]:<span class="lineCov">        102 :                 ENSURE(dynamic_cast&lt;ir::variable*&gt;(a) != nullptr,</span>
+<span class="lineNum">     114 </span>                :            :                        &quot;Left term of assignment is not a variable. Variable name must be a non keyword, alpha - numeric and should not start with a digit.&quot;);
+<span class="lineNum">     115 </span>                :<span class="lineCov">        102 :                 rghtgen = &amp;parser_engine::expr;</span>
+<span class="lineNum">     116 </span>                :<span class="lineCov">        102 :                 break;</span>
+<span class="lineNum">     117 </span>                :            :             default:
+<span class="lineNum">     118 </span>                :<span class="lineNoCov">          0 :                 PCSH_ASSERT_MSG(false, &quot;Invalid binary operation!&quot;);</span>
+<span class="lineNum">     119 </span>                :<span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">     120 </span>                :            :         }
+<span class="lineNum">     121 </span>[<span class="branchCov" title="Branch 5 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 6 was not taken"> - </span>][<span class="branchCov" title="Branch 8 was taken 158 times"> + </span><span class="branchNoCov" title="Branch 9 was not taken"> - </span>]:<span class="lineCov">        158 :         m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };</span>
+<span class="lineNum">     122 </span>                :            :         advance();
+<span class="lineNum">     123 </span>                :<span class="lineCov">        158 :         op-&gt;set_left(a);</span>
+<span class="lineNum">     124 </span>                :<span class="lineCov">        156 :         op-&gt;set_right(call_mem_fn(this, rghtgen, m));</span>
+<span class="lineNum">     125 </span>                :<span class="lineCov">        156 :         return op;</span>
+<span class="lineNum">     126 </span>                :            :     }
+<span class="lineNum">     127 </span>                :            : 
+<span class="lineNum">     128 </span>                :<span class="lineCov">         20 :     ir::untyped_unary_op_base* parser::parser_engine::create_unary_op(const token&amp; nxt, source_map&amp; m)</span>
+<span class="lineNum">     129 </span>                :            :     {
+<span class="lineNum">     130 </span>                :<span class="lineCov">         20 :         ir::untyped_unary_op_base* op = nullptr;</span>
+<span class="lineNum">     131 </span>     [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchCov" title="Branch 2 was taken 4 times"> + </span><span class="branchNoCov" title="Branch 3 was not taken"> - </span>]:<span class="lineCov">         20 :         switch (nxt.type()) {</span>
+<span class="lineNum">     132 </span>                :            :             case token_type::MINUS:
+<span class="lineNum">     133 </span>                :<span class="lineCov">         16 :                 op = arena_.create&lt;ir::unary_minus&gt;();</span>
+<span class="lineNum">     134 </span>                :<span class="lineCov">         16 :                 break;</span>
+<span class="lineNum">     135 </span>                :            :             case token_type::PLUS:
+<span class="lineNum">     136 </span>                :<span class="lineCov">          4 :                 op = arena_.create&lt;ir::unary_plus&gt;();</span>
+<span class="lineNum">     137 </span>                :<span class="lineCov">          4 :                 break;</span>
+<span class="lineNum">     138 </span>                :            :             default:
+<span class="lineNum">     139 </span>                :<span class="lineNoCov">          0 :                 PCSH_ASSERT_MSG(false, &quot;Invalid binary operation!&quot;);</span>
+<span class="lineNum">     140 </span>                :<span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">     141 </span>                :            :         }
+<span class="lineNum">     142 </span>[<span class="branchCov" title="Branch 5 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 6 was not taken"> - </span>][<span class="branchCov" title="Branch 8 was taken 20 times"> + </span><span class="branchNoCov" title="Branch 9 was not taken"> - </span>]:<span class="lineCov">         20 :         m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };</span>
+<span class="lineNum">     143 </span>                :            :         advance();
+<span class="lineNum">     144 </span>                :<span class="lineCov">         20 :         op-&gt;set_operand(factor(m));</span>
+<span class="lineNum">     145 </span>                :<span class="lineCov">         18 :         return op;</span>
+<span class="lineNum">     146 </span>                :            :     }
+<span class="lineNum">     147 </span>                :            : 
+<span class="lineNum">     148 </span>                :<span class="lineCov">         60 :     ir::block* parser::parser_engine::block(source_map&amp; m)</span>
+<span class="lineNum">     149 </span>                :            :     {
+<span class="lineNum">     150 </span>        [<span class="branchCov" title="Branch 1 was taken 60 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         60 :         std::vector&lt;ir::node*&gt; stmts;</span>
+<span class="lineNum">     151 </span>        [<span class="branchCov" title="Branch 1 was taken 60 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         60 :         stmts.reserve(20);</span>
+<span class="lineNum">     152 </span>                :            : 
+<span class="lineNum">     153 </span>                :            :         auto t = peek();
+<span class="lineNum">     154 </span>        [<span class="branchCov" title="Branch 1 was taken 60 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         60 :         bool startWithLbrace = t.is_a(token_type::LBRACE);</span>
+<span class="lineNum">     155 </span>                :            : 
+<span class="lineNum">     156 </span>        [<span class="branchCov" title="Branch 0 was taken 22 times"> + </span><span class="branchCov" title="Branch 1 was taken 38 times"> + </span>]:<span class="lineCov">         60 :         if (startWithLbrace) {</span>
+<span class="lineNum">     157 </span>                :            :             advance();
+<span class="lineNum">     158 </span>                :            :         }
+<span class="lineNum">     159 </span>                :            : 
+<span class="lineNum">     160 </span>                :            :         while (true) {
+<span class="lineNum">     161 </span>[<span class="branchCov" title="Branch 1 was taken 164 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 38 times"> + </span><span class="branchCov" title="Branch 4 was taken 126 times"> + </span>]:<span class="lineCov">        164 :             if (t.is_a(token_type::EOS)) {</span>
+<span class="lineNum">     162 </span>        [<span class="branchCov" title="Branch 0 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         38 :                 if (!startWithLbrace) {</span>
+<span class="lineNum">     163 </span>                :<span class="lineCov">         38 :                     break;</span>
+<span class="lineNum">     164 </span>                :            :                 } else {
+<span class="lineNum">     165 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     ENSURE(false, &quot;Unexpected end of stream while reading a block. Expected a `}' before termination.&quot;);</span>
+<span class="lineNum">     166 </span>                :            :                 }
+<span class="lineNum">     167 </span>                :            :             }
+<span class="lineNum">     168 </span>[<span class="branchCov" title="Branch 1 was taken 126 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 20 times"> + </span><span class="branchCov" title="Branch 4 was taken 106 times"> + </span>]:<span class="lineCov">        126 :             if (t.is_a(token_type::RBRACE)) {</span>
+<span class="lineNum">     169 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 20 times"> + </span>]:<span class="lineCov">         20 :                 if (!startWithLbrace) {</span>
+<span class="lineNum">     170 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     ENSURE(false, &quot;Unexpected `}'. Did not see a `{' to start a block.&quot;);</span>
+<span class="lineNum">     171 </span>                :            :                 } else {
+<span class="lineNum">     172 </span>                :            :                     advance();
+<span class="lineNum">     173 </span>                :<span class="lineCov">         20 :                     break;</span>
+<span class="lineNum">     174 </span>                :            :                 }
+<span class="lineNum">     175 </span>                :            :             }
+<span class="lineNum">     176 </span>[<span class="branchCov" title="Branch 1 was taken 104 times"> + </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span>][<span class="branchCov" title="Branch 4 was taken 104 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        106 :             stmts.push_back(stmt(m));</span>
+<span class="lineNum">     177 </span>                :<span class="lineCov">        104 :             t = peek();</span>
+<span class="lineNum">     178 </span>                :            :     }
+<span class="lineNum">     179 </span>                :            : 
+<span class="lineNum">     180 </span>        [<span class="branchCov" title="Branch 1 was taken 58 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         58 :         ir::block* blk = arena_.create&lt;ir::block&gt;(arena_);</span>
+<span class="lineNum">     181 </span>                :<span class="lineCov">         58 :         auto beg = stmts.rbegin();</span>
+<span class="lineNum">     182 </span>                :<span class="lineCov">         58 :         const auto end = stmts.rend();</span>
+<span class="lineNum">     183 </span>[<span class="branchCov" title="Branch 1 was taken 104 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 162 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        162 :         for (; beg != end; ++beg) {</span>
+<span class="lineNum">         </span>        [<span class="branchCov" title="Branch 6 was taken 104 times"> + </span><span class="branchCov" title="Branch 7 was taken 58 times"> + </span>]
+<span class="lineNum">     184 </span>[<span class="branchCov" title="Branch 1 was taken 104 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 104 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        104 :             blk-&gt;push_front_statement(*beg);</span>
+<span class="lineNum">     185 </span>                :            :         }
+<span class="lineNum">     186 </span>                :<span class="lineCov">         60 :         return blk;</span>
+<span class="lineNum">     187 </span>                :            :     }
+<span class="lineNum">     188 </span>                :            : 
+<span class="lineNum">     189 </span>                :<span class="lineCov">        238 :     ir::node* parser::parser_engine::expr(source_map&amp; m)</span>
+<span class="lineNum">     190 </span>                :            :     {
+<span class="lineNum">     191 </span>        [<span class="branchCov" title="Branch 1 was taken 234 times"> + </span><span class="branchCov" title="Branch 2 was taken 4 times"> + </span>]:<span class="lineCov">        238 :         ir::node* a = arith(m);</span>
+<span class="lineNum">     192 </span>                :            :         auto t = peek();
+<span class="lineNum">     193 </span>[<span class="branchCov" title="Branch 1 was taken 234 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 234 times"> + </span><span class="branchNoCov" title="Branch 4 was not taken"> - </span>]:<span class="lineCov">        234 :         while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS) || t.is_a(token_type::ISEQUAL)) {</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 6 was taken 234 times"> + </span><span class="branchNoCov" title="Branch 7 was not taken"> - </span>][<span class="branchCov" title="Branch 8 was taken 234 times"> + </span><span class="branchNoCov" title="Branch 9 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 11 was taken 234 times"> + </span><span class="branchNoCov" title="Branch 12 was not taken"> - </span>][<span class="branchNoCov" title="Branch 13 was not taken"> - </span><span class="branchCov" title="Branch 14 was taken 234 times"> + </span>]
+<span class="lineNum">         </span>        [<span class="branchNoCov" title="Branch 15 was not taken"> - </span><span class="branchCov" title="Branch 16 was taken 234 times"> + </span>]
+<span class="lineNum">     194 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :             a = create_binary_op(t, a, m, &amp;parser_engine::arith);</span>
+<span class="lineNum">     195 </span>                :<span class="lineNoCov">          0 :             t = peek();</span>
+<span class="lineNum">     196 </span>                :            :         }
+<span class="lineNum">     197 </span>                :<span class="lineCov">        234 :         return a;</span>
+<span class="lineNum">     198 </span>                :            :     }
+<span class="lineNum">     199 </span>                :            : 
+<span class="lineNum">     200 </span>                :<span class="lineCov">        114 :     ir::node* parser::parser_engine::stmt(source_map&amp; m)</span>
+<span class="lineNum">     201 </span>                :            :     {
+<span class="lineNum">     202 </span>                :            :         auto t = peek();
+<span class="lineNum">     203 </span>                :<span class="lineCov">        114 :         ir::node* op = nullptr;</span>
+<span class="lineNum">     204 </span>[<span class="branchCov" title="Branch 1 was taken 114 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 8 times"> + </span><span class="branchCov" title="Branch 4 was taken 106 times"> + </span>]:<span class="lineCov">        114 :         if (t.is_a(token_type::IF)) {</span>
+<span class="lineNum">     205 </span>        [<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">          8 :             op = ifstmt(m);</span>
+<span class="lineNum">     206 </span>[<span class="branchCov" title="Branch 1 was taken 106 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 16 times"> + </span><span class="branchCov" title="Branch 4 was taken 90 times"> + </span>]:<span class="lineCov">        106 :         } else if (t.is_a(token_type::LBRACE)) {</span>
+<span class="lineNum">     207 </span>        [<span class="branchCov" title="Branch 1 was taken 16 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         16 :             op = block(m);</span>
+<span class="lineNum">     208 </span>                :            :         } else {
+<span class="lineNum">     209 </span>        [<span class="branchCov" title="Branch 1 was taken 88 times"> + </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span>]:<span class="lineCov">         90 :             op = expr(m);</span>
+<span class="lineNum">     210 </span>[<span class="branchCov" title="Branch 1 was taken 88 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchNoCov" title="Branch 3 was not taken"> - </span><span class="branchCov" title="Branch 4 was taken 88 times"> + </span>]:<span class="lineCov">         88 :             ENSURE(peek().is_a(token_type::SEMICOLON), &quot;Expected the end of a statement with `;'&quot;);</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">     211 </span>                :            :             advance();
+<span class="lineNum">     212 </span>                :            :         }
+<span class="lineNum">     213 </span>                :<span class="lineCov">        112 :         return op;</span>
+<span class="lineNum">     214 </span>                :            :     }
+<span class="lineNum">     215 </span>                :            : 
+<span class="lineNum">     216 </span>                :<span class="lineCov">        238 :     ir::node* parser::parser_engine::arith(source_map&amp; m)</span>
+<span class="lineNum">     217 </span>                :            :     {
+<span class="lineNum">     218 </span>        [<span class="branchCov" title="Branch 1 was taken 234 times"> + </span><span class="branchCov" title="Branch 2 was taken 4 times"> + </span>]:<span class="lineCov">        238 :         auto *a = term(m);</span>
+<span class="lineNum">     219 </span>                :            :         auto t = peek();
+<span class="lineNum">     220 </span>[<span class="branchCov" title="Branch 1 was taken 240 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 6 times"> + </span><span class="branchCov" title="Branch 4 was taken 234 times"> + </span>]:<span class="lineCov">        240 :         while (is_binary_op(t)) {</span>
+<span class="lineNum">     221 </span>        [<span class="branchCov" title="Branch 1 was taken 6 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">          6 :             a = create_binary_op(t, a, m, &amp;parser_engine::term);</span>
+<span class="lineNum">     222 </span>                :<span class="lineCov">          6 :             t = peek();</span>
+<span class="lineNum">     223 </span>                :            :         }
+<span class="lineNum">     224 </span>                :<span class="lineCov">        234 :         return a;</span>
+<span class="lineNum">     225 </span>                :            :     }
+<span class="lineNum">     226 </span>                :            : 
+<span class="lineNum">     227 </span>                :<span class="lineCov">        244 :     ir::node* parser::parser_engine::term(source_map&amp; m)</span>
+<span class="lineNum">     228 </span>                :            :     {
+<span class="lineNum">     229 </span>        [<span class="branchCov" title="Branch 1 was taken 242 times"> + </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span>]:<span class="lineCov">        244 :         ir::node* a = unop(m);</span>
+<span class="lineNum">     230 </span>                :            :         auto t = peek();
+<span class="lineNum">     231 </span>[<span class="branchCov" title="Branch 1 was taken 242 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 152 times"> + </span><span class="branchCov" title="Branch 4 was taken 90 times"> + </span>]:<span class="lineCov">        242 :         if (is_binary_op(t)) {</span>
+<span class="lineNum">     232 </span>        [<span class="branchCov" title="Branch 1 was taken 150 times"> + </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span>]:<span class="lineCov">        152 :             a = create_binary_op(t, a, m, &amp;parser_engine::unop);</span>
+<span class="lineNum">     233 </span>                :            :         }
+<span class="lineNum">     234 </span>                :<span class="lineCov">        240 :         return a;</span>
+<span class="lineNum">     235 </span>                :            :     }
+<span class="lineNum">     236 </span>                :            : 
+<span class="lineNum">     237 </span>                :<span class="lineCov">        294 :     ir::node* parser::parser_engine::factor(source_map&amp; m)</span>
+<span class="lineNum">     238 </span>                :            :     {
+<span class="lineNum">     239 </span>                :            :         auto t = peek();
+<span class="lineNum">     240 </span>[<span class="branchCov" title="Branch 1 was taken 292 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 38 times"> + </span><span class="branchCov" title="Branch 4 was taken 254 times"> + </span>]:<span class="lineCov">        292 :         if (t.is_a(token_type::LPAREN)) {</span>
+<span class="lineNum">     241 </span>                :            :             advance();
+<span class="lineNum">     242 </span>        [<span class="branchCov" title="Branch 1 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         38 :             auto e = expr(m);</span>
+<span class="lineNum">     243 </span>                :<span class="lineCov">         38 :             t = peek();</span>
+<span class="lineNum">     244 </span>[<span class="branchCov" title="Branch 1 was taken 38 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchNoCov" title="Branch 3 was not taken"> - </span><span class="branchCov" title="Branch 4 was taken 38 times"> + </span>]:<span class="lineCov">         38 :             ENSURE(t.is_a(token_type::RPAREN), &quot;Unmatched `(' when parsing an expression.&quot;);</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">     245 </span>                :            :             advance();
+<span class="lineNum">     246 </span>                :<span class="lineCov">         38 :             return e;</span>
+<span class="lineNum">     247 </span>                :            :         } else {
+<span class="lineNum">     248 </span>        [<span class="branchCov" title="Branch 1 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">        292 :             return atom(m);</span>
+<span class="lineNum">     249 </span>                :            :         }
+<span class="lineNum">     250 </span>                :            :     }
+<span class="lineNum">     251 </span>                :            : 
+<span class="lineNum">     252 </span>                :<span class="lineCov">          8 :     ir::node* parser::parser_engine::ifstmt(source_map&amp; m)</span>
+<span class="lineNum">     253 </span>                :            :     {
+<span class="lineNum">     254 </span>                :            :         auto t = peek();
+<span class="lineNum">     255 </span>[<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchNoCov" title="Branch 3 was not taken"> - </span><span class="branchCov" title="Branch 4 was taken 8 times"> + </span>]:<span class="lineCov">          8 :         PCSH_ASSERT_MSG(t.is_a(token_type::IF), &quot;Expected an `if' statement.&quot;);</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">     256 </span>                :            :         advance();
+<span class="lineNum">     257 </span>                :<span class="lineCov">          8 :         t = peek();</span>
+<span class="lineNum">     258 </span>[<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchNoCov" title="Branch 3 was not taken"> - </span><span class="branchCov" title="Branch 4 was taken 8 times"> + </span>]:<span class="lineCov">          8 :         ENSURE(t.is_a(token_type::LPAREN), &quot;Expected a `(' after an if.&quot;);</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">     259 </span>                :            :         advance();
+<span class="lineNum">     260 </span>        [<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">          8 :         auto cond = expr(m);</span>
+<span class="lineNum">     261 </span>                :<span class="lineCov">          8 :         t = peek();</span>
+<span class="lineNum">     262 </span>[<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchNoCov" title="Branch 3 was not taken"> - </span><span class="branchCov" title="Branch 4 was taken 8 times"> + </span>]:<span class="lineCov">          8 :         ENSURE(t.is_a(token_type::RPAREN), &quot;Expected a `)' after an if statement expression.&quot;);</span>
+<span class="lineNum">         </span>        [<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">     263 </span>                :            :         advance();
+<span class="lineNum">     264 </span>[<span class="branchCov" title="Branch 1 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 8 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">          8 :         return arena_.create&lt;ir::if_stmt&gt;(cond, stmt(m));</span>
+<span class="lineNum">     265 </span>                :            :     }
+<span class="lineNum">     266 </span>                :            : 
+<span class="lineNum">     267 </span>                :<span class="lineCov">        294 :     ir::node* parser::parser_engine::unop(source_map&amp; m)</span>
+<span class="lineNum">     268 </span>                :            :     {
+<span class="lineNum">     269 </span>                :            :         auto t = peek();
+<span class="lineNum">     270 </span>[<span class="branchCov" title="Branch 1 was taken 294 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 20 times"> + </span><span class="branchCov" title="Branch 4 was taken 274 times"> + </span>]:<span class="lineCov">        294 :         if (is_unary_op(t)) {</span>
+<span class="lineNum">     271 </span>        [<span class="branchCov" title="Branch 1 was taken 18 times"> + </span><span class="branchCov" title="Branch 2 was taken 2 times"> + </span>]:<span class="lineCov">         20 :             return create_unary_op(t, m);</span>
+<span class="lineNum">     272 </span>                :            :         } else {
+<span class="lineNum">     273 </span>        [<span class="branchCov" title="Branch 1 was taken 274 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">        292 :             return factor(m);</span>
+<span class="lineNum">     274 </span>                :            :         }
+<span class="lineNum">     275 </span>                :            :     }
+<span class="lineNum">     276 </span>                :            : 
+<span class="lineNum">     277 </span>                :            :     namespace conversions {
+<span class="lineNum">     278 </span>                :            : 
+<span class="lineNum">     279 </span>                :            :         PCSH_INLINE int to_int(const token&amp; t)
+<span class="lineNum">     280 </span>                :            :         {
+<span class="lineNum">     281 </span>        [<span class="branchCov" title="Branch 1 was taken 62 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         62 :             size_t len = t.length();</span>
+<span class="lineNum">     282 </span>        [<span class="branchCov" title="Branch 1 was taken 62 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         62 :             char* s = const_cast&lt;char*&gt;(t.str().ptr);</span>
+<span class="lineNum">     283 </span>                :<span class="lineCov">         62 :             auto oldval = s[len];</span>
+<span class="lineNum">     284 </span>                :<span class="lineCov">         62 :             s[len] = '\0';</span>
+<span class="lineNum">     285 </span>                :<span class="lineCov">         62 :             int i = ::atoi(s);</span>
+<span class="lineNum">     286 </span>                :<span class="lineCov">         62 :             s[len] = oldval;</span>
+<span class="lineNum">     287 </span>                :<span class="lineCov">         62 :             return i;</span>
+<span class="lineNum">     288 </span>                :            :         }
+<span class="lineNum">     289 </span>                :            : 
+<span class="lineNum">     290 </span>                :            :         PCSH_INLINE double to_double(const token&amp; t)
+<span class="lineNum">     291 </span>                :            :         {
+<span class="lineNum">     292 </span>        [<span class="branchCov" title="Branch 1 was taken 26 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         26 :             size_t len = t.length();</span>
+<span class="lineNum">     293 </span>        [<span class="branchCov" title="Branch 1 was taken 26 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         26 :             char* s = const_cast&lt;char*&gt;(t.str().ptr);</span>
+<span class="lineNum">     294 </span>                :<span class="lineCov">         26 :             auto oldval = s[len];</span>
+<span class="lineNum">     295 </span>                :<span class="lineCov">         26 :             s[len] = '\0';</span>
+<span class="lineNum">     296 </span>                :<span class="lineCov">         26 :             double f = ::atof(s);</span>
+<span class="lineNum">     297 </span>                :<span class="lineCov">         26 :             s[len] = oldval;</span>
+<span class="lineNum">     298 </span>                :<span class="lineCov">         26 :             return f;</span>
+<span class="lineNum">     299 </span>                :            :         }
+<span class="lineNum">     300 </span>                :            : 
+<span class="lineNum">     301 </span>                :            :     }//namespace conversions
+<span class="lineNum">     302 </span>                :            : 
+<span class="lineNum">     303 </span>                :<span class="lineCov">        254 :     ir::node* parser::parser_engine::atom(source_map&amp; m)</span>
+<span class="lineNum">     304 </span>                :            :     {
+<span class="lineNum">     305 </span>                :            :         auto t = peek();
+<span class="lineNum">     306 </span>                :<span class="lineCov">        254 :         ir::untyped_atom_base* v = nullptr;</span>
+<span class="lineNum">     307 </span>[<span class="branchCov" title="Branch 1 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 130 times"> + </span><span class="branchCov" title="Branch 4 was taken 62 times"> + </span> :<span class="lineCov">        254 :         switch (t.type()) {</span>
+<span class="lineNum">         </span>      <span class="branchCov" title="Branch 5 was taken 26 times"> + </span><span class="branchCov" title="Branch 6 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 7 was not taken"> - </span>]
+<span class="lineNum">     308 </span>                :            :             case token_type::SYMBOL:
+<span class="lineNum">     309 </span>[<span class="branchCov" title="Branch 1 was taken 130 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 130 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        130 :                 v = arena_.create&lt;ir::variable&gt;(arena_.create_string(t.str().ptr, t.length()));</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 130 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 130 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">     310 </span>                :<span class="lineCov">        130 :                 break;</span>
+<span class="lineNum">     311 </span>                :            :             case token_type::INTEGER:
+<span class="lineNum">     312 </span>        [<span class="branchCov" title="Branch 1 was taken 62 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         62 :                 v = arena_.create&lt;ir::int_constant&gt;(conversions::to_int(t));</span>
+<span class="lineNum">     313 </span>                :<span class="lineCov">         62 :                 break;</span>
+<span class="lineNum">     314 </span>                :            :             case token_type::FLOATING:
+<span class="lineNum">     315 </span>        [<span class="branchCov" title="Branch 1 was taken 26 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         26 :                 v = arena_.create&lt;ir::float_constant&gt;(conversions::to_double(t));</span>
+<span class="lineNum">     316 </span>                :<span class="lineCov">         26 :                 break;</span>
+<span class="lineNum">     317 </span>                :            :             case token_type::QUOTE: {
+<span class="lineNum">     318 </span>                :            :                 // we have a static string's data here. copy into a new string
+<span class="lineNum">     319 </span>[<span class="branchCov" title="Branch 1 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">         36 :                 cstring str = arena_.create_string(t.str().ptr);</span>
+<span class="lineNum">     320 </span>        [<span class="branchCov" title="Branch 1 was taken 36 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>]:<span class="lineCov">         36 :                 v = arena_.create&lt;ir::string_constant&gt;(str);</span>
+<span class="lineNum">     321 </span>                :<span class="lineCov">         36 :                 break;</span>
+<span class="lineNum">     322 </span>                :            :             }
+<span class="lineNum">     323 </span>                :            :             default:
+<span class="lineNum">     324 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 PCSH_ASSERT_MSG(false, &quot;Invalid atom value!&quot;);</span>
+<span class="lineNum">     325 </span>                :<span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">     326 </span>                :            :         }
+<span class="lineNum">     327 </span>[<span class="branchCov" title="Branch 1 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 4 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]:<span class="lineCov">        254 :         m[v] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };</span>
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 7 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 8 was not taken"> - </span>][<span class="branchCov" title="Branch 10 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 11 was not taken"> - </span>]
+<span class="lineNum">         </span>[<span class="branchCov" title="Branch 13 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 14 was not taken"> - </span>][<span class="branchCov" title="Branch 16 was taken 254 times"> + </span><span class="branchNoCov" title="Branch 17 was not taken"> - </span>]
+<span class="lineNum">     328 </span>                :            :         advance();
+<span class="lineNum">     329 </span>                :<span class="lineCov">        254 :         return v;</span>
+<span class="lineNum">     330 </span>                :            :     }
+<a name="331"><span class="lineNum">     331 </span>                :            : </a>
+<span class="lineNum">     332 </span>                :            : }//namespace parser
+<span class="lineNum">     333 </span>[<span class="branchCov" title="Branch 1 was taken 3 times"> + </span><span class="branchNoCov" title="Branch 2 was not taken"> - </span>][<span class="branchCov" title="Branch 3 was taken 3 times"> + </span><span class="branchNoCov" title="Branch 4 was not taken"> - </span>]:<span class="lineCov">         12 : }//namespace pcsh</span>
+<span class="lineNum">     334 </span>                :            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
