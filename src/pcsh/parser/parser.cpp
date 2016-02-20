@@ -431,11 +431,6 @@ namespace parser {
 
     token parser::peek(pos_t pstrt, pos_t* pactstrt)
     {
-        return peek_impl(pstrt, pactstrt);
-    }
-
-    PCSH_INLINE token parser::peek_impl(pos_t pstrt, pos_t* pactstrt)
-    {
         using namespace tokenize;
         // skip whitespace
         auto p = find_first_non_whitespace(pstrt);
@@ -479,11 +474,6 @@ namespace parser {
     }
 
     void parser::advance(pos_t len, bool countnl)
-    {
-        advance_impl(len, countnl);
-    }
-
-    PCSH_INLINE void parser::advance_impl(pos_t len, bool countnl)
     {
         pos_t p = 0;
         if (PCSH_LIKELY(countnl)) {

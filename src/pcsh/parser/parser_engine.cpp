@@ -19,8 +19,8 @@ namespace parser {
     int parser::parser_engine::throw_error(cstring msg)
     {
         pos_t ws = 0;
-        parser_.peek_impl(ws, &ws);
-        parser_.advance_impl(ws);
+        parser_.peek(ws, &ws);
+        parser_.advance(ws);
         const auto& linestr = "line " + std::to_string(parser_.line()) + ", char " + std::to_string(parser_.curr_pos() - parser_.line_start());
         std::string message(msg);
         message += "\n\tnear: \"" + parser_.copy_line(0) + "\"";
@@ -39,7 +39,7 @@ namespace parser {
     void parser::parser_engine::do_peek()
     {
         PCSH_ASSERT(ws_ == 0);
-        auto t = parser_.peek_impl(0, &ws_);
+        auto t = parser_.peek(0, &ws_);
         if (PCSH_UNLIKELY(t.is_a(token_type::FAIL))) {
             throw_error(t.str().ptr);
         }
@@ -53,9 +53,9 @@ namespace parser {
         PCSH_ASSERT(parsed_);
         token t = curr_;
         if (!t.is_a(token_type::QUOTE)) {
-            parser_.advance_impl(ws_ + t.length());
+            parser_.advance(ws_ + t.length());
         } else {
-            parser_.advance_impl(ws_ + t.length() + 2, false);
+            parser_.advance(ws_ + t.length() + 2, false);
         }
         parsed_ = false;
         ws_ = 0;

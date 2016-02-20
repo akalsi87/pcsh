@@ -188,8 +188,6 @@ namespace parser {
         pos_t line_start_;
         std::string filename_;
 
-        inline token peek_impl(pos_t p = 0, pos_t* pactstart = nullptr);
-        inline void advance_impl(pos_t len, bool countnl = true);
         pos_t find_first_non_whitespace(pos_t start);
         pos_t skip_till_line_end(pos_t p);
         token read_string(pos_t p);
