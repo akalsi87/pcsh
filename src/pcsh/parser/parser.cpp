@@ -14,7 +14,7 @@
 #include "ir/nodes.hpp"
 #include "ir/passes/type_checker.hpp"
 #include "ir/tree_validation.hpp"
-#include "parser_engine.hpp"
+#include "parser/parser_engine.hpp"
 
 #include <cstring>
 #include <string>
