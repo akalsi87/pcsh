@@ -1,41 +1,43 @@
 /**
- * \file executor.cpp
+ * \file interpreter.cpp
  * \date Jan 31, 2016
  */
 
 #include "pcsh/parser.hpp"
 
-#include "ir/execution/executor.hpp"
+#include "execution/interpreter.hpp"
 #include "ir/nodes.hpp"
 #include "ir/symbol_table.hpp"
 
 namespace pcsh {
-namespace ir {
+namespace execution {
+
+    using namespace ir;
 
     template <bool isint>
     bool compare_eq(const comp_equals* v, const variable_accessor& acc, arena& ar);
 
     template <class T>
-    class typed_executor;
+    class typed_interpreter;
 
     template <>
-    class typed_executor<void>;
+    class typed_interpreter<void>;
 
     template <>
-    class typed_executor<cstring>;
+    class typed_interpreter<cstring>;
 
     template <class T>
-    class typed_executor : public node_visitor
+    class typed_interpreter : public node_visitor
     {
-      public:
-        typed_executor(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_()
+    public:
+        typed_interpreter(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_()
         { }
 
         T value() const
         {
             return value_;
         }
-      private:
+    private:
         variable_accessor accessor_;
         arena& ar_;
         T value_;
@@ -124,23 +126,23 @@ namespace ir {
         void visit_impl(const comp_equals* v) override
         {
             value_ = compare_eq<result_type_of<T>::value == result_type::INTEGER>(v, accessor_, ar_)
-                         ? 1
-                         : 0;
+                ? 1
+                : 0;
         }
     };
 
     template <>
-    class typed_executor<cstring> : public node_visitor
+    class typed_interpreter<cstring> : public node_visitor
     {
-      public:
-        typed_executor(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
+    public:
+        typed_interpreter(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
         { }
 
         cstring value() const
         {
             return value_;
         }
-      private:
+    private:
         variable_accessor accessor_;
         arena& ar_;
         cstring value_;
@@ -180,7 +182,7 @@ namespace ir {
     };
 
     template <>
-    class typed_executor<void> : public node_visitor
+    class typed_interpreter<void> : public node_visitor
     { };
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +201,7 @@ namespace ir {
     {
         switch (v->comp_type()) {
             case result_type::STRING: {
-                typed_executor<cstring> eval(acc.symtab_list(), ar);
+                typed_interpreter<cstring> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -207,7 +209,7 @@ namespace ir {
                 return ::strcmp(v1, v2) == 0;
             }
             case result_type::INTEGER: {
-                typed_executor<int> eval(acc.symtab_list(), ar);
+                typed_interpreter<int> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -216,7 +218,7 @@ namespace ir {
                 break;
             }
             case result_type::FLOATING: {
-                typed_executor<int> eval(acc.symtab_list(), ar);
+                typed_interpreter<int> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -234,61 +236,67 @@ namespace ir {
     /// evaluator
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void executor::visit_impl(const variable* v)
+    void interpreter::visit_impl(const variable* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const int_constant* v)
+    void interpreter::visit_impl(const int_constant* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const float_constant* v)
+    void interpreter::visit_impl(const float_constant* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const string_constant* v)
+    void interpreter::visit_impl(const string_constant* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const unary_plus* v)
+    void interpreter::visit_impl(const unary_plus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const unary_minus* v)
+    void interpreter::visit_impl(const unary_minus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const binary_div* v)
+    void interpreter::visit_impl(const binary_div* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const binary_minus* v)
+    void interpreter::visit_impl(const binary_minus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const binary_mult* v)
+    void interpreter::visit_impl(const binary_mult* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const binary_plus* v)
+    void interpreter::visit_impl(const binary_plus* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const assign* v)
+    void interpreter::visit_impl(const assign* v)
     {
         auto oldvis = curr_visitor_;
 
         arena& ar = *ar_;
+
+        // slightly wasteful, yes, but avoids dynamic allocation
+        // and can be cleaned up later with a smarter union
+        typed_interpreter<int> intinterp(nested_tables_, ar);
+        typed_interpreter<double> dblinterp(nested_tables_, ar);
+        typed_interpreter<cstring> strinterp(nested_tables_, ar);
 
         variable_accessor acc(nested_tables_);
 
@@ -297,14 +305,13 @@ namespace ir {
 
         switch (outty) {
             case result_type::INTEGER:
-                curr_visitor_ = new typed_executor<int>(nested_tables_, ar);
+                curr_visitor_ = &intinterp;
                 break;
             case result_type::FLOATING:
-                curr_visitor_ = new typed_executor<double>(nested_tables_, ar);
+                curr_visitor_ = &dblinterp;
                 break;
             case result_type::STRING:
-                // do nothing, we retain the same value as of now
-                curr_visitor_ = new typed_executor<cstring>(nested_tables_, ar);
+                curr_visitor_ = &strinterp;
                 break;
             default:
                 PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
@@ -314,32 +321,23 @@ namespace ir {
         auto oldlastasgn = last_assign_;
         v->right()->accept(this);
 
-        union
-        {
-            double  dblval;
-            int     intval;
-            cstring strval;
-        } uval;
-
         node* newvalue = nullptr;
 
         if (oldlastasgn != last_assign_) {
+            // cascading assignment operators
             acc.set(v->var(), last_assign_, outty, true);
             goto assign_done_cleanup;
         }
 
         switch (outty) {
             case result_type::INTEGER:
-                uval.intval = static_cast<typed_executor<int>*>(curr_visitor_)->value();
-                newvalue = ar.create<int_constant>(uval.intval);
+                newvalue = ar.create<int_constant>(intinterp.value());
                 break;
             case result_type::FLOATING:
-                uval.dblval = static_cast<typed_executor<double>*>(curr_visitor_)->value();
-                newvalue = ar.create<float_constant>(uval.dblval);
+                newvalue = ar.create<float_constant>(dblinterp.value());
                 break;
             case result_type::STRING:
-                uval.strval = static_cast<typed_executor<cstring>*>(curr_visitor_)->value();
-                newvalue = ar.create<string_constant>(ar.create_string(uval.strval));
+                newvalue = ar.create<string_constant>(ar.create_string(strinterp.value()));
                 break;
             default:
                 PCSH_ENFORCE_MSG(false, "Incomplete implementation for evaluate!");
@@ -348,17 +346,17 @@ namespace ir {
 
         acc.set(v->var(), newvalue, outty, true);
         last_assign_ = newvalue;
-  assign_done_cleanup:
-        delete curr_visitor_;
+
+assign_done_cleanup:
         curr_visitor_ = oldvis;
     }
 
-    void executor::visit_impl(const comp_equals* v)
+    void interpreter::visit_impl(const comp_equals* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void executor::visit_impl(const block* v)
+    void interpreter::visit_impl(const block* v)
     {
         auto oldblk = curr_;
         auto oldvis = curr_visitor_;
@@ -369,7 +367,7 @@ namespace ir {
 
         {// visit this block
             curr_ = v;
-            typed_executor<void> donothing;
+            typed_interpreter<void> donothing;
             curr_visitor_ = &donothing;
 
             nested_tables_.push_back(&(v->table()));
@@ -383,7 +381,7 @@ namespace ir {
         curr_visitor_ = oldvis;
     }
 
-    void executor::visit_impl(const if_stmt* v)
+    void interpreter::visit_impl(const if_stmt* v)
     {
         auto c = v->condition();
         auto cty = v->condition_type();
@@ -392,19 +390,19 @@ namespace ir {
 
         switch (cty) {
             case pcsh::result_type::INTEGER: {
-                typed_executor<int> eval(nested_tables_, *ar_);
+                typed_interpreter<int> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 runbody = (eval.value() != 0);
                 break;
             }
             case pcsh::result_type::FLOATING: {
-                typed_executor<double> eval(nested_tables_, *ar_);
+                typed_interpreter<double> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 runbody = (eval.value() != 0.0);
                 break;
             }
             case pcsh::result_type::STRING: {
-                typed_executor<cstring> eval(nested_tables_, *ar_);
+                typed_interpreter<cstring> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 cstring str = eval.value();
                 runbody = (str[0] != '\0');
@@ -420,5 +418,5 @@ namespace ir {
         }
     }
 
-}//namespace ir
+}//namespace execution
 }//namespace pcsh

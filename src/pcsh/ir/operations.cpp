@@ -6,7 +6,7 @@
 #include "pcsh/ir.hpp"
 #include "pcsh/ir_operations.hpp"
 
-#include "ir/execution/executor.hpp"
+#include "execution/interpreter.hpp"
 #include "ir/nodes.hpp"
 #include "ir/ops/printer.hpp"
 #include "ir/ops/tree_cloner.hpp"
@@ -37,7 +37,7 @@ namespace ir {
 
     void evaluate(const tree* ptree)
     {
-        executor e;
+        execution::interpreter e;
         ptree->accept(&e);
     }
 

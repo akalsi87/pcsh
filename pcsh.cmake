@@ -31,7 +31,7 @@ set(pcsh_hdr
 
 # internal
 set(pcsh_int_hdr
-    ${src_dir}/ir/execution/executor.hpp;
+    ${src_dir}/execution/interpreter.hpp;
     ${src_dir}/ir/nodes.hpp;
     ${src_dir}/ir/nodes_fwd.hpp;
     ${src_dir}/ir/ops/printer.hpp;
@@ -49,7 +49,7 @@ set(pcsh_int_hdr
 set(pcsh_src
     ${src_dir}/assert.cpp;
     ${src_dir}/arena.cpp;
-    ${src_dir}/ir/execution/executor.cpp;
+    ${src_dir}/execution/interpreter.cpp;
     ${src_dir}/ir/operations.cpp;
     ${src_dir}/ir/ops/printer.cpp;
     ${src_dir}/ir/ops/tree_cloner.cpp;
