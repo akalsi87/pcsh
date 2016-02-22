@@ -12,7 +12,7 @@
 namespace pcsh {
 namespace ir {
 
-    class populate_symbol_table : public node_visitor
+    class populate_symbol_table final : public node_visitor
     {
       public:
         populate_symbol_table() : curr_(nullptr), nested_list_()

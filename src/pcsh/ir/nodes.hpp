@@ -54,7 +54,7 @@ namespace ir {
 
     // leaf nodes
 
-    class variable : public atom_base<variable>
+    class variable final : public atom_base<variable>
     {
       public:
         variable(cstring nm) : name_(nm)
@@ -73,7 +73,7 @@ namespace ir {
         cstring name_;
     };
 
-    class int_constant : public atom_base<int_constant>
+    class int_constant final : public atom_base<int_constant>
     {
       public:
         int_constant(int val) : val_(val)
@@ -87,7 +87,7 @@ namespace ir {
         int val_;
     };
 
-    class float_constant : public atom_base<float_constant>
+    class float_constant final : public atom_base<float_constant>
     {
       public:
         float_constant(double val) : val_(val)
@@ -101,7 +101,7 @@ namespace ir {
         double val_;
     };
 
-    class string_constant : public atom_base<string_constant>
+    class string_constant final : public atom_base<string_constant>
     {
       public:
         string_constant(cstring val) : val_(val)
@@ -156,10 +156,10 @@ namespace ir {
         }
     };
 
-    class unary_plus : public unary_op<unary_plus>
+    class unary_plus final : public unary_op<unary_plus>
     { };
 
-    class unary_minus : public unary_op<unary_minus>
+    class unary_minus final : public unary_op<unary_minus>
     { };
 
     // binary ops
@@ -205,19 +205,19 @@ namespace ir {
         }
     };
 
-    class binary_plus : public binary_op<binary_plus>
+    class binary_plus final : public binary_op<binary_plus>
     { };
 
-    class binary_minus : public binary_op<binary_minus>
+    class binary_minus final : public binary_op<binary_minus>
     { };
 
-    class binary_mult : public binary_op<binary_mult>
+    class binary_mult final : public binary_op<binary_mult>
     { };
 
-    class binary_div : public binary_op<binary_div>
+    class binary_div final : public binary_op<binary_div>
     { };
 
-    class assign : public binary_op<assign>
+    class assign final : public binary_op<assign>
     {
       public:
         inline variable* var() const
@@ -227,7 +227,7 @@ namespace ir {
         }
     };
 
-    class comp_equals : public binary_op<comp_equals>
+    class comp_equals final : public binary_op<comp_equals>
     {
       public:
         comp_equals()
@@ -248,7 +248,7 @@ namespace ir {
         mutable result_type comp_ty_;
     };
 
-    class block : public atom_base<block>
+    class block final : public atom_base<block>
     {
       public:
         struct list_node
@@ -294,7 +294,7 @@ namespace ir {
         symbol_table::ptr symtab_;
     };
 
-    class if_stmt : public atom_base<if_stmt>
+    class if_stmt final : public atom_base<if_stmt>
     {
       public:
         if_stmt(node* c = nullptr, node* b = nullptr)

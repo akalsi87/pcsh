@@ -27,7 +27,7 @@ namespace ir {
         { }
     };
 
-    class type_checker : public node_visitor
+    class type_checker final : public node_visitor
     {
       public:
         type_checker() : curr_(result_type::UNDETERMINED), curr_blk_(nullptr), nested_tables_()

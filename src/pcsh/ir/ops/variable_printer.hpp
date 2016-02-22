@@ -13,7 +13,7 @@
 namespace pcsh {
 namespace ir {
 
-    class var_value_printer : public node_visitor
+    class var_value_printer final : public node_visitor
     {
       public:
         var_value_printer(ostream& os) : strm_(os), nesting_(0), tbl_(nullptr), prn_(nullptr)

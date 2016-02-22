@@ -21,7 +21,7 @@ namespace ir {
 
     ostream& print(ostream& os, const string_constant* v);
 
-    class printer : public node_visitor
+    class printer final : public node_visitor
     {
       public:
         printer(ostream& os, bool types) : strm_(os), nesting_(0), types_(types)

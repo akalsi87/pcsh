@@ -11,7 +11,7 @@
 namespace pcsh {
 namespace ir {
 
-    class tree_cloner : public node_visitor
+    class tree_cloner final : public node_visitor
     {
       public:
         tree_cloner() : curr_(nullptr), tree_(tree::create()), root_(nullptr), out_stmts_(), cloned_(nullptr)

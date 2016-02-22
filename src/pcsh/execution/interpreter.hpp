@@ -14,7 +14,7 @@
 namespace pcsh {
 namespace execution {
 
-    class interpreter : public ir::node_visitor
+    class interpreter final : public ir::node_visitor
     {
     public:
         inline interpreter() : curr_(nullptr), curr_visitor_(nullptr), ar_(nullptr), nested_tables_(), last_assign_(nullptr)
