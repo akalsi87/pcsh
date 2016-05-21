@@ -14,9 +14,9 @@
 namespace pcsh {
 namespace ir {
 
-    PCSH_API void print(const tree* ptree, ostream& os, bool printvarty = true);
+    PCSH_API void print(const tree* ptree, ostream& os = DEFAULT_OUTPUT_STREAM, bool printvarty = true);
 
-    PCSH_API void print_variables(const tree* ptree, ostream& os);
+    PCSH_API void print_variables(const tree* ptree, ostream& os = DEFAULT_OUTPUT_STREAM);
 
     PCSH_API tree::ptr clone(const tree* ptree);
 

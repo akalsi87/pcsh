@@ -23,7 +23,7 @@ namespace parser {
         parser_.advance(ws);
         const auto& linestr = "line " + std::to_string(parser_.line()) + ", char " + std::to_string(parser_.curr_pos() - parser_.line_start());
         std::string message(msg);
-        message += "\n\tnear: \"" + parser_.copy_line(0) + "\"";
+        message += " near: \"" + parser_.copy_line(0) + "\"";
         throw_parser_exception(message, parser_.filename_, func_, linestr);
         return 0;
     }
@@ -175,7 +175,7 @@ namespace parser {
             }
             stmts.push_back(stmt(m));
             t = peek();
-    }
+        }
 
         ir::block* blk = arena_.create<ir::block>(arena_);
         auto beg = stmts.rbegin();
@@ -215,7 +215,7 @@ namespace parser {
 
     ir::node* parser::parser_engine::arith(source_map& m)
     {
-        auto *a = term(m);
+        auto a = term(m);
         auto t = peek();
         while (is_binary_op(t)) {
             a = create_binary_op(t, a, m, &parser_engine::term);

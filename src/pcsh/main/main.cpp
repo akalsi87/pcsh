@@ -33,7 +33,7 @@ void die_handling_exception()
 
 void die_if_unable_to_open_file(std::ifstream& in, const std::string& fn)
 {
-        if (in.fail()) {
+    if (in.fail()) {
         auto msg = "Failed to open file `" + fn + "'.";
         PCSH_ENFORCE_MSG(!in.fail(), msg.c_str());
     }
@@ -58,7 +58,8 @@ void run(std::istream& in, pcsh::ostream& out)
         die_handling_exception();
     }
 
-    //ir::print_variables(treep.get(), out);
+    out << "\n--- Evaluated results ---\n";
+    ir::print_variables(treep.get(), out);
 }
 
 int main(int argc, const char* argv[])

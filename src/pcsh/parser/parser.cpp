@@ -685,5 +685,8 @@ namespace parser {
         throw exception(msg, fname, func, line);
     }
 
+    exception::~exception()
+    { }
+
 }// namespace parser
 }// namespace pcsh

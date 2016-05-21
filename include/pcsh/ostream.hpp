@@ -7,10 +7,13 @@
 #define PCSH_OSTREAM_HPP
 
 #include <ostream>
+#include <iostream>
 
 namespace pcsh {
 
     using ostream = std::ostream;
+
+    static ostream& DEFAULT_OUTPUT_STREAM = std::cout;
 
 }//namespace pcsh
 

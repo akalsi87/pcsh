@@ -18,6 +18,14 @@
 #  pragma warning(disable:4251)
 #endif // defined(_MSC_VER)
 
+#if !defined(NOTHROW)
+#  if defined(_MSC_VER)
+#    define NOTHROW throw()
+#  else
+#    define NOTHROW noexcept
+#  endif // defined(_MSC_VER)
+#endif // !defined(NOTHROW)
+
 namespace pcsh {
 namespace parser {
 
@@ -119,11 +127,10 @@ namespace parser {
 
     void throw_parser_exception(const std::string& msg, const std::string& fname, const std::string& func, const std::string& line);
 
-    class exception
+    class PCSH_API exception : public std::exception
     {
       public:
-        inline ~exception()
-        { }
+        ~exception();
 
         inline const std::string& message() const { return msg_; }
 
@@ -132,15 +139,24 @@ namespace parser {
         inline const std::string& fcn() const { return func_; }
 
         inline const std::string& line() const { return line_; }
+
+        inline const char* what() const NOTHROW { return what_.c_str(); }
       private:
         std::string msg_;
         std::string fname_;
         std::string func_;
         std::string line_;
+        std::string what_;
 
         inline exception(const std::string& msg, const std::string& fname, const std::string& func, const std::string& line)
-          : msg_(msg), fname_(fname), func_(func), line_(line)
-        { }
+          : msg_(msg), fname_(fname), func_(func), line_(line), what_()
+        {
+            what_ = std::string("Exception!\n\t") +
+                "  message:  " + msg_   + "\n\t"
+                "  filename: " + fname_ + "\n\t"
+                "  function: " + func_  + "\n\t"
+                "  line:     " + line_  + "\n";
+        }
 
         friend void throw_parser_exception(const std::string&, const std::string&, const std::string&, const std::string&);
     };

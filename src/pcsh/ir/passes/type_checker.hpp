@@ -11,6 +11,8 @@
 #include "ir/visitor.hpp"
 #include "ir/symbol_table.hpp"
 
+#include <string>
+
 namespace pcsh {
 namespace ir {
 

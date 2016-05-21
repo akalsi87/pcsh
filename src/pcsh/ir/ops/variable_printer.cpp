@@ -18,6 +18,7 @@ namespace ir {
             strm_ << "\n";
         }
 
+        print_spacing();
         strm_ << "(block) at " << v;
 
         auto oldtbl = tbl_;
