@@ -64,6 +64,10 @@
 
 cmake_minimum_required(VERSION 3.0)
 
+# if(PROJ_BASE_DIR)
+#   return()
+# endif()
+
 function(projmsg)
   message("-- [${PROJ_NAME}] " ${ARGV})
 endfunction(projmsg)
@@ -273,12 +277,12 @@ if(NOT MSVC)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
 else()
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Oy- /EHsc-")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Oy- /EHc")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Oy- /EHsc")
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD /GS-")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD /GS-")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 endif()
 
 # -- add_comp_flag: Add compile flag to target
@@ -379,50 +383,27 @@ function(add_lib_build_def tgt file buildTemplate)
   get_target_property(tgttype ${tgt} TYPE)
   string(COMPARE EQUAL ${tgttype} "SHARED_LIBRARY" is_shared)
   string(COMPARE EQUAL ${tgttype} "STATIC_LIBRARY" is_static)
-  get_filename_component(n ${file} NAME)
   file(WRITE ${file}
-    "/*! \\file ${n} */\n"
     "/* Export symbol definitions */\n"
     "\n"
-    "#if !defined(${buildTemplate}_EXPORTSYM_H)\n"
-    "#define ${buildTemplate}_EXPORTSYM_H\n"
-    "\n"
+    "/*!\n"
+    " * Export API macro definition\n"
+    " */\n"
     "#if defined(${buildTemplate}_LINK_STATIC)\n"
-    "/*! Macro to define library export symbol */\n"
     "#  define ${buildTemplate}_API \n"
     "#elif defined(${buildTemplate}_BUILD)\n"
     "#  if defined(_MSC_VER)\n"
-    "/*! Macro to define library export symbol */\n"
     "#    define ${buildTemplate}_API __declspec(dllexport)\n"
-    "#  else/*GCC-like compiler*/\n"
-    "/*! Macro to define library export symbol */\n"
+    "#  else\n"
     "#    define ${buildTemplate}_API __attribute__((__visibility__(\"default\")))\n"
     "#  endif\n"
-    "#else/* import symbol */\n"
+    "#else\n"
     "#  if defined(_MSC_VER)\n"
-    "/*! Macro to define library export symbol */\n"
     "#    define ${buildTemplate}_API __declspec(dllimport)\n"
-    "#  else/*GCC-like compiler*/\n"
-    "/*! Macro to define library export symbol */\n"
+    "#  else\n"
     "#    define ${buildTemplate}_API \n"
     "#  endif\n"
-    "#endif/*defined(${buildTemplate}_LINK_STATIC)*/\n"
-    "\n"
-    "/*! Allow deprecation? */\n"
-    "#define ${buildTemplate}_ALLOW_DEPRECATION 1\n"
-    "\n"
-    "#if ${buildTemplate}_ALLOW_DEPRECATION\n"
-    "/*! Deprecated macro */\n"
-    "#  if defined(_MSC_VER)\n"
-    "#    define ${buildTemplate}_DEPRECATED(x) __declspec(deprecated(x))\n"
-    "#  else/*GCC-like compiler*/\n"
-    "#    define ${buildTemplate}_DEPRECATED(x) __attribute__((deprecated(x)))\n"
-    "#  endif/*defined(_MSC_VER)*/\n"
-    "#else/* render macro useless */\n"
-    "#  define ${buildTemplate}_DEPRECATED(x) \n"
-    "#endif/*!${buildTemplate}_ALLOW_DEPRECATION*/\n"
-    "\n"
-    "#endif/*!defined(${buildTemplate}_EXPORTSYM_H)*/\n")
+    "#endif/*defined(${buildTemplate}_LINK_STATIC)*/\n")
   if(is_shared)
     target_compile_definitions(${tgt} PRIVATE "${buildTemplate}_BUILD")
   endif()
@@ -434,8 +415,8 @@ endfunction(add_lib_build_def)
 
 # -- link_libs: Link to libraries (target_link_libraries mimic)
 function(link_libs tgt)
-  set(xtra_libs )
-
+    set(xtra_libs )
+	
 if (USE_CODE_COV)
   if (APPLE)
     add_link_flag(${tgt} --coverage)
@@ -470,7 +451,7 @@ endfunction(set_tgt_ver)
 # Link library install function: For test_on_install builds
 function(link_libs_install tgt)
   set(xtra_libs )
-
+	
 if (USE_CODE_COV)
   if (APPLE)
     add_link_flag(${tgt} --coverage)
@@ -513,7 +494,7 @@ add_custom_target(check)
 add_custom_target(install_for_check DEPENDS check)
 add_custom_command(OUTPUT install_for_check.done
                    DEPENDS install_for_check
-                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target install --config ${CMAKE_BUILD_TYPE}
+                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target install
                    COMMAND ${CMAKE_COMMAND} -E touch install_for_check.done)
 
 add_custom_target(install_for_check_done DEPENDS install_for_check.done)
@@ -554,12 +535,11 @@ function(add_test_exe testname filename)
   # deal with test on install
   # copy file to temp folder
   set(test_dirname "${testname}.toi")
+  projmsg("Adding install test for ${testname} in dir ${test_dirname}")
   
   # copy the file over
   file(MAKE_DIRECTORY ${test_dirname})
-  get_filename_component(tfilename ${filename} NAME)
-  get_filename_component(filepath ${filename} ABSOLUTE)
-  configure_file(${filepath} "${test_dirname}/${tfilename}" COPYONLY)
+  file(COPY ${filename} DESTINATION ${test_dirname})
 
   set(install_test_args ${ARGV})
   list(REMOVE_AT install_test_args 0)
