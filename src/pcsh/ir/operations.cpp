@@ -32,7 +32,7 @@ namespace ir {
     {
         tree_cloner c;
         ptree->accept(&c);
-        return std::move(c.cloned_tree());
+        return c.cloned_tree();
     }
 
     void evaluate(const tree* ptree)

@@ -62,7 +62,7 @@ namespace ir {
             arena* parena = new arena;
             ptr p(parena->create<tree>());
             p->arena_ = parena;
-            return std::move(p);
+            return p;
         }
 
         inline tree(node* root = nullptr) : root_(root), arena_(nullptr)

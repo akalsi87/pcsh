@@ -547,12 +547,13 @@ namespace parser {
 
     token parser::read_string(pos_t p)
     {
-        //return token::get(token_type::QUOTE, "\"", 1);
         static std::string buffer;
         buffer.reserve(1024);
         buffer.resize(0);
+
         pos_t startp = ++p; // skip past start quote
         int c = strm_->peek_at(p);
+
         while (true) {
             if (c == strm_->EOS) {
                 return token::get(token_type::FAIL, "End-of-stream while reading string literal.");

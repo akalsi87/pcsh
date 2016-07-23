@@ -48,7 +48,7 @@ namespace detail {
     ptr make_new()
     {
         ptr tableptr(new table_impl());
-        return std::move(tableptr);
+        return tableptr;
     }
 
     void set(const ptr& tbl, const ir::variable* v, ir::node* value, result_type ty, bool eval)
