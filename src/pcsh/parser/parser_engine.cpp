@@ -261,7 +261,13 @@ namespace parser {
         t = peek();
         ENSURE(t.is_a(token_type::RPAREN), "Expected a `)' after an if statement expression.");
         advance();
-        return arena_.create<ast::if_stmt>(cond, stmt(m));
+        auto ifnode = arena_.create<ast::if_stmt>(cond, stmt(m));
+        t = peek();
+        if (t.is_a(token_type::ELSE)) {
+            advance();
+            ifnode->set_else_body(stmt(m));
+        }
+        return ifnode;
     }
 
     ast::node* parser::parser_engine::unop(source_map& m)

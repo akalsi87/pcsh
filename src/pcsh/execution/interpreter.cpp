@@ -414,7 +414,9 @@ assign_done_cleanup:
         }
 
         if (runbody) {
-            v->body()->accept(this);
+            v->then_body()->accept(this);
+        } else {
+            v->else_body()->accept(this);
         }
     }
 

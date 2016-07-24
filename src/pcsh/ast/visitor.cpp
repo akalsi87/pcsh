@@ -38,7 +38,11 @@ namespace ast {
     void node_visitor::visit_impl(const if_stmt* v)
     {
         v->condition()->accept(this);
-        v->body()->accept(this);
+        v->then_body()->accept(this);
+        auto elsebody = v->else_body();
+        if (elsebody) {
+            elsebody->accept(this);
+        }
     }
 
     void node_visitor::visit_block(const block* v)

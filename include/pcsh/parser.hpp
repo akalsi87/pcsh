@@ -52,6 +52,7 @@ namespace parser {
         FLOATING,
         EOS,
         IF,
+        ELSE,
         ISEQUAL,
         NONE,
         FAIL

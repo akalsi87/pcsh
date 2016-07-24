@@ -298,7 +298,7 @@ namespace ast {
     {
       public:
         if_stmt(node* c = nullptr, node* b = nullptr)
-          : cond_(c), body_(b), cond_ty_(result_type::UNDETERMINED)
+          : cond_(c), body_(b), else_(nullptr), cond_ty_(result_type::UNDETERMINED)
         { }
 
         inline node* condition() const
@@ -306,9 +306,14 @@ namespace ast {
             return cond_;
         }
 
-        inline node* body() const
+        inline node* then_body() const
         {
             return body_;
+        }
+
+        inline node* else_body() const
+        {
+            return else_;
         }
 
         inline result_type condition_type() const
@@ -321,9 +326,14 @@ namespace ast {
             cond_ = c;
         }
 
-        inline void set_body(node* b)
+        inline void set_then_body(node* b)
         {
             body_ = b;
+        }
+
+        inline void set_else_body(node* b)
+        {
+            else_ = b;
         }
 
         inline void set_condition_type(result_type ty) const
@@ -333,6 +343,7 @@ namespace ast {
       private:
         node* cond_;
         node* body_;
+        node* else_;
         mutable result_type cond_ty_;
     };
 

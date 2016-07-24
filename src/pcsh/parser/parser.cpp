@@ -79,6 +79,9 @@ namespace parser {
             case token_type::IF:
                 PCSH_ASSERT(::strncmp(nm, "if", len) == 0);
                 break;
+            case token_type::ELSE:
+                PCSH_ASSERT(::strncmp(nm, "else", len) == 0);
+                break;
             case token_type::INTEGER:
                 PCSH_ASSERT(nm);
                 break;
@@ -143,77 +146,6 @@ namespace parser {
         }
         return token(t, nm, len);
     }
-
-#if 0
-    std::string token::to_string() const
-    {
-        auto str = std::string();
-        switch (type_) {
-            case token_type::ASSIGN:
-                str += "assign        | ";
-                break;
-            case token_type::ASTERISK:
-                str += "asterisk      | ";
-                break;
-            case token_type::DOT:
-                str += "dot           | ";
-                break;
-            case token_type::EOS:
-                str += "end-of-stream | ";
-                break;
-            case token_type::FLOATING:
-                str += "float         | ";
-                break;
-            case token_type::FSLASH:
-                str += "fwd-slash     | ";
-                break;
-            case token_type::INTEGER:
-                str += "integer       | ";
-                break;
-            case token_type::LBRACE:
-                str += "lbrace        | ";
-                break;
-            case token_type::LPAREN:
-                str += "lparen        | ";
-                break;
-            case token_type::MINUS:
-                str += "minus         | ";
-                break;
-            case token_type::NONE:
-                str += "none          | ";
-                break;
-            case token_type::PLUS:
-                str += "plus          | ";
-                break;
-            case token_type::QUOTE:
-                str += "quote         | ";
-                break;
-            case token_type::RBRACE:
-                str += "rbrace        | ";
-                break;
-            case token_type::RPAREN:
-                str += "rparen        | ";
-                break;
-            case token_type::SEMICOLON:
-                str += "semicolon     | ";
-                break;
-            case token_type::SYMBOL:
-                str += "symbol        | ";
-                break;
-            case token_type::FAIL:
-                str += "fail          | ";
-                break;
-            case token_type::IF:
-                str += "if            |";
-                break;
-            case token_type::ISEQUAL:
-                str += "isequal       |";
-                break;
-        }
-        return str.append(str_, str_ + len_);
-    }
-
-#endif // 0
 
     //////////////////////////////////////////////////////////////////////////
     /// parser
@@ -640,6 +572,8 @@ namespace parser {
             buff_string bs { strm_->buff() + pstart, p - pstart };
             if (bs.equals("if")) {
                 return token::get(token_type::IF, bs.ptr, bs.len);
+            } else if (bs.equals("else")) {
+                return token::get(token_type::ELSE, bs.ptr, bs.len);
             } else {
                 return token::get(token_type::SYMBOL, bs.ptr, bs.len);
             }

@@ -128,17 +128,23 @@ namespace ast {
 
     void printer::visit_impl(const if_stmt* v)
     {
-        strm_ << "(if-cond-body ";
+        strm_ << "(if-else ";
         v->condition()->accept(this);
         strm_ << " ";
-        auto b = v->body();
+        auto b = v->then_body();
+
         ++nesting_;
-        if (dynamic_cast<block*>(b)) {
+
+        print_spacing_newline();
+        b->accept(this);
+
+        b = v->else_body();
+        if (b) {
+            strm_ << " ";
             print_spacing_newline();
             b->accept(this);
-        } else {
-            b->accept(this);
         }
+
         --nesting_;
         strm_ << ")";
     }

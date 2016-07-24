@@ -171,11 +171,22 @@ namespace ast {
     {
         v->condition()->accept(this);
         auto cclone = cloned_;
-        v->body()->accept(this);
-        auto bclone = cloned_;
+
+        v->then_body()->accept(this);
+        auto tbclone = cloned_;
+
+        auto elsebody = v->else_body();
+        if (elsebody) {
+            elsebody->accept(this);
+        } else {
+            cloned_ = nullptr;
+        }
+        auto ebclone = cloned_;
+
         arena& ar = tree_->get_arena();
-        auto ifs = ar.create<if_stmt>(cclone, bclone);
+        auto ifs = ar.create<if_stmt>(cclone, tbclone);
         ifs->set_condition_type(v->condition_type());
+        ifs->set_else_body(ebclone);
         cloned_ = ifs;
     }
 

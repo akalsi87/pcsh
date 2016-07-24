@@ -31,7 +31,11 @@ namespace ast {
 
     void populate_symbol_table::visit_impl(const if_stmt* v)
     {
-        v->body()->accept(this);
+        v->then_body()->accept(this);
+        auto elsebody = v->else_body();
+        if (elsebody) {
+            elsebody->accept(this);
+        }
     }
 
 }//namespace ast
