@@ -13,6 +13,8 @@
 #include <new>
 #include <type_traits>
 
+#define MIN_ARENA_SIZE 512
+
 namespace pcsh {
 
     //////////////////////////////////////////////////////////////////////////
@@ -22,7 +24,7 @@ namespace pcsh {
     class PCSH_API arena
     {
       public:
-        arena(size_t sz = 1024);
+        arena(size_t sz = MIN_ARENA_SIZE);
 
         ~arena();
 

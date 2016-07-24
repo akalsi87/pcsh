@@ -24,7 +24,7 @@ namespace execution {
     class typed_interpreter<void>;
 
     template <>
-    class typed_interpreter<cstring>;
+    class typed_interpreter<ast::string_type>;
 
     template <class T>
     class typed_interpreter : public node_visitor
@@ -132,20 +132,20 @@ namespace execution {
     };
 
     template <>
-    class typed_interpreter<cstring> : public node_visitor
+    class typed_interpreter<ast::string_type> : public node_visitor
     {
       public:
         typed_interpreter(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
         { }
 
-        cstring value() const
+        ast::string_type value() const
         {
             return value_;
         }
       private:
         variable_accessor accessor_;
         arena& ar_;
-        cstring value_;
+        ast::string_type value_;
 
         void visit_impl(const variable* v) override
         {
@@ -201,7 +201,7 @@ namespace execution {
     {
         switch (v->comp_type()) {
             case result_type::STRING: {
-                typed_interpreter<cstring> eval(acc.symtab_list(), ar);
+                typed_interpreter<ast::string_type> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -209,7 +209,7 @@ namespace execution {
                 return ::strcmp(v1, v2) == 0;
             }
             case result_type::INTEGER: {
-                typed_interpreter<int> eval(acc.symtab_list(), ar);
+                typed_interpreter<ast::int_type> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -218,7 +218,7 @@ namespace execution {
                 break;
             }
             case result_type::FLOATING: {
-                typed_interpreter<int> eval(acc.symtab_list(), ar);
+                typed_interpreter<ast::float_type> eval(acc.symtab_list(), ar);
                 v->left()->accept(&eval);
                 auto v1 = eval.value();
                 v->right()->accept(&eval);
@@ -294,9 +294,9 @@ namespace execution {
 
         // slightly wasteful, yes, but avoids dynamic allocation
         // and can be cleaned up later with a smarter union
-        typed_interpreter<int> intinterp(nested_tables_, ar);
-        typed_interpreter<double> dblinterp(nested_tables_, ar);
-        typed_interpreter<cstring> strinterp(nested_tables_, ar);
+        typed_interpreter<ast::int_type> intinterp(nested_tables_, ar);
+        typed_interpreter<ast::float_type> dblinterp(nested_tables_, ar);
+        typed_interpreter<ast::string_type> strinterp(nested_tables_, ar);
 
         variable_accessor acc(nested_tables_);
 
@@ -390,21 +390,21 @@ assign_done_cleanup:
 
         switch (cty) {
             case pcsh::result_type::INTEGER: {
-                typed_interpreter<int> eval(nested_tables_, *ar_);
+                typed_interpreter<ast::int_type> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 run_then_body = (eval.value() != 0);
                 break;
             }
             case pcsh::result_type::FLOATING: {
-                typed_interpreter<double> eval(nested_tables_, *ar_);
+                typed_interpreter<ast::float_type> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 run_then_body = (eval.value() != 0.0);
                 break;
             }
             case pcsh::result_type::STRING: {
-                typed_interpreter<cstring> eval(nested_tables_, *ar_);
+                typed_interpreter<ast::string_type> eval(nested_tables_, *ar_);
                 c->accept(&eval);
-                cstring str = eval.value();
+                ast::string_type str = eval.value();
                 run_then_body = (str[0] != '\0');
                 break;
             }

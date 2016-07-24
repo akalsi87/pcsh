@@ -14,6 +14,13 @@ namespace pcsh {
 
     typedef unsigned char byte;
 
+namespace ast {
+
+    using int_type = int64_t;
+    using float_type = double;
+    using string_type = cstring;
+
+}//namespace ast
 }//namespace pcsh
 
 #endif/*PCSH_TYPES_HPP*/

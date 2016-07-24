@@ -76,43 +76,43 @@ namespace ast {
     class int_constant final : public atom_base<int_constant>
     {
       public:
-        int_constant(int val) : val_(val)
+        int_constant(int_type val) : val_(val)
         { }
 
-        inline int value() const
+        inline int_type value() const
         {
             return val_;
         }
       private:
-        int val_;
+        int_type val_;
     };
 
     class float_constant final : public atom_base<float_constant>
     {
       public:
-        float_constant(double val) : val_(val)
+        float_constant(float_type val) : val_(val)
         { }
 
-        inline double value() const
+        inline float_type value() const
         {
             return val_;
         }
       private:
-        double val_;
+        float_type val_;
     };
 
     class string_constant final : public atom_base<string_constant>
     {
       public:
-        string_constant(cstring val) : val_(val)
+        string_constant(string_type val) : val_(val)
         { }
 
-        inline cstring value() const
+        inline string_type value() const
         {
             return val_;
         }
       private:
-        cstring val_;
+        string_type val_;
     };
 
     // operations
