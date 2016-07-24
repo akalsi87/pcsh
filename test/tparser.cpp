@@ -15,8 +15,6 @@ CPP_TEST( tokenizerCommentsAndLines )
 {
     using namespace pcsh::parser;
 
-    std::cout.setstate(std::ios_base::failbit);
-
     std::istringstream is(
         "#/usr/bin/env pcsh\n"
         "foo = 1; # comment after tokens\n"

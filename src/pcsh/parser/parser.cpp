@@ -28,7 +28,7 @@
 Grammar:
 -------
 block ::= ['{'] [stmt]+ ['}']
-stmt ::= expr ';' | block | if '(' expr ')' stmt
+stmt ::= expr ';' | block | if '(' expr ')' stmt [ else stmt ]
 expr ::= expr '==' arith | var '=' arith | arith
 arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | unary
@@ -224,11 +224,11 @@ namespace parser {
     {
       private:
         mutable char stackbuff[N + 1];
-        size_t sz;
+        uint64_t sz : 63;
+        bool useheap : 1;
         mutable std::string heapbuff;
-        bool useheap;
       public:
-        flex_buffer() : stackbuff(), sz(0), heapbuff(), useheap(false)
+        flex_buffer() : stackbuff(), sz(0), useheap(false), heapbuff()
         {
             stackbuff[N] = '\0';
         }
@@ -240,24 +240,25 @@ namespace parser {
 
         inline size_t size() const
         {
-            return useheap ? heapbuff.size() : sz;
+            return sz;
         }
 
         inline void resize(size_t s)
         {
-            if (!useheap && (s <= N)) {
-                sz = s;
+            auto oldsz = sz;
+            sz = s;
+            if (s <= oldsz) {
                 return;
             }
 
             if (!useheap) {
-                heapbuff.reserve(2 * s);
-            }
-
-            heapbuff.resize(s);
-            if (!useheap) {
-                std::copy(stackbuff, stackbuff + sz, &heapbuff[0]);
-                useheap = true;
+                if (s > N) {
+                    heapbuff.resize(s);
+                    std::copy(stackbuff, stackbuff + oldsz, &heapbuff[0]);
+                    useheap = true;
+                }
+            } else {
+                heapbuff.resize(s);
             }
         }
     };
@@ -327,7 +328,7 @@ namespace parser {
             buffsz_ = 0;
         }
       private:
-        static const int INIT_SIZE = 256;
+        static const int INIT_SIZE = 127;
 
         std::istream&          strm_;
         flex_buffer<INIT_SIZE> buffer_;
@@ -598,7 +599,7 @@ namespace parser {
         treeptr->set_root(eng.parse(sm));
         try {
             validate_tree(treeptr);
-        } catch(const ast::type_checker_error& ex) {
+        } catch (const ast::type_checker_error& ex) {
             const source_info& info = sm[ex.left];
             throw_parser_exception(ex.msg, info.filename, info.fcn, info.line);
         }
