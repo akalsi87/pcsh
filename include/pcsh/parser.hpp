@@ -80,7 +80,7 @@ namespace parser {
     class PCSH_API token
     {
       public:
-        token(const token& rhs) : type_(rhs.type_), str_(rhs.str_), len_(rhs.len_)
+        token(const token& rhs) : str_(rhs.str_), len_(rhs.len_), type_(rhs.type_)
         { }
 
         inline token_type type() const
@@ -110,16 +110,16 @@ namespace parser {
         }
 
       private:
-        token(token_type t, cstring s, size_t l) : type_(t), str_(s), len_(l)
+        token(token_type t, cstring s, size_t l) : str_(s), len_(l), type_(t)
         { }
 
         static token get(token_type t, cstring nm = nullptr, size_t len = 0);
 
         friend class parser;
 
-        token_type type_;
         cstring str_;
         size_t len_;
+        token_type type_;
     };
 
     //////////////////////////////////////////////////////////////////////////

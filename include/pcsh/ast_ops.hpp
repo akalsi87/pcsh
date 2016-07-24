@@ -26,9 +26,9 @@ namespace ast {
     {
         result_type type;
         union {
-            int int_val;
-            double dbl_val;
-            cstring str_val;
+            int_type int_val;
+            float_type dbl_val;
+            string_type str_val;
         };
     };
 

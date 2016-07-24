@@ -13,7 +13,7 @@
 #include <new>
 #include <type_traits>
 
-#define MIN_ARENA_SIZE 512
+#define MIN_ARENA_SIZE 4096
 
 namespace pcsh {
 
@@ -63,7 +63,7 @@ namespace pcsh {
         template <class T>
         struct destroyer
         {
-            inline static void act(void* ptr)
+            static void act(void* ptr)
             {
                 static_cast<T*>(ptr)->~T();
             }

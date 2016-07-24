@@ -60,6 +60,7 @@ void run(std::istream& in, pcsh::ostream& out)
         die_handling_exception();
     }
 
+    out << "\n";
     out << "--- evaluated results ---\n";
     ast::print_variables(treep.get(), out);
 }
