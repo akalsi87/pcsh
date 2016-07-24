@@ -11,9 +11,9 @@
 #include "pcsh/assert.hpp"
 #include "pcsh/parser.hpp"
 
-#include "ir/nodes.hpp"
-#include "ir/passes/type_checker.hpp"
-#include "ir/tree_validation.hpp"
+#include "ast/nodes.hpp"
+#include "ast/passes/type_checker.hpp"
+#include "ast/tree_validation.hpp"
 #include "parser/parser_engine.hpp"
 
 #include <cstring>
@@ -655,16 +655,16 @@ namespace parser {
         return strm_->pos();
     }
 
-    ir::tree::ptr parser::parse_to_tree()
+    ast::tree::ptr parser::parse_to_tree()
     {
-        auto treeptr = ir::tree::create();
+        auto treeptr = ast::tree::create();
         source_map sm;
         sm.reserve(20);
         parser_engine eng(*this, treeptr->get_arena());
         treeptr->set_root(eng.parse(sm));
         try {
             validate_tree(treeptr);
-        } catch(const ir::type_checker_error& ex) {
+        } catch(const ast::type_checker_error& ex) {
             const source_info& info = sm[ex.left];
             throw_parser_exception(ex.msg, info.filename, info.fcn, info.line);
         }

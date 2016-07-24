@@ -5,8 +5,8 @@
 
 #include "unittest.hpp"
 
-#include "pcsh/ir.hpp"
-#include "pcsh/ir_operations.hpp"
+#include "pcsh/ast.hpp"
+#include "pcsh/ast_ops.hpp"
 #include "pcsh/parser.hpp"
 
 #include <sstream>
@@ -14,6 +14,9 @@
 CPP_TEST( tokenizerCommentsAndLines )
 {
     using namespace pcsh::parser;
+
+    std::cout.setstate(std::ios_base::failbit);
+
     std::istringstream is(
         "#/usr/bin/env pcsh\n"
         "foo = 1; # comment after tokens\n"
@@ -262,7 +265,7 @@ CPP_TEST( tokenizerCommentsAndLinesCascade )
     TEST_TRUE(curr == (size_t)is.tellg());
 }
 
-CPP_TEST( irTreeClone )
+CPP_TEST( astTreeClone )
 {
     using namespace pcsh;
     {
@@ -277,14 +280,14 @@ CPP_TEST( irTreeClone )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ptree = ir::clone(ptree.get());
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        ir::print_variables(ptree.get(), std::cout);
+        ptree = ast::clone(ptree.get());
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        ast::print_variables(ptree.get(), std::cout);
     }
 }
 
-CPP_TEST( irCreationBasic )
+CPP_TEST( astCreationBasic )
 {
     using namespace pcsh;
     {
@@ -299,11 +302,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        TEST_TRUE(ir::query(ptree.get(), "bar").int_val == 2);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ast::query(ptree.get(), "bar").int_val == 2);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -316,12 +319,12 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "a").int_val == 1);
-        TEST_TRUE(ir::query(ptree.get(), "b").int_val == -42);
-        TEST_TRUE(ir::query(ptree.get(), "c").int_val == -41);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "a").int_val == 1);
+        TEST_TRUE(ast::query(ptree.get(), "b").int_val == -42);
+        TEST_TRUE(ast::query(ptree.get(), "c").int_val == -41);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -333,11 +336,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        TEST_TRUE(ir::query(ptree.get(), "doo").dbl_val == 0.0);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ast::query(ptree.get(), "doo").dbl_val == 0.0);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -349,11 +352,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        TEST_TRUE(ir::query(ptree.get(), "doo").dbl_val == 0.0);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ast::query(ptree.get(), "doo").dbl_val == 0.0);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -365,11 +368,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        TEST_TRUE(ir::query(ptree.get(), "doo").str_val == std::string("a literal string."));
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ast::query(ptree.get(), "doo").str_val == std::string("a literal string."));
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -381,11 +384,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        TEST_TRUE(ir::query(ptree.get(), "doo").str_val == std::string("a\n"));
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ast::query(ptree.get(), "doo").str_val == std::string("a\n"));
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -397,11 +400,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        TEST_TRUE(ir::query(ptree.get(), "doo").str_val == std::string("a\a\v\r\t\n\\f\b"));
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        TEST_TRUE(ast::query(ptree.get(), "doo").str_val == std::string("a\a\v\r\t\n\\f\b"));
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -443,10 +446,10 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").dbl_val == 635.5);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").dbl_val == 635.5);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -462,11 +465,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "a").int_val == -1);
-        TEST_TRUE(ir::query(ptree.get(), "foo").str_val == std::string("bar"));
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "a").int_val == -1);
+        TEST_TRUE(ast::query(ptree.get(), "foo").str_val == std::string("bar"));
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -483,11 +486,11 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "a").dbl_val == -1);
-        TEST_TRUE(ir::query(ptree.get(), "foo").str_val == std::string("bar"));
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "a").dbl_val == -1);
+        TEST_TRUE(ast::query(ptree.get(), "foo").str_val == std::string("bar"));
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -499,20 +502,20 @@ CPP_TEST( irCreationBasic )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").dbl_val == 21.0);
-        TEST_TRUE(ir::query(ptree.get(), "bar").dbl_val == 21.0);
-        TEST_TRUE(ir::query(ptree.get(), "car").dbl_val == 20.0);
-        TEST_TRUE(ir::query(ptree.get(), "caz").dbl_val == 20.0);
-        TEST_TRUE(ir::query(ptree.get(), "mainstr").str_val == std::string("somestr"));
-        TEST_TRUE(ir::query(ptree.get(), "f").str_val == std::string("somestr"));
-        TEST_TRUE(ir::query(ptree.get(), "b").str_val == std::string("somestr"));
-        TEST_TRUE(ir::query(ptree.get(), "cr").str_val == std::string("somestr"));
-        TEST_TRUE(ir::query(ptree.get(), "cz").str_val == std::string("somestr"));
-        TEST_TRUE(ir::query(ptree.get(), "y").dbl_val == 0.1);
-        TEST_TRUE(ir::query(ptree.get(), "x").dbl_val == 0.9);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").dbl_val == 21.0);
+        TEST_TRUE(ast::query(ptree.get(), "bar").dbl_val == 21.0);
+        TEST_TRUE(ast::query(ptree.get(), "car").dbl_val == 20.0);
+        TEST_TRUE(ast::query(ptree.get(), "caz").dbl_val == 20.0);
+        TEST_TRUE(ast::query(ptree.get(), "mainstr").str_val == std::string("somestr"));
+        TEST_TRUE(ast::query(ptree.get(), "f").str_val == std::string("somestr"));
+        TEST_TRUE(ast::query(ptree.get(), "b").str_val == std::string("somestr"));
+        TEST_TRUE(ast::query(ptree.get(), "cr").str_val == std::string("somestr"));
+        TEST_TRUE(ast::query(ptree.get(), "cz").str_val == std::string("somestr"));
+        TEST_TRUE(ast::query(ptree.get(), "y").dbl_val == 0.1);
+        TEST_TRUE(ast::query(ptree.get(), "x").dbl_val == 0.9);
+        ast::print_variables(ptree.get(), std::cout);
     }
 }
 
@@ -527,10 +530,10 @@ CPP_TEST( eqOp )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -539,10 +542,10 @@ CPP_TEST( eqOp )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -551,10 +554,10 @@ CPP_TEST( eqOp )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 0);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 0);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -563,10 +566,10 @@ CPP_TEST( eqOp )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 0);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 0);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -575,10 +578,10 @@ CPP_TEST( eqOp )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 0);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 0);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -587,10 +590,10 @@ CPP_TEST( eqOp )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 1);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 1);
+        ast::print_variables(ptree.get(), std::cout);
     }
     {
         std::istringstream is(
@@ -613,9 +616,9 @@ CPP_TEST( eqOp )
         parser::parser p(is);
         std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
-        ir::print(ptree.get(), std::cout);
-        ir::evaluate(ptree.get());
-        TEST_TRUE(ir::query(ptree.get(), "foo").int_val == 2);
-        ir::print_variables(ptree.get(), std::cout);
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 2);
+        ast::print_variables(ptree.get(), std::cout);
     }
 }

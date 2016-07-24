@@ -4,8 +4,8 @@
  */
 
 #include "pcsh/assert.hpp"
-#include "pcsh/ir.hpp"
-#include "pcsh/ir_operations.hpp"
+#include "pcsh/ast.hpp"
+#include "pcsh/ast_ops.hpp"
 #include "pcsh/parser.hpp"
 
 #include "linebufistream.hpp"
@@ -43,24 +43,25 @@ void run(std::istream& in, pcsh::ostream& out)
 {
     using namespace pcsh;
 
-    ir::tree::ptr treep;
+    ast::tree::ptr treep;
     try {
         treep = parser::parser(in).parse_to_tree();
     } catch(...) {
         die_handling_exception();
     }
 
-    out << "\n--- IR tree ---\n";
-    ir::print(treep.get(), out);
+    out << "\n";
+    out << "--- ast tree ---\n";
+    ast::print(treep.get(), out);
 
     try {
-        ir::evaluate(treep.get());
+        ast::evaluate(treep.get());
     } catch (...) {
         die_handling_exception();
     }
 
-    out << "\n--- Evaluated results ---\n";
-    ir::print_variables(treep.get(), out);
+    out << "--- evaluated results ---\n";
+    ast::print_variables(treep.get(), out);
 }
 
 int main(int argc, const char* argv[])

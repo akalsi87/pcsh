@@ -3,7 +3,7 @@
  * \date Feb 15, 2016
  */
 
-#include "ir/nodes.hpp"
+#include "ast/nodes.hpp"
 #include "parser/parser_engine.hpp"
 
 #include <vector>
@@ -84,33 +84,33 @@ namespace parser {
         }
     }
 
-    PCSH_INLINE ir::node* parser::parser_engine::call_mem_fn(parser_engine* p, nexttermfcn pfn, source_map& m)
+    PCSH_INLINE ast::node* parser::parser_engine::call_mem_fn(parser_engine* p, nexttermfcn pfn, source_map& m)
     {
         return ((*p).*(pfn))(m);
     }
 
-    ir::untyped_binary_op_base* parser::parser_engine::create_binary_op(const token& currtok, ir::node* a, source_map& m, nexttermfcn rghtgen)
+    ast::untyped_binary_op_base* parser::parser_engine::create_binary_op(const token& currtok, ast::node* a, source_map& m, nexttermfcn rghtgen)
     {
-        ir::untyped_binary_op_base* op = nullptr;
+        ast::untyped_binary_op_base* op = nullptr;
         switch (currtok.type()) {
             case token_type::PLUS:
-                op = arena_.create<ir::binary_plus>();
+                op = arena_.create<ast::binary_plus>();
                 break;
             case token_type::MINUS:
-                op = arena_.create<ir::binary_minus>();
+                op = arena_.create<ast::binary_minus>();
                 break;
             case token_type::ASTERISK:
-                op = arena_.create<ir::binary_mult>();
+                op = arena_.create<ast::binary_mult>();
                 break;
             case token_type::FSLASH:
-                op = arena_.create<ir::binary_div>();
+                op = arena_.create<ast::binary_div>();
                 break;
             case token_type::ISEQUAL:
-                op = arena_.create<ir::comp_equals>();
+                op = arena_.create<ast::comp_equals>();
                 break;
             case token_type::ASSIGN:
-                op = arena_.create<ir::assign>();
-                ENSURE(dynamic_cast<ir::variable*>(a) != nullptr,
+                op = arena_.create<ast::assign>();
+                ENSURE(dynamic_cast<ast::variable*>(a) != nullptr,
                        "Left term of assignment is not a variable. Variable name must be a non keyword, alpha - numeric and should not start with a digit.");
                 rghtgen = &parser_engine::expr;
                 break;
@@ -125,15 +125,15 @@ namespace parser {
         return op;
     }
 
-    ir::untyped_unary_op_base* parser::parser_engine::create_unary_op(const token& nxt, source_map& m)
+    ast::untyped_unary_op_base* parser::parser_engine::create_unary_op(const token& nxt, source_map& m)
     {
-        ir::untyped_unary_op_base* op = nullptr;
+        ast::untyped_unary_op_base* op = nullptr;
         switch (nxt.type()) {
             case token_type::MINUS:
-                op = arena_.create<ir::unary_minus>();
+                op = arena_.create<ast::unary_minus>();
                 break;
             case token_type::PLUS:
-                op = arena_.create<ir::unary_plus>();
+                op = arena_.create<ast::unary_plus>();
                 break;
             default:
                 PCSH_ASSERT_MSG(false, "Invalid binary operation!");
@@ -145,9 +145,9 @@ namespace parser {
         return op;
     }
 
-    ir::block* parser::parser_engine::block(source_map& m)
+    ast::block* parser::parser_engine::block(source_map& m)
     {
-        std::vector<ir::node*> stmts;
+        std::vector<ast::node*> stmts;
         stmts.reserve(20);
 
         auto t = peek();
@@ -177,7 +177,7 @@ namespace parser {
             t = peek();
         }
 
-        ir::block* blk = arena_.create<ir::block>(arena_);
+        ast::block* blk = arena_.create<ast::block>(arena_);
         auto beg = stmts.rbegin();
         const auto end = stmts.rend();
         for (; beg != end; ++beg) {
@@ -186,9 +186,9 @@ namespace parser {
         return blk;
     }
 
-    ir::node* parser::parser_engine::expr(source_map& m)
+    ast::node* parser::parser_engine::expr(source_map& m)
     {
-        ir::node* a = arith(m);
+        ast::node* a = arith(m);
         auto t = peek();
         while (t.is_a(token_type::PLUS) || t.is_a(token_type::MINUS) || t.is_a(token_type::ISEQUAL)) {
             a = create_binary_op(t, a, m, &parser_engine::arith);
@@ -197,10 +197,10 @@ namespace parser {
         return a;
     }
 
-    ir::node* parser::parser_engine::stmt(source_map& m)
+    ast::node* parser::parser_engine::stmt(source_map& m)
     {
         auto t = peek();
-        ir::node* op = nullptr;
+        ast::node* op = nullptr;
         if (t.is_a(token_type::IF)) {
             op = ifstmt(m);
         } else if (t.is_a(token_type::LBRACE)) {
@@ -213,7 +213,7 @@ namespace parser {
         return op;
     }
 
-    ir::node* parser::parser_engine::arith(source_map& m)
+    ast::node* parser::parser_engine::arith(source_map& m)
     {
         auto a = term(m);
         auto t = peek();
@@ -224,9 +224,9 @@ namespace parser {
         return a;
     }
 
-    ir::node* parser::parser_engine::term(source_map& m)
+    ast::node* parser::parser_engine::term(source_map& m)
     {
-        ir::node* a = unop(m);
+        ast::node* a = unop(m);
         auto t = peek();
         if (is_binary_op(t)) {
             a = create_binary_op(t, a, m, &parser_engine::unop);
@@ -234,7 +234,7 @@ namespace parser {
         return a;
     }
 
-    ir::node* parser::parser_engine::factor(source_map& m)
+    ast::node* parser::parser_engine::factor(source_map& m)
     {
         auto t = peek();
         if (t.is_a(token_type::LPAREN)) {
@@ -249,7 +249,7 @@ namespace parser {
         }
     }
 
-    ir::node* parser::parser_engine::ifstmt(source_map& m)
+    ast::node* parser::parser_engine::ifstmt(source_map& m)
     {
         auto t = peek();
         PCSH_ASSERT_MSG(t.is_a(token_type::IF), "Expected an `if' statement.");
@@ -261,10 +261,10 @@ namespace parser {
         t = peek();
         ENSURE(t.is_a(token_type::RPAREN), "Expected a `)' after an if statement expression.");
         advance();
-        return arena_.create<ir::if_stmt>(cond, stmt(m));
+        return arena_.create<ast::if_stmt>(cond, stmt(m));
     }
 
-    ir::node* parser::parser_engine::unop(source_map& m)
+    ast::node* parser::parser_engine::unop(source_map& m)
     {
         auto t = peek();
         if (is_unary_op(t)) {
@@ -300,24 +300,24 @@ namespace parser {
 
     }//namespace conversions
 
-    ir::node* parser::parser_engine::atom(source_map& m)
+    ast::node* parser::parser_engine::atom(source_map& m)
     {
         auto t = peek();
-        ir::untyped_atom_base* v = nullptr;
+        ast::untyped_atom_base* v = nullptr;
         switch (t.type()) {
             case token_type::SYMBOL:
-                v = arena_.create<ir::variable>(arena_.create_string(t.str().ptr, t.length()));
+                v = arena_.create<ast::variable>(arena_.create_string(t.str().ptr, t.length()));
                 break;
             case token_type::INTEGER:
-                v = arena_.create<ir::int_constant>(conversions::to_int(t));
+                v = arena_.create<ast::int_constant>(conversions::to_int(t));
                 break;
             case token_type::FLOATING:
-                v = arena_.create<ir::float_constant>(conversions::to_double(t));
+                v = arena_.create<ast::float_constant>(conversions::to_double(t));
                 break;
             case token_type::QUOTE: {
                 // we have a static string's data here. copy into a new string
                 cstring str = arena_.create_string(t.str().ptr);
-                v = arena_.create<ir::string_constant>(str);
+                v = arena_.create<ast::string_constant>(str);
                 break;
             }
             default:

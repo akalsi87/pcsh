@@ -6,13 +6,13 @@
 #include "pcsh/parser.hpp"
 
 #include "execution/interpreter.hpp"
-#include "ir/nodes.hpp"
-#include "ir/symbol_table.hpp"
+#include "ast/nodes.hpp"
+#include "ast/symbol_table.hpp"
 
 namespace pcsh {
 namespace execution {
 
-    using namespace ir;
+    using namespace ast;
 
     template <bool isint>
     bool compare_eq(const comp_equals* v, const variable_accessor& acc, arena& ar);

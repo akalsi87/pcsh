@@ -8,7 +8,7 @@
 
 #include "pcsh/exportsym.h"
 #include "pcsh/arena.hpp"
-#include "pcsh/ir.hpp"
+#include "pcsh/ast.hpp"
 #include "pcsh/types.hpp"
 
 #include <iostream>
@@ -191,7 +191,7 @@ namespace parser {
         pos_t curr_pos() const;
 
         // returns a valid executable tree, except for use before assign errors.
-        ir::tree::ptr parse_to_tree();
+        ast::tree::ptr parse_to_tree();
 
         void sync_stream();
       private:

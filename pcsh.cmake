@@ -19,8 +19,8 @@ set(src_dir src/pcsh)
 set(pcsh_hdr
     ${hdr_dir}/assert.hpp;
     ${hdr_dir}/arena.hpp;
-    ${hdr_dir}/ir.hpp;
-    ${hdr_dir}/ir_operations.hpp;
+    ${hdr_dir}/ast.hpp;
+    ${hdr_dir}/ast_ops.hpp;
     ${hdr_dir}/noncopyable.hpp;
     ${hdr_dir}/ostream.hpp;
     ${hdr_dir}/parser.hpp;
@@ -32,16 +32,16 @@ set(pcsh_hdr
 # internal
 set(pcsh_int_hdr
     ${src_dir}/execution/interpreter.hpp;
-    ${src_dir}/ir/nodes.hpp;
-    ${src_dir}/ir/nodes_fwd.hpp;
-    ${src_dir}/ir/ops/printer.hpp;
-    ${src_dir}/ir/ops/tree_cloner.hpp;
-    ${src_dir}/ir/ops/variable_printer.hpp;
-    ${src_dir}/ir/passes/populate_symbol_table.hpp;
-    ${src_dir}/ir/passes/type_checker.hpp;
-    ${src_dir}/ir/symbol_table.hpp;
-    ${src_dir}/ir/tree_validation.hpp;
-    ${src_dir}/ir/visitor.hpp;
+    ${src_dir}/ast/nodes.hpp;
+    ${src_dir}/ast/nodes_fwd.hpp;
+    ${src_dir}/ast/ops/printer.hpp;
+    ${src_dir}/ast/ops/tree_cloner.hpp;
+    ${src_dir}/ast/ops/variable_printer.hpp;
+    ${src_dir}/ast/passes/populate_symbol_table.hpp;
+    ${src_dir}/ast/passes/type_checker.hpp;
+    ${src_dir}/ast/symbol_table.hpp;
+    ${src_dir}/ast/tree_validation.hpp;
+    ${src_dir}/ast/visitor.hpp;
     ${src_dir}/parser/parser_engine.hpp;
 )
 
@@ -50,15 +50,15 @@ set(pcsh_src
     ${src_dir}/assert.cpp;
     ${src_dir}/arena.cpp;
     ${src_dir}/execution/interpreter.cpp;
-    ${src_dir}/ir/operations.cpp;
-    ${src_dir}/ir/ops/printer.cpp;
-    ${src_dir}/ir/ops/tree_cloner.cpp;
-    ${src_dir}/ir/ops/variable_printer.cpp;
-    ${src_dir}/ir/visitor.cpp;
-    ${src_dir}/ir/passes/populate_symbol_table.cpp;
-    ${src_dir}/ir/passes/type_checker.cpp;
-    ${src_dir}/ir/symbol_table.cpp;
-    ${src_dir}/ir/tree_validation.cpp;
+    ${src_dir}/ast/operations.cpp;
+    ${src_dir}/ast/ops/printer.cpp;
+    ${src_dir}/ast/ops/tree_cloner.cpp;
+    ${src_dir}/ast/ops/variable_printer.cpp;
+    ${src_dir}/ast/visitor.cpp;
+    ${src_dir}/ast/passes/populate_symbol_table.cpp;
+    ${src_dir}/ast/passes/type_checker.cpp;
+    ${src_dir}/ast/symbol_table.cpp;
+    ${src_dir}/ast/tree_validation.cpp;
     ${src_dir}/parser/parser_engine.cpp;
     ${src_dir}/parser/parser.cpp;
     ${src_dir}/version.cpp;
