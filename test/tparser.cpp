@@ -275,6 +275,7 @@ CPP_TEST( irTreeClone )
             "#handle fancy new line\r\n"
             "#{ a.b } - cannot handle this line yet as it is unsupported\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ptree = ir::clone(ptree.get());
         ir::print(ptree.get(), std::cout);
@@ -292,10 +293,11 @@ CPP_TEST( irCreationBasic )
             "foo = 1;## test if double comment works\n"
             "bar = 2;\r\n"
             "#{ y = 1; } { z = 2; }\n"
-            "213 + 456123.123; # cannot handle this line yet as it is not a statement\n"
+            "213 + 456123.123; # some comment on statement without assignment\n"
             "#handle fancy new line\r\n"
             "#{ a.b } - cannot handle this line yet as it is unsupported\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -312,6 +314,7 @@ CPP_TEST( irCreationBasic )
             "    c = a + b;\n"
             "}\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -328,6 +331,7 @@ CPP_TEST( irCreationBasic )
             "    doo = -1.0 + foo;\n"
             "");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -343,6 +347,7 @@ CPP_TEST( irCreationBasic )
             "    doo = -1.0 + foo;\n"
             "}");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -358,6 +363,7 @@ CPP_TEST( irCreationBasic )
             "    doo = \"a literal string.\";\n"
             "}");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -373,6 +379,7 @@ CPP_TEST( irCreationBasic )
             "    doo = \"a\n\";\n"
             "}");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -388,6 +395,7 @@ CPP_TEST( irCreationBasic )
             "    doo = \"a\\a\\v\\r\\t\\n\\\\\\f\\b\";\n"
             "}");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -402,6 +410,7 @@ CPP_TEST( irCreationBasic )
             "    doo = -1.0f;\n"
             "}");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         bool shouldBeTrue = false;
         try {
             p.parse_to_tree();
@@ -418,6 +427,7 @@ CPP_TEST( irCreationBasic )
             "    doo = \"foo\";\n"
             "}");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         bool shouldBeTrue = false;
         try {
             p.parse_to_tree();
@@ -431,6 +441,7 @@ CPP_TEST( irCreationBasic )
             "#!/usr/bin/env pcsh\n"
             "foo = 1 + -9 + +9 * 71.5;\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -449,6 +460,7 @@ CPP_TEST( irCreationBasic )
             "    }\n"
             "}\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -469,6 +481,7 @@ CPP_TEST( irCreationBasic )
             "    }\n"
             "}\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -484,6 +497,7 @@ CPP_TEST( irCreationBasic )
             "f = b = (b = cr = (cz = (mainstr = \"somestr\")));\n"
             "y = 1.0 / 10\n; x = (y - 0.1 + (+0.1)) * 9;");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -511,6 +525,7 @@ CPP_TEST( eqOp )
             "foo = (1 == 1);\n"
             "# comment as last line");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -522,6 +537,7 @@ CPP_TEST( eqOp )
             "#!/usr/bin/env pcsh\n"
             "foo = (1 == 1.0);\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -533,6 +549,7 @@ CPP_TEST( eqOp )
             "#!/usr/bin/env pcsh\n"
             "foo = (1 == 0);\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -544,6 +561,7 @@ CPP_TEST( eqOp )
             "#!/usr/bin/env pcsh\n"
             "foo = (1 == 0.0);\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -555,6 +573,7 @@ CPP_TEST( eqOp )
             "#!/usr/bin/env pcsh\n"
             "foo = (\"a\" == \"b\");\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -566,6 +585,7 @@ CPP_TEST( eqOp )
             "#!/usr/bin/env pcsh\n"
             "foo = (\"a\" == \"a\");\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());
@@ -577,6 +597,7 @@ CPP_TEST( eqOp )
             "#!/usr/bin/env pcsh\n"
             "foo = (1 + \"a\" == \"a\");\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto shouldBeTrue = false;
         try {
             p.parse_to_tree();
@@ -590,6 +611,7 @@ CPP_TEST( eqOp )
             "#!/usr/bin/env pcsh\n"
             "foo = (1 + (\"a\" == \"a\"));\n");
         parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
         auto ptree = p.parse_to_tree();
         ir::print(ptree.get(), std::cout);
         ir::evaluate(ptree.get());

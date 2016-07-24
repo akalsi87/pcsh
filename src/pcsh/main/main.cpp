@@ -50,8 +50,8 @@ void run(std::istream& in, pcsh::ostream& out)
         die_handling_exception();
     }
 
-    //out << "\n--- IR tree ---\n";
-    //ir::print(treep.get(), out);
+    out << "\n--- IR tree ---\n";
+    ir::print(treep.get(), out);
 
     try {
         ir::evaluate(treep.get());
