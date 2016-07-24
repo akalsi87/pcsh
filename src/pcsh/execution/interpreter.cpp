@@ -29,7 +29,7 @@ namespace execution {
     template <class T>
     class typed_interpreter : public node_visitor
     {
-    public:
+      public:
         typed_interpreter(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_()
         { }
 
@@ -37,7 +37,7 @@ namespace execution {
         {
             return value_;
         }
-    private:
+      private:
         variable_accessor accessor_;
         arena& ar_;
         T value_;
@@ -134,7 +134,7 @@ namespace execution {
     template <>
     class typed_interpreter<cstring> : public node_visitor
     {
-    public:
+      public:
         typed_interpreter(const sym_table_list& p, arena& ar) : accessor_(p), ar_(ar), value_(nullptr)
         { }
 
@@ -142,7 +142,7 @@ namespace execution {
         {
             return value_;
         }
-    private:
+      private:
         variable_accessor accessor_;
         arena& ar_;
         cstring value_;
@@ -386,26 +386,26 @@ assign_done_cleanup:
         auto c = v->condition();
         auto cty = v->condition_type();
 
-        bool runbody = false;
+        bool run_then_body = false;
 
         switch (cty) {
             case pcsh::result_type::INTEGER: {
                 typed_interpreter<int> eval(nested_tables_, *ar_);
                 c->accept(&eval);
-                runbody = (eval.value() != 0);
+                run_then_body = (eval.value() != 0);
                 break;
             }
             case pcsh::result_type::FLOATING: {
                 typed_interpreter<double> eval(nested_tables_, *ar_);
                 c->accept(&eval);
-                runbody = (eval.value() != 0.0);
+                run_then_body = (eval.value() != 0.0);
                 break;
             }
             case pcsh::result_type::STRING: {
                 typed_interpreter<cstring> eval(nested_tables_, *ar_);
                 c->accept(&eval);
                 cstring str = eval.value();
-                runbody = (str[0] != '\0');
+                run_then_body = (str[0] != '\0');
                 break;
             }
             default:
@@ -413,10 +413,11 @@ assign_done_cleanup:
                 break;
         }
 
-        if (runbody) {
+        node* elsebody = nullptr;
+        if (run_then_body) {
             v->then_body()->accept(this);
-        } else {
-            v->else_body()->accept(this);
+        } else if ((elsebody = v->else_body())) {
+            elsebody->accept(this);
         }
     }
 
