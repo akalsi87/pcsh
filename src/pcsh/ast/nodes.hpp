@@ -220,6 +220,12 @@ namespace ast {
     class binary_div final : public binary_op<binary_div>
     { };
 
+    class logical_and final : public binary_op<logical_and>
+    { };
+
+    class logical_or final : public binary_op<logical_or>
+    { };
+
     class assign final : public binary_op<assign>
     {
       public:

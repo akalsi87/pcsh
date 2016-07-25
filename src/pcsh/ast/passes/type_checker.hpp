@@ -56,6 +56,8 @@ namespace ast {
         void visit_impl(const comp_ge* v) override;
         void visit_impl(const comp_lt* v) override;
         void visit_impl(const comp_gt* v) override;
+        void visit_impl(const logical_and* v) override;
+        void visit_impl(const logical_or* v) override;
         void visit_impl(const block* v) override;
         void visit_impl(const if_stmt* v) override;
     };

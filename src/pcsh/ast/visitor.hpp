@@ -118,6 +118,16 @@ namespace ast {
             visit_impl(v);
         }
 
+        inline void visit(const logical_and* v)
+        {
+            visit_impl(v);
+        }
+
+        inline void visit(const logical_or* v)
+        {
+            visit_impl(v);
+        }
+
       private:
         void visit_impl_binary_op(const void* v);
         void visit_impl_unary_op(const void* v);
@@ -197,6 +207,16 @@ namespace ast {
         }
 
         virtual void visit_impl(const comp_gt* v)
+        {
+            visit_impl_binary_op(v);
+        }
+
+        virtual void visit_impl(const logical_and* v)
+        {
+            visit_impl_binary_op(v);
+        }
+
+        virtual void visit_impl(const logical_or* v)
         {
             visit_impl_binary_op(v);
         }

@@ -201,6 +201,24 @@ namespace ast {
         strm_ << ")";
     }
 
+    void printer::visit_impl(const logical_and* v)
+    {
+        strm_ << "(and ";
+        v->left()->accept(this);
+        strm_ << " ";
+        v->right()->accept(this);
+        strm_ << ")";
+    }
+
+    void printer::visit_impl(const logical_or* v)
+    {
+        strm_ << "(or ";
+        v->left()->accept(this);
+        strm_ << " ";
+        v->right()->accept(this);
+        strm_ << ")";
+    }
+
     void printer::print_types(const block* v)
     {
         if (!types_) { return; }

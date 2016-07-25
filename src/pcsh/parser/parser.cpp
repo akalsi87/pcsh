@@ -155,6 +155,12 @@ namespace parser {
             case token_type::NOT:
                 PCSH_ASSERT((len == 1) && (nm[0] == '='));
                 break;
+            case token_type::AND:
+                PCSH_ASSERT((len == 2) && (nm[0] == '&') && (nm[1] == '&'));
+                break;
+            case token_type::OR:
+                PCSH_ASSERT((len == 2) && (nm[0] == '|') && (nm[1] == '|'));
+                break;
             default:
                 PCSH_ASSERT_MSG(false, "Invalid token type!");
                 break;
@@ -425,8 +431,14 @@ namespace parser {
             case '<':
                 return (strm_->peek_at(p + 1) == '=') ? token::get(token_type::ISLE, "<=", 2)
                                                       : token::get(token_type::ISLT, "<" , 1);
+            case '&':
+                return (strm_->peek_at(p + 1) == '&') ? token::get(token_type::AND, "&&", 2)
+                                                      : token::get(token_type::FAIL, "Invalid expression `&', expected `&&'");
+            case '|':
+                return (strm_->peek_at(p + 1) == '|') ? token::get(token_type::OR, "||", 2)
+                                                      : token::get(token_type::FAIL, "Invalid expression `|', expected `||'");
             default:
-                return (is_digit(c) ? read_number(p) : read_name(p));
+                return is_digit(c) ? read_number(p) : read_name(p);
         }
     }
 

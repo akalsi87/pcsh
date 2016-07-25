@@ -75,6 +75,8 @@ namespace parser {
         ISGE,
         ISLE,
         NOT,
+        AND,
+        OR,
         NONE,
         FAIL
     };

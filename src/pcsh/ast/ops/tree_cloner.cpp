@@ -123,6 +123,34 @@ namespace ast {
         cloned_ = newbinop;
     }
 
+    void tree_cloner::visit_impl(const logical_and* v)
+    {
+        v->left()->accept(this);
+        auto newleft = cloned_;
+        v->right()->accept(this);
+        auto newright = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newbinop = ar.create<logical_and>();
+        newbinop->set_left(newleft);
+        newbinop->set_right(newright);
+        cloned_ = newbinop;
+    }
+
+    void tree_cloner::visit_impl(const logical_or* v)
+    {
+        v->left()->accept(this);
+        auto newleft = cloned_;
+        v->right()->accept(this);
+        auto newright = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newbinop = ar.create<logical_or>();
+        newbinop->set_left(newleft);
+        newbinop->set_right(newright);
+        cloned_ = newbinop;
+    }
+
     void tree_cloner::visit_impl(const assign* v)
     {
         v->var()->accept(this);

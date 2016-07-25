@@ -46,6 +46,10 @@ namespace ast {
 
     class comp_ge;
 
+    class logical_and;
+
+    class logical_or;
+
     // container
     class block;
 

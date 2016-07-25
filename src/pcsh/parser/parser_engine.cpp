@@ -89,6 +89,8 @@ namespace parser {
             case token_type::ISLE:
             case token_type::ISGT:
             case token_type::ISGE:
+            case token_type::AND:
+            case token_type::OR:
                 return true;
             default:
                 return false;
@@ -130,6 +132,12 @@ namespace parser {
                 break;
             case token_type::ISLE:
                 op = arena_.create<ast::comp_le>();
+                break;
+            case token_type::AND:
+                op = arena_.create<ast::logical_and>();
+                break;
+            case token_type::OR:
+                op = arena_.create<ast::logical_or>();
                 break;
             case token_type::ASSIGN:
                 op = arena_.create<ast::assign>();

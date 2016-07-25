@@ -43,6 +43,8 @@ namespace execution {
         void visit_impl(const ast::comp_ge* v) override;
         void visit_impl(const ast::comp_lt* v) override;
         void visit_impl(const ast::comp_gt* v) override;
+        void visit_impl(const ast::logical_and* v) override;
+        void visit_impl(const ast::logical_or* v) override;
         void visit_impl(const ast::block* v) override;
         void visit_impl(const ast::if_stmt* v) override;
     };

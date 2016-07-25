@@ -90,8 +90,8 @@ namespace execution {
         void visit_impl(const unary_not* v) override
         {
             v->operand()->accept(this);
-            if (result_type_of<T>::value == result_type::INTEGER) {
-                value_ = value_ ? 0 : 1;
+            if (result_type_of<T>::value != result_type::STRING) {
+                value_ = (value_ != T()) ? T() : (T() + 1);
             } else {
                 parser::throw_parser_exception("Using `!' on an expression that cannot be cast to a boolean value!", "", "", "");
             }
@@ -147,37 +147,75 @@ namespace execution {
 
         void visit_impl(const comp_equals* v) override
         {
-            value_ = compare_eq<result_type_of<T>::value == result_type::INTEGER>(v, accessor_, ar_)
-                ? 1
-                : 0;
+            value_ = compare_eq<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
+                ? (T() + 1)
+                : T();
         }
 
         void visit_impl(const comp_lt* v) override
         {
-            value_ = compare_lt<result_type_of<T>::value == result_type::INTEGER>(v, accessor_, ar_)
-                ? 1
-                : 0;
+            value_ = compare_lt<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
+                ? (T() + 1)
+                : T();
         }
 
         void visit_impl(const comp_gt* v) override
         {
-            value_ = compare_gt<result_type_of<T>::value == result_type::INTEGER>(v, accessor_, ar_)
-                ? 1
-                : 0;
+            value_ = compare_gt<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
+                ? (T() + 1)
+                : T();
         }
 
         void visit_impl(const comp_le* v) override
         {
-            value_ = compare_le<result_type_of<T>::value == result_type::INTEGER>(v, accessor_, ar_)
-                ? 1
-                : 0;
+            value_ = compare_le<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
+                ? (T() + 1)
+                : T();
         }
 
         void visit_impl(const comp_ge* v) override
         {
-            value_ = compare_ge<result_type_of<T>::value == result_type::INTEGER>(v, accessor_, ar_)
-                ? 1
-                : 0;
+            value_ = compare_ge<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
+                ? (T() + 1)
+                : T();
+        }
+
+        void visit_impl(const logical_and* v) override
+        {
+            if (result_type_of<T>::value == result_type::STRING) {
+                parser::throw_parser_exception("Using `&&' on an expression that cannot be cast to a boolean value!", "", "", "");
+            }
+            v->left()->accept(this);
+            auto left = value_;
+
+            if (left == T()) {
+                // short-circuit false
+                value_ = T();
+                return;
+            }
+
+            v->right()->accept(this);
+            auto right = value_;
+            value_ = right != T();
+        }
+
+        void visit_impl(const logical_or* v) override
+        {
+            if (result_type_of<T>::value == result_type::STRING) {
+                parser::throw_parser_exception("Using `&&' on an expression that cannot be cast to a boolean value!", "", "", "");
+            }
+            v->left()->accept(this);
+            auto left = value_;
+
+            if (left != T()) {
+                // short-circuit true
+                value_ = (T() + 1);
+                return;
+            }
+
+            v->right()->accept(this);
+            auto right = value_;
+            value_ = right != T();
         }
     };
 
@@ -529,6 +567,16 @@ namespace execution {
     }
 
     void interpreter::visit_impl(const comp_ge* v)
+    {
+        curr_visitor_->visit(v);
+    }
+
+    void interpreter::visit_impl(const logical_and* v)
+    {
+        curr_visitor_->visit(v);
+    }
+
+    void interpreter::visit_impl(const logical_or* v)
     {
         curr_visitor_->visit(v);
     }

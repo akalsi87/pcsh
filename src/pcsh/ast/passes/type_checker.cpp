@@ -133,6 +133,32 @@ namespace ast {
         curr_ = (fintype == result_type::BOOLEAN) ? result_type::INTEGER : fintype;
     }
 
+    void type_checker::visit_impl(const logical_and* v)
+    {
+        v->left()->accept(this);
+        auto lfttype = curr_;
+        v->right()->accept(this);
+        auto rgttype = curr_;
+        auto fintype = propagate(lfttype, rgttype);
+        if (fintype == result_type::FAILED) {
+            throw type_checker_error("Invalid application of `&&'.", v->left(), v->right());
+        }
+        curr_ = (fintype == result_type::BOOLEAN) ? result_type::INTEGER : fintype;
+    }
+
+    void type_checker::visit_impl(const logical_or* v)
+    {
+        v->left()->accept(this);
+        auto lfttype = curr_;
+        v->right()->accept(this);
+        auto rgttype = curr_;
+        auto fintype = propagate(lfttype, rgttype);
+        if (fintype == result_type::FAILED) {
+            throw type_checker_error("Invalid application of `||'.", v->left(), v->right());
+        }
+        curr_ = (fintype == result_type::BOOLEAN) ? result_type::INTEGER : fintype;
+    }
+
     void type_checker::visit_impl(const assign* v)
     {
         v->right()->accept(this);
