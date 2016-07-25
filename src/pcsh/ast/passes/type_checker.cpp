@@ -71,6 +71,16 @@ namespace ast {
         curr_ = fintype;
     }
 
+    void type_checker::visit_impl(const unary_not* v)
+    {
+        v->left()->accept(this);
+        auto exprtype = curr_;
+        if (exprtype != result_type::INTEGER) {
+            throw type_checker_error("Invalid application of `=='.", v->left(), v->right());
+        }
+        curr_ = result_type::INTEGER; 
+    }
+
     void type_checker::visit_impl(const binary_div* v)
     {
         v->left()->accept(this);
@@ -187,6 +197,94 @@ namespace ast {
         }
         if (!isvalid) {
             throw type_checker_error("Invalid application of `=='.", v->left(), v->right());
+        }
+        curr_ = result_type::INTEGER;
+    }
+
+    void type_checker::visit_impl(const comp_lt* v)
+    {
+        v->left()->accept(this);
+        auto lfttype = curr_;
+        v->right()->accept(this);
+        auto rgttype = curr_;
+        bool isvalid = false;
+        auto ty = lfttype;
+        if (lfttype == result_type::STRING || rgttype == result_type::STRING) {
+            isvalid = (lfttype == rgttype);
+            v->set_comp_type(result_type::STRING);
+        } else {
+            ty = propagate(lfttype, rgttype);
+            v->set_comp_type(ty);
+            isvalid = ty != result_type::FAILED;
+        }
+        if (!isvalid) {
+            throw type_checker_error("Invalid application of `<'.", v->left(), v->right());
+        }
+        curr_ = result_type::INTEGER;
+    }
+
+    void type_checker::visit_impl(const comp_gt* v)
+    {
+        v->left()->accept(this);
+        auto lfttype = curr_;
+        v->right()->accept(this);
+        auto rgttype = curr_;
+        bool isvalid = false;
+        auto ty = lfttype;
+        if (lfttype == result_type::STRING || rgttype == result_type::STRING) {
+            isvalid = (lfttype == rgttype);
+            v->set_comp_type(result_type::STRING);
+        } else {
+            ty = propagate(lfttype, rgttype);
+            v->set_comp_type(ty);
+            isvalid = ty != result_type::FAILED;
+        }
+        if (!isvalid) {
+            throw type_checker_error("Invalid application of `>'.", v->left(), v->right());
+        }
+        curr_ = result_type::INTEGER;
+    }
+
+    void type_checker::visit_impl(const comp_le* v)
+    {
+        v->left()->accept(this);
+        auto lfttype = curr_;
+        v->right()->accept(this);
+        auto rgttype = curr_;
+        bool isvalid = false;
+        auto ty = lfttype;
+        if (lfttype == result_type::STRING || rgttype == result_type::STRING) {
+            isvalid = (lfttype == rgttype);
+            v->set_comp_type(result_type::STRING);
+        } else {
+            ty = propagate(lfttype, rgttype);
+            v->set_comp_type(ty);
+            isvalid = ty != result_type::FAILED;
+        }
+        if (!isvalid) {
+            throw type_checker_error("Invalid application of `<='.", v->left(), v->right());
+        }
+        curr_ = result_type::INTEGER;
+    }
+
+    void type_checker::visit_impl(const comp_ge* v)
+    {
+        v->left()->accept(this);
+        auto lfttype = curr_;
+        v->right()->accept(this);
+        auto rgttype = curr_;
+        bool isvalid = false;
+        auto ty = lfttype;
+        if (lfttype == result_type::STRING || rgttype == result_type::STRING) {
+            isvalid = (lfttype == rgttype);
+            v->set_comp_type(result_type::STRING);
+        } else {
+            ty = propagate(lfttype, rgttype);
+            v->set_comp_type(ty);
+            isvalid = ty != result_type::FAILED;
+        }
+        if (!isvalid) {
+            throw type_checker_error("Invalid application of `>='.", v->left(), v->right());
         }
         curr_ = result_type::INTEGER;
     }

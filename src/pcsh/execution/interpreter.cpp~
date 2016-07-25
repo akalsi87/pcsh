@@ -513,22 +513,22 @@ namespace execution {
         curr_visitor_->visit(v);
     }
 
-    void interpreter::visit_impl(const comp_lt* v)
+    void interpreter::visit_impl(const compare_lt* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void interpreter::visit_impl(const comp_gt* v)
+    void interpreter::visit_impl(const compare_gt* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void interpreter::visit_impl(const comp_le* v)
+    void interpreter::visit_impl(const compare_le* v)
     {
         curr_visitor_->visit(v);
     }
 
-    void interpreter::visit_impl(const comp_ge* v)
+    void interpreter::visit_impl(const compare_ge* v)
     {
         curr_visitor_->visit(v);
     }

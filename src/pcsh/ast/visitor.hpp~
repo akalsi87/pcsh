@@ -53,11 +53,6 @@ namespace ast {
             visit_impl(v);
         }
 
-        inline void visit(const unary_not* v)
-        {
-            visit_impl(v);
-        }
-
         inline void visit(const binary_div* v)
         {
             visit_impl(v);
@@ -94,26 +89,6 @@ namespace ast {
         }
 
         inline void visit(const comp_equals* v)
-        {
-            visit_impl(v);
-        }
-
-        inline void visit(const comp_lt* v)
-        {
-            visit_impl(v);
-        }
-
-        inline void visit(const comp_gt* v)
-        {
-            visit_impl(v);
-        }
-
-        inline void visit(const comp_le* v)
-        {
-            visit_impl(v);
-        }
-        
-        inline void visit(const comp_ge* v)
         {
             visit_impl(v);
         }

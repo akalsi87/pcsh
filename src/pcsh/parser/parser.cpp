@@ -140,6 +140,21 @@ namespace parser {
             case token_type::ISEQUAL:
                 PCSH_ASSERT((len == 2) && (nm[0] == '=') && (nm[1] == '='));
                 break;
+            case token_type::ISGT:
+                PCSH_ASSERT((len == 1) && (nm[0] == '>'));
+                break;
+            case token_type::ISLT:
+                PCSH_ASSERT((len == 1) && (nm[0] == '<'));
+                break;
+            case token_type::ISGE:
+                PCSH_ASSERT((len == 2) && (nm[0] == '>') && (nm[1] == '='));
+                break;
+            case token_type::ISLE:
+                PCSH_ASSERT((len == 2) && (nm[0] == '<') && (nm[1] == '='));
+                break;
+            case token_type::NOT:
+                PCSH_ASSERT((len == 1) && (nm[0] == '='));
+                break;
             default:
                 PCSH_ASSERT_MSG(false, "Invalid token type!");
                 break;
@@ -402,6 +417,14 @@ namespace parser {
                 return read_string(p);
             case '/':
                 return token::get(token_type::FSLASH, "/", 1);
+            case '!':
+                return token::get(token_type::NOT, "!", 1);
+            case '>':
+                return (strm_->peek_at(p + 1) == '=') ? token::get(token_type::ISGE, ">=", 2)
+                                                      : token::get(token_type::ISGT, ">" , 1);
+            case '<':
+                return (strm_->peek_at(p + 1) == '=') ? token::get(token_type::ISLE, "<=", 2)
+                                                      : token::get(token_type::ISLT, "<" , 1);
             default:
                 return (is_digit(c) ? read_number(p) : read_name(p));
         }

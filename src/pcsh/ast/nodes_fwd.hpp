@@ -23,6 +23,8 @@ namespace ast {
 
     class unary_minus;
 
+    class unary_not;
+
     // binary ops
     class binary_div;
 
@@ -35,6 +37,14 @@ namespace ast {
     class assign;
 
     class comp_equals;
+
+    class comp_lt;
+
+    class comp_gt;
+
+    class comp_le;
+
+    class comp_ge;
 
     // container
     class block;

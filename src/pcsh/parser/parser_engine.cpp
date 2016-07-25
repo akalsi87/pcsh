@@ -66,18 +66,29 @@ namespace parser {
 
     bool parser::parser_engine::is_unary_op(const token& t)
     {
-        return t.is_a(token_type::MINUS) || t.is_a(token_type::PLUS);
+        switch (t.type()) {
+            case token_type::PLUS:
+            case token_type::MINUS:
+            case token_type::NOT:
+                return true;
+            default:
+                return false;
+        }
     }
 
-    bool parser::parser_engine::is_binary_op(const token& nxt)
+    bool parser::parser_engine::is_binary_op(const token& t)
     {
-        switch (nxt.type()) {
+        switch (t.type()) {
             case token_type::PLUS:
             case token_type::MINUS:
             case token_type::ASTERISK:
             case token_type::FSLASH:
             case token_type::ASSIGN:
             case token_type::ISEQUAL:
+            case token_type::ISLT:
+            case token_type::ISLE:
+            case token_type::ISGT:
+            case token_type::ISGE:
                 return true;
             default:
                 return false;
@@ -108,6 +119,18 @@ namespace parser {
             case token_type::ISEQUAL:
                 op = arena_.create<ast::comp_equals>();
                 break;
+            case token_type::ISGT:
+                op = arena_.create<ast::comp_gt>();
+                break;
+            case token_type::ISGE:
+                op = arena_.create<ast::comp_ge>();
+                break;
+            case token_type::ISLT:
+                op = arena_.create<ast::comp_lt>();
+                break;
+            case token_type::ISLE:
+                op = arena_.create<ast::comp_le>();
+                break;
             case token_type::ASSIGN:
                 op = arena_.create<ast::assign>();
                 ENSURE(dynamic_cast<ast::variable*>(a) != nullptr,
@@ -134,6 +157,9 @@ namespace parser {
                 break;
             case token_type::PLUS:
                 op = arena_.create<ast::unary_plus>();
+                break;
+            case token_type::NOT:
+                op = arena_.create<ast::unary_not>();
                 break;
             default:
                 PCSH_ASSERT_MSG(false, "Invalid binary operation!");

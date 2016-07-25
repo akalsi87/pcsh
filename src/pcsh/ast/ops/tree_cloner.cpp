@@ -56,6 +56,17 @@ namespace ast {
         cloned_ = newuminus;
     }
 
+    void tree_cloner::visit_impl(const unary_not* v)
+    {
+        v->operand()->accept(this);
+        auto newoperand = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newuminus = ar.create<unary_not>();
+        newuminus->set_operand(newoperand);
+        cloned_ = newuminus;
+    }
+
     void tree_cloner::visit_impl(const binary_div* v)
     {
         v->left()->accept(this);
@@ -199,6 +210,62 @@ namespace ast {
 
         auto& ar = root_->get_arena();
         auto newbinop = ar.create<comp_equals>();
+        newbinop->set_left(newleft);
+        newbinop->set_right(newright);
+        cloned_ = newbinop;
+    }
+
+    void tree_cloner::visit_impl(const comp_lt* v)
+    {
+        v->left()->accept(this);
+        auto newleft = cloned_;
+        v->right()->accept(this);
+        auto newright = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newbinop = ar.create<comp_lt>();
+        newbinop->set_left(newleft);
+        newbinop->set_right(newright);
+        cloned_ = newbinop;
+    }
+
+    void tree_cloner::visit_impl(const comp_gt* v)
+    {
+        v->left()->accept(this);
+        auto newleft = cloned_;
+        v->right()->accept(this);
+        auto newright = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newbinop = ar.create<comp_gt>();
+        newbinop->set_left(newleft);
+        newbinop->set_right(newright);
+        cloned_ = newbinop;
+    }
+
+    void tree_cloner::visit_impl(const comp_le* v)
+    {
+        v->left()->accept(this);
+        auto newleft = cloned_;
+        v->right()->accept(this);
+        auto newright = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newbinop = ar.create<comp_le>();
+        newbinop->set_left(newleft);
+        newbinop->set_right(newright);
+        cloned_ = newbinop;
+    }
+
+    void tree_cloner::visit_impl(const comp_ge* v)
+    {
+        v->left()->accept(this);
+        auto newleft = cloned_;
+        v->right()->accept(this);
+        auto newright = cloned_;
+
+        auto& ar = root_->get_arena();
+        auto newbinop = ar.create<comp_ge>();
         newbinop->set_left(newleft);
         newbinop->set_right(newright);
         cloned_ = newbinop;

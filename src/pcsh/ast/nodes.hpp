@@ -162,6 +162,9 @@ namespace ast {
     class unary_minus final : public unary_op<unary_minus>
     { };
 
+    class unary_not final : public unary_op<unary_not>
+    { };
+
     // binary ops
 
     class untyped_binary_op_base : public node
@@ -231,6 +234,90 @@ namespace ast {
     {
       public:
         comp_equals()
+          : comp_ty_(result_type::UNDETERMINED)
+        { }
+
+        inline result_type comp_type() const
+        {
+            return comp_ty_;
+        }
+
+        inline void set_comp_type(result_type ty) const
+        {
+            comp_ty_ = ty;
+        }
+
+      private:
+        mutable result_type comp_ty_;
+    };
+
+    class comp_lt final : public binary_op<comp_lt>
+    {
+      public:
+        comp_lt()
+          : comp_ty_(result_type::UNDETERMINED)
+        { }
+
+        inline result_type comp_type() const
+        {
+            return comp_ty_;
+        }
+
+        inline void set_comp_type(result_type ty) const
+        {
+            comp_ty_ = ty;
+        }
+
+      private:
+        mutable result_type comp_ty_;
+    };
+
+    class comp_gt final : public binary_op<comp_gt>
+    {
+      public:
+        comp_gt()
+          : comp_ty_(result_type::UNDETERMINED)
+        { }
+
+        inline result_type comp_type() const
+        {
+            return comp_ty_;
+        }
+
+        inline void set_comp_type(result_type ty) const
+        {
+            comp_ty_ = ty;
+        }
+
+      private:
+        mutable result_type comp_ty_;
+    };
+
+    class comp_le final : public binary_op<comp_le>
+    {
+      public:
+        comp_le()
+          : comp_ty_(result_type::UNDETERMINED)
+        { }
+
+        inline result_type comp_type() const
+        {
+            return comp_ty_;
+        }
+
+        inline void set_comp_type(result_type ty) const
+        {
+            comp_ty_ = ty;
+        }
+
+      private:
+        mutable result_type comp_ty_;
+    };
+
+    class comp_ge final : public binary_op<comp_ge>
+    {
+      public:
+        comp_ge()
           : comp_ty_(result_type::UNDETERMINED)
         { }
 

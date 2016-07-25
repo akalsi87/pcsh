@@ -32,12 +32,17 @@ namespace execution {
         void visit_impl(const ast::string_constant* v) override;
         void visit_impl(const ast::unary_plus* v) override;
         void visit_impl(const ast::unary_minus* v) override;
+        void visit_impl(const ast::unary_not* v) override;
         void visit_impl(const ast::binary_div* v) override;
         void visit_impl(const ast::binary_minus* v) override;
         void visit_impl(const ast::binary_mult* v) override;
         void visit_impl(const ast::binary_plus* v) override;
         void visit_impl(const ast::assign* v) override;
         void visit_impl(const ast::comp_equals* v) override;
+        void visit_impl(const ast::comp_le* v) override;
+        void visit_impl(const ast::comp_ge* v) override;
+        void visit_impl(const ast::comp_lt* v) override;
+        void visit_impl(const ast::comp_gt* v) override;
         void visit_impl(const ast::block* v) override;
         void visit_impl(const ast::if_stmt* v) override;
     };

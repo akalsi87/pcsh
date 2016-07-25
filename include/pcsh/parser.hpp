@@ -70,6 +70,11 @@ namespace parser {
         IF,
         ELSE,
         ISEQUAL,
+        ISGT,
+        ISLT,
+        ISGE,
+        ISLE,
+        NOT,
         NONE,
         FAIL
     };

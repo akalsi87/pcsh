@@ -37,12 +37,17 @@ namespace ast {
         void visit_impl(const string_constant* v) override;
         void visit_impl(const unary_plus* v) override;
         void visit_impl(const unary_minus* v) override;
+        void visit_impl(const unary_not* v) override;
         void visit_impl(const binary_div* v) override;
         void visit_impl(const binary_minus* v) override;
         void visit_impl(const binary_mult* v) override;
         void visit_impl(const binary_plus* v) override;
         void visit_impl(const assign* v) override;
         void visit_impl(const comp_equals* v) override;
+        void visit_impl(const comp_le* v) override;
+        void visit_impl(const comp_ge* v) override;
+        void visit_impl(const comp_lt* v) override;
+        void visit_impl(const comp_gt* v) override;
         void visit_impl(const block* v) override;
         void visit_impl(const if_stmt* v) override;
 

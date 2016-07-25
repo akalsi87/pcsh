@@ -59,6 +59,13 @@ namespace ast {
         strm_ << ")";
     }
 
+    void printer::visit_impl(const unary_not* v)
+    {
+        strm_ << "(un-not ";
+        v->operand()->accept(this);
+        strm_ << ")";
+    }
+
     void printer::visit_impl(const binary_div* v)
     {
         strm_ << "(divide ";
@@ -151,7 +158,43 @@ namespace ast {
 
     void printer::visit_impl(const comp_equals* v)
     {
-        strm_ << "(eq ";
+        strm_ << "(== ";
+        v->left()->accept(this);
+        strm_ << " ";
+        v->right()->accept(this);
+        strm_ << ")";
+    }
+
+    void printer::visit_impl(const comp_lt* v)
+    {
+        strm_ << "(< ";
+        v->left()->accept(this);
+        strm_ << " ";
+        v->right()->accept(this);
+        strm_ << ")";
+    }
+
+    void printer::visit_impl(const comp_gt* v)
+    {
+        strm_ << "(> ";
+        v->left()->accept(this);
+        strm_ << " ";
+        v->right()->accept(this);
+        strm_ << ")";
+    }
+
+    void printer::visit_impl(const comp_le* v)
+    {
+        strm_ << "(<= ";
+        v->left()->accept(this);
+        strm_ << " ";
+        v->right()->accept(this);
+        strm_ << ")";
+    }
+
+    void printer::visit_impl(const comp_ge* v)
+    {
+        strm_ << "(>= ";
         v->left()->accept(this);
         strm_ << " ";
         v->right()->accept(this);
