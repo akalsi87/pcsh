@@ -619,4 +619,42 @@ CPP_TEST( eqOp )
         TEST_TRUE(ast::query(ptree.get(), "foo").int_val == 2);
         ast::print_variables(ptree.get(), std::cout);
     }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "a = 4;\n"
+            "b = -2;\n"
+            "if (a == 0) b = 0;\n"
+            "else if (a == 1) b = 1;\n"
+            "else if (a == 2) b = 2;\n"
+            "else if (a == 3) b = 3;\n"
+            "else b = 4;\n");
+        parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
+        auto ptree = p.parse_to_tree();
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "a").int_val == 4);
+        TEST_TRUE(ast::query(ptree.get(), "b").int_val == 4);
+        ast::print_variables(ptree.get(), std::cout);
+    }
+    {
+        std::istringstream is(
+            "#!/usr/bin/env pcsh\n"
+            "a = 4;\n"
+            "b = -2;\n"
+            "if (a == 0)      { b = 0; }\n"
+            "else if (a == 1) { b = 1; }\n"
+            "else if (a == 2) { b = 2; }\n"
+            "else if (a == 3) { b = 3; }\n"
+            "else             { b = 4; }\n");
+        parser::parser p(is);
+        std::cout << "-----------------\n" << "Printing code\n" << is.str() << std::endl << "-----------------" << std::endl;
+        auto ptree = p.parse_to_tree();
+        ast::print(ptree.get(), std::cout);
+        ast::evaluate(ptree.get());
+        TEST_TRUE(ast::query(ptree.get(), "a").int_val == 4);
+        TEST_TRUE(ast::query(ptree.get(), "b").int_val == 4);
+        ast::print_variables(ptree.get(), std::cout);
+    }
 }

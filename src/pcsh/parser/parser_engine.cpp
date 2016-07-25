@@ -148,25 +148,24 @@ namespace parser {
     ast::block* parser::parser_engine::block(source_map& m)
     {
         std::vector<ast::node*> stmts;
-        stmts.reserve(20);
 
         auto t = peek();
-        bool startWithLbrace = t.is_a(token_type::LBRACE);
+        bool init_lbrace = t.is_a(token_type::LBRACE);
 
-        if (startWithLbrace) {
+        if (init_lbrace) {
             advance();
         }
 
         while (true) {
             if (t.is_a(token_type::EOS)) {
-                if (!startWithLbrace) {
+                if (!init_lbrace) {
                     break;
                 } else {
                     ENSURE(false, "Unexpected end of stream while reading a block. Expected a `}' before termination.");
                 }
             }
             if (t.is_a(token_type::RBRACE)) {
-                if (!startWithLbrace) {
+                if (!init_lbrace) {
                     ENSURE(false, "Unexpected `}'. Did not see a `{' to start a block.");
                 } else {
                     advance();

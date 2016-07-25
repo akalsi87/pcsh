@@ -26,6 +26,22 @@
 #  endif // defined(_MSC_VER)
 #endif // !defined(NOTHROW)
 
+#if !defined(PCSH_INLINE)
+#  if !defined(_MSC_VER)
+#    define PCSH_INLINE __inline__ __attribute__((always_inline))
+#  else
+#    define PCSH_INLINE __forceinline
+#  endif
+#endif
+
+#if !defined(_MSC_VER)
+#  define PCSH_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#  define PCSH_LIKELY(x)   __builtin_expect(!!(x), 1)
+#else
+#  define PCSH_UNLIKELY(x) (x)
+#  define PCSH_LIKELY(x)   (x)
+#endif
+
 namespace pcsh {
 namespace parser {
 
@@ -67,7 +83,7 @@ namespace parser {
         cstring ptr;
         size_t len;
 
-        inline bool equals(const char* s) const
+        PCSH_INLINE bool equals(const char* s) const
         {
             return strncmp(ptr, s, len) == 0;
         }
@@ -83,27 +99,27 @@ namespace parser {
         token(const token& rhs) : str_(rhs.str_), len_(rhs.len_), type_(rhs.type_)
         { }
 
-        inline token_type type() const
+        PCSH_INLINE token_type type() const
         {
             return type_;
         }
 
-        inline bool defined() const
+        PCSH_INLINE bool defined() const
         {
             return type_ != token_type::NONE;
         }
 
-        inline bool is_a(token_type x) const
+        PCSH_INLINE bool is_a(token_type x) const
         {
             return type_ == x;
         }
 
-        inline size_t length() const
+        PCSH_INLINE size_t length() const
         {
             return len_;
         }
 
-        inline buff_string str() const
+        PCSH_INLINE buff_string str() const
         {
             buff_string rv = { str_, len_ };
             return rv;

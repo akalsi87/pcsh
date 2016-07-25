@@ -233,17 +233,17 @@ namespace parser {
             stackbuff[N] = '\0';
         }
 
-        inline char& operator[](size_t i) const
+        PCSH_INLINE char& operator[](size_t i) const
         {
             return useheap ? heapbuff[i] : stackbuff[i];
         }
 
-        inline size_t size() const
+        PCSH_INLINE size_t size() const
         {
             return sz;
         }
 
-        inline void resize(size_t s)
+        PCSH_INLINE void resize(size_t s)
         {
             auto oldsz = sz;
             sz = s;
@@ -253,7 +253,8 @@ namespace parser {
 
             if (!useheap) {
                 if (s > N) {
-                    heapbuff.resize(s);
+                    sz = s + 20;
+                    heapbuff.resize(sz);
                     std::copy(stackbuff, stackbuff + oldsz, &heapbuff[0]);
                     useheap = true;
                 }
@@ -328,7 +329,7 @@ namespace parser {
             buffsz_ = 0;
         }
       private:
-        static const int INIT_SIZE = 127;
+        static const int INIT_SIZE = 255;
 
         std::istream&          strm_;
         flex_buffer<INIT_SIZE> buffer_;
@@ -480,20 +481,22 @@ namespace parser {
 
     token parser::read_string(pos_t p)
     {
-        static std::string buffer;
-        buffer.reserve(1024);
-        buffer.resize(0);
+        static flex_buffer<127> buffer;
 
         pos_t startp = ++p; // skip past start quote
         int c = strm_->peek_at(p);
+        size_t nchars = 0;
 
         while (true) {
             if (c == strm_->EOS) {
                 return token::get(token_type::FAIL, "End-of-stream while reading string literal.");
             }
             if (c == '"') {
+                // null terminate the string
+                buffer[nchars] = '\0';
                 break;
             }
+            ++nchars;
             if (c == '\\') {
                 int n = strm_->peek_at(++p);
                 switch (n) {
@@ -523,11 +526,17 @@ namespace parser {
                         break;
                 }
             }
-            buffer.push_back(c);
+
+            if (nchars > buffer.size() - 1) {
+                buffer.resize(nchars + 1);
+            }
+
+            buffer[nchars - 1] = c;
+
             c = strm_->peek_at(++p);
         }
 
-        return token::get(token_type::QUOTE, buffer.c_str(), p - startp/* acct for close quote */);
+        return token::get(token_type::QUOTE, &buffer[0], p - startp/* acct for close quote */);
     }
 
     token parser::read_number(pos_t p)

@@ -14,22 +14,6 @@
 #include <string>
 #include <unordered_map>
 
-#if !defined(PCSH_INLINE)
-#  if !defined(_MSC_VER)
-#    define PCSH_INLINE __inline__ __attribute__((always_inline))
-#  else
-#    define PCSH_INLINE __forceinline
-#  endif
-#endif
-
-#if !defined(_MSC_VER)
-#  define PCSH_UNLIKELY(x) __builtin_expect(!!(x), 0)
-#  define PCSH_LIKELY(x)   __builtin_expect(!!(x), 1)
-#else
-#  define PCSH_UNLIKELY(x) (x)
-#  define PCSH_LIKELY(x)   (x)
-#endif
-
 namespace pcsh {
 namespace parser {
 
@@ -49,10 +33,10 @@ namespace parser {
       public:
         parser_engine(parser& p, arena& a)
           : parser_(p), arena_(a)
+          , curr_(token::get(token_type::EOS, "\xFF", 1))
+          , ws_(0)
           , func_("(main)")
           , parsed_(false)
-          , ws_(0)
-          , curr_(token::get(token_type::EOS, "\xFF", 1))
         { }
 
         //
@@ -65,10 +49,10 @@ namespace parser {
       private:
         parser& parser_;
         arena&  arena_;
+        token curr_;
+        pos_t ws_;
         std::string func_;
         bool parsed_;
-        pos_t ws_;
-        token curr_;
 
         int throw_error(cstring msg);
 
