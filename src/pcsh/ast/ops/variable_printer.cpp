@@ -19,11 +19,11 @@ namespace ast {
         }
 
         print_spacing();
-        strm_ << "(block) at " << v;
+        strm_ << "(block at " << v;
 
         auto oldtbl = tbl_;
         ++nesting_;
-        print_spacing();
+        // print_spacing();
         tbl_ = &v->table();
         {// visit this block
             {// print this block
@@ -48,10 +48,7 @@ namespace ast {
         --nesting_;
         tbl_ = oldtbl;
 
-        if (tbl_ == nullptr) {
-            // print ending new line
-            strm_ << "\n";
-        }
+        strm_ << ((tbl_ == nullptr) ? ")\n" : ")");
     }
 
     void var_value_printer::print_spacing() const

@@ -6,6 +6,8 @@
 #include "ast/nodes.hpp"
 #include "ast/ops/printer.hpp"
 
+#include <iomanip>
+
 namespace pcsh {
 namespace ast {
 
@@ -24,25 +26,23 @@ namespace ast {
 
     void printer::visit_impl(const variable* v)
     {
-        strm_ << "<var:" << v->name() << ">";
+        strm_ << v->name();
     }
 
     void printer::visit_impl(const int_constant* v)
     {
-        strm_ << "<int:";
-        print(strm_, v) << ">";
+        print(strm_, v);
     }
 
     void printer::visit_impl(const float_constant* v)
     {
-        strm_ << "<double:";
-        print(strm_, v) << ">";
+        print(strm_, v);
     }
 
     void printer::visit_impl(const string_constant* v)
     {
-        strm_ << "<string:\"";
-        print(strm_, v) << "\">";
+        strm_ << "\"";
+        print(strm_, v) << "\"";
     }
 
     void printer::visit_impl(const unary_plus* v)
@@ -61,7 +61,7 @@ namespace ast {
 
     void printer::visit_impl(const unary_not* v)
     {
-        strm_ << "(un-not ";
+        strm_ << "(not ";
         v->operand()->accept(this);
         strm_ << ")";
     }
@@ -113,9 +113,10 @@ namespace ast {
 
     void printer::visit_impl(const block* v)
     {
-        {
-            strm_ << "(block) at " << v;
-            print_types(v);
+        strm_ << "(block at " << v;
+        print_types(v);
+
+        {// print statements
             ++nesting_;
             print_spacing_newline();
             visit_block_postcbk(v,
@@ -128,9 +129,7 @@ namespace ast {
             --nesting_;
         }
 
-        if (nesting_ == 0) {
-            strm_ << "\n";
-        }
+        strm_ << ((nesting_ == 0) ? ")\n" : ")");
     }
 
     void printer::visit_impl(const if_stmt* v)
@@ -158,7 +157,7 @@ namespace ast {
 
     void printer::visit_impl(const comp_equals* v)
     {
-        strm_ << "(== ";
+        strm_ << "(eq ";
         v->left()->accept(this);
         strm_ << " ";
         v->right()->accept(this);
@@ -167,7 +166,7 @@ namespace ast {
 
     void printer::visit_impl(const comp_lt* v)
     {
-        strm_ << "(< ";
+        strm_ << "(lt ";
         v->left()->accept(this);
         strm_ << " ";
         v->right()->accept(this);
@@ -176,7 +175,7 @@ namespace ast {
 
     void printer::visit_impl(const comp_gt* v)
     {
-        strm_ << "(> ";
+        strm_ << "(gt ";
         v->left()->accept(this);
         strm_ << " ";
         v->right()->accept(this);
@@ -185,7 +184,7 @@ namespace ast {
 
     void printer::visit_impl(const comp_le* v)
     {
-        strm_ << "(<= ";
+        strm_ << "(le ";
         v->left()->accept(this);
         strm_ << " ";
         v->right()->accept(this);
@@ -194,7 +193,7 @@ namespace ast {
 
     void printer::visit_impl(const comp_ge* v)
     {
-        strm_ << "(>= ";
+        strm_ << "(ge ";
         v->left()->accept(this);
         strm_ << " ";
         v->right()->accept(this);
@@ -226,7 +225,7 @@ namespace ast {
         strm_ << " | typemap = { ";
         auto ntvec = symbol_table::all_entries(tbl);
         for (const auto& el : ntvec) {
-            strm_ << "<" << el.name << ":" << to_string(el.type) << "> ";
+            strm_ << "(" << el.name << ", " << to_string(el.type) << ") ";
         }
         strm_ << "}";
     }
@@ -239,7 +238,8 @@ namespace ast {
 
     ostream& print(ostream& os, const float_constant* v)
     {
-        os << v->value();
+        os.setf(std::ios::fixed, std::ios::floatfield);
+        os << std::setprecision(4) << v->value();
         return os;
     }
 

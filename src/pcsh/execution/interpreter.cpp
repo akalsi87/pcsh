@@ -54,6 +54,9 @@ namespace execution {
         arena& ar_;
         T value_;
 
+        static T false_value() { return T(0); }
+        static T true_value()  { return T(1); }
+
         void visit_impl(const variable* v) override
         {
             auto res = accessor_.lookup(v, true);
@@ -91,7 +94,7 @@ namespace execution {
         {
             v->operand()->accept(this);
             if (result_type_of<T>::value != result_type::STRING) {
-                value_ = (value_ != T()) ? T() : (T() + 1);
+                value_ = (value_ != false_value()) ? false_value() : true_value();
             } else {
                 parser::throw_parser_exception("Using `!' on an expression that cannot be cast to a boolean value!", "", "", "");
             }
@@ -148,36 +151,36 @@ namespace execution {
         void visit_impl(const comp_equals* v) override
         {
             value_ = compare_eq<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
-                ? (T() + 1)
-                : T();
+                ? true_value()
+                : false_value();
         }
 
         void visit_impl(const comp_lt* v) override
         {
             value_ = compare_lt<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
-                ? (T() + 1)
-                : T();
+                ? true_value()
+                : false_value();
         }
 
         void visit_impl(const comp_gt* v) override
         {
             value_ = compare_gt<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
-                ? (T() + 1)
-                : T();
+                ? true_value()
+                : false_value();
         }
 
         void visit_impl(const comp_le* v) override
         {
             value_ = compare_le<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
-                ? (T() + 1)
-                : T();
+                ? true_value()
+                : false_value();
         }
 
         void visit_impl(const comp_ge* v) override
         {
             value_ = compare_ge<result_type_of<T>::value != result_type::STRING>(v, accessor_, ar_)
-                ? (T() + 1)
-                : T();
+                ? true_value()
+                : false_value();
         }
 
         void visit_impl(const logical_and* v) override
@@ -188,34 +191,34 @@ namespace execution {
             v->left()->accept(this);
             auto left = value_;
 
-            if (left == T()) {
+            if (left == false_value()) {
                 // short-circuit false
-                value_ = T();
+                value_ = false_value();
                 return;
             }
 
             v->right()->accept(this);
             auto right = value_;
-            value_ = right != T();
+            value_ = right != false_value();
         }
 
         void visit_impl(const logical_or* v) override
         {
             if (result_type_of<T>::value == result_type::STRING) {
-                parser::throw_parser_exception("Using `&&' on an expression that cannot be cast to a boolean value!", "", "", "");
+                parser::throw_parser_exception("Using `||' on an expression that cannot be cast to a boolean value!", "", "", "");
             }
             v->left()->accept(this);
             auto left = value_;
 
-            if (left != T()) {
+            if (left != false_value()) {
                 // short-circuit true
-                value_ = (T() + 1);
+                value_ = true_value();
                 return;
             }
 
             v->right()->accept(this);
             auto right = value_;
-            value_ = right != T();
+            value_ = right != false_value();
         }
     };
 
