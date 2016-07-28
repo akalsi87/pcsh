@@ -77,6 +77,10 @@ namespace parser {
         NOT,
         AND,
         OR,
+        COLON,
+        TYPE_INT,
+        TYPE_STRING,
+        TYPE_FLOAT,
         NONE,
         FAIL
     };
@@ -92,7 +96,7 @@ namespace parser {
 
         PCSH_INLINE bool equals(const char* s) const
         {
-            return strncmp(ptr, s, len) == 0;
+            return (len == strlen(s)) && (strncmp(ptr, s, len) == 0);
         }
     };
 

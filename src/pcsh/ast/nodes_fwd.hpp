@@ -12,6 +12,8 @@ namespace ast {
     // atoms
     class variable;
 
+    class type_constant;
+
     class int_constant;
 
     class float_constant;
@@ -49,6 +51,8 @@ namespace ast {
     class logical_and;
 
     class logical_or;
+
+    class var_decl;
 
     // container
     class block;

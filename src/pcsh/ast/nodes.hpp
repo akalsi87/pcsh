@@ -54,6 +54,20 @@ namespace ast {
 
     // leaf nodes
 
+    class type_constant final : public atom_base<type_constant>
+    {
+      public:
+        type_constant(result_type r) : type_(r)
+        { }
+
+        inline result_type type() const
+        {
+            return type_;
+        }
+      private:
+        result_type type_;
+    };
+
     class variable final : public atom_base<variable>
     {
       public:
@@ -233,6 +247,16 @@ namespace ast {
         {
             PCSH_ASSERT_MSG(dynamic_cast<variable*>(left_) != nullptr, "Assignment node left must be a variable.");
             return reinterpret_cast<variable*>(left_);
+        }
+    };
+
+    class var_decl final : public binary_op<var_decl>
+    {
+      public:
+        inline type_constant* type() const
+        {
+            PCSH_ASSERT_MSG(dynamic_cast<type_constant*>(right_) != nullptr, "VarDecl node right must be a type_constant.");
+            return reinterpret_cast<type_constant*>(right_);            
         }
     };
 

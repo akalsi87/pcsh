@@ -91,6 +91,7 @@ namespace parser {
             case token_type::ISGE:
             case token_type::AND:
             case token_type::OR:
+            case token_type::COLON:
                 return true;
             default:
                 return false;
@@ -105,6 +106,7 @@ namespace parser {
     ast::untyped_binary_op_base* parser::parser_engine::create_binary_op(const token& currtok, ast::node* a, source_map& m, nexttermfcn rghtgen)
     {
         ast::untyped_binary_op_base* op = nullptr;
+        bool checkfortype = false;
         switch (currtok.type()) {
             case token_type::PLUS:
                 op = arena_.create<ast::binary_plus>();
@@ -139,6 +141,13 @@ namespace parser {
             case token_type::OR:
                 op = arena_.create<ast::logical_or>();
                 break;
+            case token_type::COLON:
+                op = arena_.create<ast::var_decl>();
+                ENSURE(dynamic_cast<ast::variable*>(a) != nullptr,
+                       "Left term of variable declaration is not a variable. Variable name must be a non keyword, alpha - numeric and should not start with a digit.");
+                rghtgen = &parser_engine::atom;
+                checkfortype = true;
+                break;
             case token_type::ASSIGN:
                 op = arena_.create<ast::assign>();
                 ENSURE(dynamic_cast<ast::variable*>(a) != nullptr,
@@ -152,7 +161,12 @@ namespace parser {
         m[op] = source_info{ parser_.filename_, std::to_string(parser_.line()), func_ };
         advance();
         op->set_left(a);
-        op->set_right(call_mem_fn(this, rghtgen, m));
+        auto right = call_mem_fn(this, rghtgen, m);
+        if (checkfortype) {
+            ENSURE(dynamic_cast<ast::type_constant*>(right) != nullptr,
+                   "Right term of variable declaration is not a type. Type name must be one of `int', `string' or `float'.");
+        }
+        op->set_right(right);
         return op;
     }
 
@@ -337,6 +351,20 @@ namespace parser {
             return f;
         }
 
+        result_type token_type_to_result(token_type t)
+        {
+            switch (t) {
+                case token_type::TYPE_INT:
+                    return result_type::INTEGER;
+                case token_type::TYPE_STRING:
+                    return result_type::STRING;
+                case token_type::TYPE_FLOAT:
+                    return result_type::FLOATING;
+                default:
+                    return result_type::FAILED;
+            }
+        }
+
     }//namespace conversions
 
     ast::node* parser::parser_engine::atom(source_map& m)
@@ -357,6 +385,14 @@ namespace parser {
                 // we have a static string's data here. copy into a new string
                 cstring str = arena_.create_string(t.str().ptr);
                 v = arena_.create<ast::string_constant>(str);
+                break;
+            }
+            case token_type::TYPE_INT:
+            case token_type::TYPE_STRING:
+            case token_type::TYPE_FLOAT: {
+                auto ty = conversions::token_type_to_result(t.type());
+                ENSURE(ty != result_type::FAILED, "Expect a type, either `int', `string' or `float'.");
+                v = arena_.create<ast::type_constant>(ty);
                 break;
             }
             default:

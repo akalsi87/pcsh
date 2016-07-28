@@ -28,6 +28,11 @@ namespace ast {
             visit_impl(v);
         }
 
+        inline void visit(const type_constant* v)
+        {
+            visit_impl(v);
+        }
+
         inline void visit(const int_constant* v)
         {
             visit_impl(v);
@@ -128,6 +133,11 @@ namespace ast {
             visit_impl(v);
         }
 
+        inline void visit(const var_decl* v)
+        {
+            visit_impl(v);
+        }
+
       private:
         void visit_impl_binary_op(const void* v);
         void visit_impl_unary_op(const void* v);
@@ -140,6 +150,9 @@ namespace ast {
 
       private:
         virtual void visit_impl(const variable* v)
+        { }
+
+        virtual void visit_impl(const type_constant* v)
         { }
 
         virtual void visit_impl(const int_constant* v)
@@ -217,6 +230,11 @@ namespace ast {
         }
 
         virtual void visit_impl(const logical_or* v)
+        {
+            visit_impl_binary_op(v);
+        }
+
+        virtual void visit_impl(const var_decl* v)
         {
             visit_impl_binary_op(v);
         }

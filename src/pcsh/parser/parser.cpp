@@ -77,10 +77,19 @@ namespace parser {
                 nm = "/";
                 break;
             case token_type::IF:
-                PCSH_ASSERT(::strncmp(nm, "if", len) == 0);
+                PCSH_ASSERT(len == 2 && (::strncmp(nm, "if", len) == 0));
                 break;
             case token_type::ELSE:
-                PCSH_ASSERT(::strncmp(nm, "else", len) == 0);
+                PCSH_ASSERT(len == 4 && (::strncmp(nm, "else", len) == 0));
+                break;
+            case token_type::TYPE_INT:
+                PCSH_ASSERT(len == 3 && (::strncmp(nm, "int", len) == 0));
+                break;
+            case token_type::TYPE_STRING:
+                PCSH_ASSERT(len == 6 && (::strncmp(nm, "string", len) == 0));
+                break;
+            case token_type::TYPE_FLOAT:
+                PCSH_ASSERT(len == 5 && (::strncmp(nm, "float", len) == 0));
                 break;
             case token_type::INTEGER:
                 PCSH_ASSERT(nm);
@@ -161,6 +170,8 @@ namespace parser {
             case token_type::OR:
                 PCSH_ASSERT((len == 2) && (nm[0] == '|') && (nm[1] == '|'));
                 break;
+            case token_type::COLON:
+                PCSH_ASSERT((len == 1) && (nm[0] == ':'));
             default:
                 PCSH_ASSERT_MSG(false, "Invalid token type!");
                 break;
@@ -408,6 +419,8 @@ namespace parser {
                 return token::get(token_type::RBRACE, "}", 1);
             case ';':
                 return token::get(token_type::SEMICOLON, ";", 1);
+            case ':':
+                return token::get(token_type::COLON, ":", 1);
             case '=':
                 return (strm_->peek_at(p + 1) == '=') ? token::get(token_type::ISEQUAL, "==", 2)
                                                       : token::get(token_type::ASSIGN, "=", 1);
@@ -619,6 +632,12 @@ namespace parser {
                 return token::get(token_type::IF, bs.ptr, bs.len);
             } else if (bs.equals("else")) {
                 return token::get(token_type::ELSE, bs.ptr, bs.len);
+            } else if (bs.equals("int")) {
+                return token::get(token_type::TYPE_INT, bs.ptr, bs.len);
+            } else if (bs.equals("string")) {
+                return token::get(token_type::TYPE_STRING, bs.ptr, bs.len);
+            } else if (bs.equals("float")) {
+                return token::get(token_type::TYPE_FLOAT, bs.ptr, bs.len);
             } else {
                 return token::get(token_type::SYMBOL, bs.ptr, bs.len);
             }
